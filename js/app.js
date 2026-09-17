@@ -8,6 +8,16 @@
 // 1. DICIONÁRIO DE PRESETS (Vazio - turmas criadas e salvas pelo usuário)
 const PRESETS = {};
 
+// Variável com o histórico de alterações da versão atual
+const mudancasDeVersao = `
+<div class="version-popup-header">Alterações da versão V.01</div>
+<ul class="version-popup-list">
+  <li>Exibição de horas durante os dias, com destaque visual para dias com horários diferentes do padrão.</li>
+  <li>Mudanças individuais nos dias: Possibilidade de inserir a quantidade de horas-aulas individualmente para cada dia, bem como inserir um ambiente específico para cada dia.</li>
+  <li>Ao 'Segurar o clique' num dia específico, um menu será aberto, com a possibilidade de divisão entre prática e teoria no mesmo dia.</li>
+</ul>
+`.trim();
+
 // 2. BASE DE FERIADOS E RECESSOS 2026
 const FERIADOS_MAP = new Map([
   ["2026-01-01", "Confraternização Universal"],
@@ -2004,6 +2014,12 @@ document.addEventListener("DOMContentLoaded", () => {
       closeDayOptionsModal();
     }
   });
+
+  // Inicializa o balão pop-up com as mudanças de versão
+  const versionPopup = document.getElementById("version-popup");
+  if (versionPopup) {
+    versionPopup.innerHTML = mudancasDeVersao;
+  }
 
   // Renderiza a lista inicial de datas ajustadas manualmente se houver
   renderManualDatesList();
