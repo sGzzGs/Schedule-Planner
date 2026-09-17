@@ -1,0 +1,1522 @@
+/**
+ * style.css
+ * Layout A4 Paisagem (Horizontal) - SENAI FR-1.02-66A (V.00)
+ * Proporção Exata A4 Paisagem (297mm x 210mm / 1.414)
+ * Distribuição Vertical Total dos 8 Blocos Mensais Sem Espaço Vazio
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap');
+
+:root,
+:root[data-theme="solarized"],
+body[data-theme="solarized"] {
+  --bg-primary: #fdf6e3;
+  --bg-surface: #eee8d5;
+  --border-color: #e0d6c1;
+  --text-primary: #073642;
+  --text-secondary: #586e75;
+  --accent-btn: #b58900;
+  --accent-active: #268bd2;
+
+  --senai-red: #e30613;
+  --senai-green: #008000;
+  --senai-blue: #0070C0;
+}
+
+:root[data-theme="claro"],
+body[data-theme="claro"] {
+  --bg-primary: #ffffff;
+  --bg-surface: #f8f9fa;
+  --border-color: #e9ecef;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --accent-btn: #0056b3;
+  --accent-active: #0d6efd;
+
+  --senai-red: #e30613;
+  --senai-green: #008000;
+  --senai-blue: #0070C0;
+}
+
+:root[data-theme="conforto visual"],
+body[data-theme="conforto visual"] {
+  --bg-primary: #121417;
+  --bg-surface: #1a1d24;
+  --border-color: #2b303c;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --accent-btn: #3b82f6;
+  --accent-active: #60a5fa;
+
+  --senai-red: #e30613;
+  --senai-green: #008000;
+  --senai-blue: #0070C0;
+}
+
+/* Efeito de Brilho Reduzido no PDF (Tema Conforto Visual) */
+[data-theme="conforto visual"] .page-a4 {
+  filter: brightness(0.7) contrast(0.95);
+  transition: filter 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ==========================================================================
+   TOPBAR
+   ========================================================================== */
+.app-topbar {
+  height: 52px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  flex-shrink: 0;
+  z-index: 10;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-logo {
+  height: 26px;
+  width: auto;
+  display: block;
+}
+
+.brand-title h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.brand-title span {
+  font-size: 11px;
+  color: var(--accent-active);
+  font-weight: 600;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ==========================================================================
+   BOTÕES
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: var(--accent-btn);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  filter: brightness(0.9);
+}
+
+.btn-success {
+  background: #10b981;
+  color: #fff;
+}
+
+.btn-success:hover {
+  background: #059669;
+}
+
+.btn-secondary {
+  background: var(--text-secondary);
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  filter: brightness(0.9);
+}
+
+.btn-remove-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-remove-outline:hover {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* Botões simples de contorno (+ e -) integrados ao tema */
+.btn-outline-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-outline-add:hover {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.btn-outline-remove:hover {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.manual-dates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.manual-date-tag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
+
+.manual-date-tag.tag-add {
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+}
+
+.manual-date-tag.tag-remove {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.manual-date-tag-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  padding: 0 2px;
+  margin-left: 6px;
+}
+
+.manual-date-tag-btn:hover {
+  color: #ef4444;
+}
+
+/* ==========================================================================
+   LAYOUT PRINCIPAL
+   ========================================================================== */
+.app-container {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
+
+/* SIDEBAR */
+.app-sidebar {
+  width: 400px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100%;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.sidebar-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-header h2 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  padding: 9px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent-active);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.school-fixed-badge {
+  background: rgba(227, 6, 19, 0.15);
+  border: 1px solid rgba(227, 6, 19, 0.4);
+  border-radius: 5px;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.school-fixed-badge .badge-lbl {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #fca5a5;
+  text-transform: uppercase;
+}
+
+.school-fixed-badge .badge-val {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.input-control {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 5px 7px;
+  color: var(--text-primary);
+  font-size: 11.5px;
+  font-family: inherit;
+  width: 100%;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.input-control:focus {
+  outline: none;
+  border-color: var(--accent-active);
+}
+
+select.input-control {
+  cursor: pointer;
+}
+
+/* SELETOR DE DIAS DA SEMANA */
+.weekday-selector {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+}
+
+.day-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 5px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.day-btn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.day-btn.active {
+  background: var(--accent-active) !important;
+  border-color: var(--accent-active) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(38, 139, 210, 0.4);
+}
+
+/* ==========================================================================
+   ÁREA DE PRÉ-VISUALIZAÇÃO (PREVIEW CONTAINER)
+   ========================================================================== */
+#preview-container {
+  flex: 1;
+  background: var(--bg-primary);
+  background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+  background-size: 20px 20px;
+  overflow-y: auto;
+  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 20px 50px 20px;
+  transition: background-color 0.3s ease;
+}
+
+/* ==========================================================================
+   PAINEL GERENCIADOR INTERATIVO DE AULAS
+   ========================================================================== */
+.interactive-editor-card {
+  width: 297mm;
+  max-width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.editor-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.editor-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-title-group h3 {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ch-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 9px;
+  border-radius: 20px;
+  background: rgba(38, 139, 210, 0.15);
+  color: var(--accent-active);
+  border: 1px solid var(--accent-active);
+  letter-spacing: 0.2px;
+}
+
+.ch-badge.ch-full {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.ch-badge.ch-overflow {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.editor-subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.editor-env-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.env-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.env-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.env-dot-teoria {
+  background: var(--senai-green);
+  box-shadow: 0 0 8px rgba(0, 128, 0, 0.8);
+}
+
+.env-dot-pratica {
+  background: var(--senai-blue);
+  box-shadow: 0 0 8px rgba(0, 112, 192, 0.8);
+}
+
+.env-input-group label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.env-control {
+  width: 90px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.editor-quick-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-outline-teoria {
+  background: rgba(0, 128, 0, 0.15);
+  border: 1px solid var(--senai-green);
+  color: var(--senai-green);
+}
+
+.btn-outline-teoria:hover {
+  background: var(--senai-green);
+  color: #ffffff;
+}
+
+.btn-outline-pratica {
+  background: rgba(0, 112, 192, 0.15);
+  border: 1px solid var(--senai-blue);
+  color: var(--senai-blue);
+}
+
+.btn-outline-pratica:hover {
+  background: var(--senai-blue);
+  color: #ffffff;
+}
+
+/* GRADE DE CHIPS INTERATIVOS */
+.interactive-days-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 9px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+
+.lesson-chip {
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-color);
+  border-radius: 7px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.lesson-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.lesson-chip.chip-teoria {
+  background: rgba(0, 128, 0, 0.1);
+  border-color: var(--senai-green);
+}
+
+.lesson-chip.chip-teoria:hover {
+  border-color: #22c55e;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+}
+
+.lesson-chip.chip-pratica {
+  background: rgba(0, 112, 192, 0.1);
+  border-color: var(--senai-blue);
+}
+
+.lesson-chip.chip-pratica:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+}
+
+/* Chip Inativo (Botão Direito) - 50% de opacidade e desativado da contagem/visualização */
+.lesson-chip.chip-inactive {
+  opacity: 0.5 !important;
+  filter: grayscale(0.8);
+  border-style: dashed !important;
+  border-color: var(--border-color) !important;
+  background: rgba(120, 120, 120, 0.08) !important;
+}
+
+.lesson-chip.chip-inactive:hover {
+  transform: none;
+  box-shadow: none;
+  opacity: 0.65 !important;
+}
+
+.lesson-chip.chip-inactive .chip-badge {
+  background: var(--text-secondary) !important;
+  color: #ffffff !important;
+}
+
+.chip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.chip-num {
+  color: var(--text-secondary);
+  font-size: 9.5px;
+}
+
+.chip-date {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.chip-badge-wrapper {
+  display: flex;
+  margin: 2px 0;
+}
+
+.chip-badge {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.badge-teoria {
+  background: var(--senai-green);
+  color: #ffffff;
+}
+
+.badge-pratica {
+  background: var(--senai-blue);
+  color: #ffffff;
+}
+
+.chip-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-secondary);
+  border-top: 1px dashed var(--border-color);
+  padding-top: 4px;
+}
+
+.chip-amb-val {
+  font-weight: 800;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  padding: 2px 6px;
+  border-radius: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* Índice discreto no canto superior esquerdo (30% do tamanho padrão) */
+.chip-idx {
+  font-size: 7.5px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  opacity: 0.85;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Indicador de Horas no Card do Dia */
+.chip-hours-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  letter-spacing: 0.2px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Destaque quando a carga horária for diferente da padrão (horasPorDia) */
+.chip-hours-pill.hours-different {
+  background: rgba(245, 158, 11, 0.22) !important;
+  color: #f59e0b !important;
+  border: 1.2px solid rgba(245, 158, 11, 0.7) !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Chip de Aula Mista (Teoria + Prática no mesmo dia) */
+.lesson-chip.chip-misto {
+  background: linear-gradient(135deg, rgba(0, 128, 0, 0.1) 0%, rgba(0, 112, 192, 0.1) 100%);
+  border-color: #0d9488;
+}
+
+.lesson-chip.chip-misto:hover {
+  border-color: #14b8a6;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+}
+
+.badge-misto {
+  background: linear-gradient(90deg, var(--senai-green) 50%, var(--senai-blue) 50%);
+  color: #ffffff;
+}
+
+.badge-misto-invert {
+  background: linear-gradient(90deg, var(--senai-blue) 50%, var(--senai-green) 50%);
+  color: #ffffff;
+}
+
+/* Botão de Menu de Opções no Card */
+.chip-menu-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chip-menu-btn:hover {
+  background: var(--bg-surface);
+  color: var(--accent-active);
+}
+
+/* Feedback tátil visual ao segurar o clique (Long-Press) */
+.lesson-chip.is-pressing {
+  transform: scale(0.96) translateY(1px) !important;
+  box-shadow: 0 0 0 2px var(--accent-active) !important;
+  filter: brightness(1.1);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+/* Célula A4 com ambiente dividido */
+.a4-cell-split {
+  font-size: 7.5pt !important;
+  letter-spacing: -0.4px !important;
+  line-height: 1.05 !important;
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   ESTILOS DO MODAL DE OPÇÕES DO DIA (LONG-PRESS)
+   ========================================================================== */
+.day-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: modalFadeIn 0.2s ease;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.day-modal-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from { transform: translateY(16px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.day-modal-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-primary);
+}
+
+.day-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.day-modal-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(38, 139, 210, 0.15);
+  color: var(--accent-active);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.day-modal-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.day-modal-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.day-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0 6px;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.day-modal-close:hover {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.day-modal-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.modal-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-field-group label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.modal-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.btn-text-action {
+  background: transparent;
+  border: none;
+  color: var(--accent-active);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.btn-text-action:hover {
+  filter: brightness(1.2);
+}
+
+.modal-split-box {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.modal-toggle-label input {
+  display: none;
+}
+
+.modal-toggle-slider {
+  width: 36px;
+  height: 20px;
+  background: var(--border-color);
+  border-radius: 20px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.modal-toggle-slider::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.modal-toggle-label input:checked + .modal-toggle-slider {
+  background: var(--accent-active);
+}
+
+.modal-toggle-label input:checked + .modal-toggle-slider::after {
+  transform: translateX(16px);
+}
+
+.modal-toggle-text {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.split-order-selector {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.radio-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.radio-chip input {
+  margin: 0;
+}
+
+.split-columns-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.split-col {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.split-col-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+}
+
+.split-col-teoria {
+  border-left: 3px solid var(--senai-green);
+}
+
+.split-col-pratica {
+  border-left: 3px solid var(--senai-blue);
+}
+
+.day-modal-footer {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-primary);
+}
+
+/* ==========================================================================
+   FOLHA A4 PAISAGEM (297mm x 210mm) - DISTRIBUIÇÃO VERTICAL 100%
+   ========================================================================== */
+.page-a4 {
+  width: 297mm;
+  min-width: 297mm;
+  max-width: 297mm;
+  height: 210mm;
+  min-height: 210mm;
+  max-height: 210mm;
+  aspect-ratio: 297 / 210;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 6mm 10mm;
+  overflow: hidden;
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+  font-family: Arial, Helvetica, sans-serif;
+  position: relative;
+  transform-origin: top center;
+}
+
+/* 1. CABEÇALHO COM LOGOTIPO ORIGINAL SENAI */
+.a4-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 1.2mm;
+  padding-bottom: 0.2mm;
+  flex-shrink: 0;
+}
+
+.senai-logo-img {
+  height: 28px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.a4-school-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.a4-school-title h2 {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #333333;
+  margin: 0;
+  letter-spacing: 0.1px;
+  line-height: 1.15;
+}
+
+.a4-school-title h1 {
+  font-size: 11.5pt;
+  font-weight: 700;
+  color: #333333;
+  margin: 1px 0 0 0;
+  letter-spacing: 0.2px;
+  line-height: 1.15;
+}
+
+/* 2. TABELA DE DADOS GERAIS */
+.a4-meta-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #000000;
+  margin-bottom: 1.5mm;
+  font-size: 7.6pt;
+  flex-shrink: 0;
+}
+
+.a4-meta-table td {
+  border: 1px solid #000000;
+  padding: 2.5px 5px;
+  line-height: 1.15;
+  height: 23px;
+}
+
+.a4-meta-table td.col-left {
+  width: 72%;
+}
+
+.a4-meta-table td.col-right {
+  width: 28%;
+}
+
+.meta-field {
+  display: flex;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta-lbl {
+  font-weight: 700;
+  color: #000000;
+  flex-shrink: 0;
+}
+
+.meta-val {
+  font-weight: 700;
+  color: #000000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 3. GRADES MENSAIS (8 TABELAS PREENCHENDO 100% DA ÁREA DISPONÍVEL) */
+.a4-months-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.8mm;
+  flex: 1;
+  min-height: 0;
+}
+
+.a4-month-table {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  border-collapse: collapse;
+  table-layout: fixed;
+  border: 1px solid #000000;
+}
+
+.a4-month-table thead {
+  height: 25%;
+}
+
+.a4-month-table tbody {
+  height: 75%;
+}
+
+.a4-month-table tbody tr {
+  height: 33.33%;
+}
+
+.a4-month-table th,
+.a4-month-table td {
+  border: 1px solid #000000;
+  text-align: center;
+  padding: 0;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+/* Cabeçalho do Mês */
+.a4-th-label {
+  width: 105px;
+  font-weight: 700;
+  font-size: 7.8pt;
+  color: #000000;
+  text-align: center;
+  padding: 0 2px;
+  white-space: nowrap;
+  background: #ffffff;
+}
+
+.a4-th-monthname {
+  font-weight: 700;
+  font-size: 8.5pt;
+  color: var(--senai-red);
+  text-align: center;
+  background: #ffffff;
+}
+
+/* Linhas de Dados */
+.a4-row-teoria {
+  width: 105px;
+  font-weight: 700;
+  font-size: 7.8pt;
+  color: var(--senai-green);
+  text-align: center;
+  white-space: nowrap;
+  background: #ffffff;
+}
+
+.a4-row-pratica {
+  width: 105px;
+  font-weight: 700;
+  font-size: 7.8pt;
+  color: var(--senai-blue);
+  text-align: center;
+  white-space: nowrap;
+  background: #ffffff;
+}
+
+.a4-row-ambiente {
+  width: 105px;
+  font-weight: 700;
+  font-size: 7.8pt;
+  color: #000000;
+  text-align: center;
+  white-space: nowrap;
+  background: #ffffff;
+}
+
+.a4-cell {
+  font-size: 10.5pt;
+  font-weight: 700;
+  color: #000000;
+  background: #ffffff;
+}
+
+.a4-cell-teoria {
+  color: var(--senai-green) !important;
+}
+
+.a4-cell-pratica {
+  color: var(--senai-blue) !important;
+}
+
+.a4-cell.has-val {
+  font-weight: 600;
+}
+
+/* 4. RODAPÉ OFICIAL ANCORADO NA BASE */
+.a4-footer {
+  margin-top: 1.2mm;
+  flex-shrink: 0;
+}
+
+.a4-signatures-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #000000;
+  margin-bottom: 1.2mm;
+  font-size: 7.5pt;
+}
+
+.a4-signatures-table td {
+  border: 1px solid #000000;
+  padding: 3px 6px;
+  height: 32px;
+  vertical-align: middle;
+}
+
+.a4-signatures-table .col-elab {
+  width: 38%;
+}
+
+.a4-signatures-table .col-data1 {
+  width: 12%;
+}
+
+.a4-signatures-table .col-aprov {
+  width: 38%;
+}
+
+.a4-signatures-table .col-data2 {
+  width: 12%;
+}
+
+.a4-footer-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 6.6pt;
+  padding: 0 2px;
+}
+
+.a4-footer-info .code {
+  font-weight: 400;
+  color: #000000;
+}
+
+.a4-footer-info .legend-coral {
+  color: #e30613;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.a4-footer-info .page-num {
+  font-weight: 400;
+  color: #000000;
+}
+
+/* ==========================================================================
+   SEÇÃO PERFIL DE MODELOS & TOOLTIPS (BACKUP / TROCA DE PCS)
+   ========================================================================== */
+.profile-section {
+  border-left: 3px solid var(--accent-active);
+  background: rgba(38, 139, 210, 0.05);
+}
+
+.profile-btn-group {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+.profile-help-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  line-height: 1.3;
+}
+
+/* Tooltip moderno e elegante ao passar o mouse */
+.has-custom-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.has-custom-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  transform: translateY(4px);
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  padding: 7px 11px;
+  border-radius: 6px;
+  white-space: normal;
+  width: 220px;
+  text-align: left;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+}
+
+.has-custom-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 20px;
+  border-width: 6px 6px 0 6px;
+  border-style: solid;
+  border-color: #0f172a transparent transparent transparent;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+}
+
+.has-custom-tooltip:hover::after,
+.has-custom-tooltip:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   REGRAS DE IMPRESSÃO (PRINT A4 PAISAGEM / LANDSCAPE)
+   ========================================================================== */
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+@media print {
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: hidden !important;
+  }
+
+  .app-sidebar, .app-topbar, .no-print {
+    display: none !important;
+  }
+
+  .app-container, #preview-container {
+    display: block !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  .page-a4 {
+    width: 297mm !important;
+    height: 210mm !important;
+    min-height: 210mm !important;
+    max-height: 210mm !important;
+    aspect-ratio: 297 / 210 !important;
+    padding: 6mm 10mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}

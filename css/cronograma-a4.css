@@ -1,0 +1,432 @@
+/**
+ * cronograma-a4.css
+ * Geometria milimétrica e estilos dos modelos SENAI:
+ * 1) Modelo Oficial FR-1.02-66A (V.00)
+ * 2) Modelo Calendário Gráfico Anual (ExemploExcel.png)
+ */
+
+:root {
+  --senai-blue: #005caa;
+  --senai-dark-blue: #003e73;
+  --border-black: #000000;
+  --border-light: #555555;
+  --bg-table-header: #f3f4f6;
+}
+
+/* CONTAINER DA FOLHA A4 */
+.fr-paper-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px;
+  overflow: auto;
+  min-height: 100%;
+}
+
+.fr-document-page {
+  width: 210mm;
+  min-height: 297mm;
+  max-height: 297mm;
+  height: 297mm;
+  background: #ffffff;
+  color: #000000;
+  padding: 8mm 9mm 8mm 9mm;
+  box-sizing: border-box;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.15);
+  font-family: Arial, Helvetica, sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  transform-origin: top center;
+  transition: transform 0.2s ease;
+}
+
+/* ==========================================================================
+   ESTILOS ESPECÍFICOS DO MODELO OFICIAL FR-1.02-66A (V.00)
+   ========================================================================== */
+.official-v00 {
+  font-size: 8pt;
+  line-height: 1.25;
+}
+
+/* Cabeçalho V.00 */
+.fr-v00-header {
+  border-bottom: 1.5px solid var(--border-black);
+  padding-bottom: 4px;
+  margin-bottom: 3mm;
+}
+
+.v00-header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.v00-school-title h2 {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #000000;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.v00-school-title h1 {
+  font-size: 13pt;
+  font-weight: 700;
+  color: #000000;
+  margin: 2px 0 0 0;
+}
+
+.v00-approval-box {
+  border: 1px solid var(--border-black);
+  padding: 3px 8px;
+  font-size: 7pt;
+  min-width: 220px;
+  background: #ffffff;
+}
+
+.v00-approval-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.4;
+}
+
+.v00-approval-row:first-child {
+  border-bottom: 1px dashed #cccccc;
+  margin-bottom: 2px;
+  padding-bottom: 2px;
+}
+
+.v00-label {
+  font-weight: 700;
+  color: #333333;
+}
+
+.v00-sign-val {
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v00-date-val {
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.v00-header-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 7.5pt;
+  padding-top: 2px;
+}
+
+.v00-code {
+  font-weight: 700;
+}
+
+.v00-legend {
+  color: #222222;
+}
+
+.v00-page {
+  font-weight: 700;
+}
+
+/* Seção de Metadados do Curso */
+.v00-meta-section {
+  border: 1px solid var(--border-black);
+  margin-bottom: 3.5mm;
+  padding: 3px 6px;
+  background: #fafafa;
+}
+
+.v00-meta-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.v00-meta-row:last-child {
+  border-bottom: none;
+}
+
+.v00-meta-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.v00-meta-col.flex-2 { flex: 2; }
+.v00-meta-col.flex-1 { flex: 1; }
+
+.v00-m-label {
+  font-weight: 700;
+  font-size: 7.5pt;
+  color: #111111;
+  flex-shrink: 0;
+}
+
+.v00-m-val {
+  font-size: 8pt;
+  font-weight: 600;
+  color: #000000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.v00-m-val.highlight {
+  font-weight: 700;
+  color: #000000;
+}
+
+.v00-m-val.bold {
+  font-weight: 700;
+}
+
+/* Tabelas Mensais Oficiais (6 Blocos) */
+.v00-tables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5mm;
+  flex: 1;
+}
+
+.v00-month-table-wrapper {
+  border: 1px solid var(--border-black);
+}
+
+.v00-month-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 7.5pt;
+}
+
+.v00-th-month {
+  background: var(--bg-table-header);
+  border-bottom: 1px solid var(--border-black);
+  text-align: left;
+  padding: 2.5px 6px;
+  font-size: 8pt;
+  font-weight: 600;
+}
+
+.v00-month-title strong {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.v00-row-label {
+  width: 105px;
+  font-weight: 700;
+  font-size: 7pt;
+  padding: 2px 4px;
+  border-right: 1px solid var(--border-black);
+  border-bottom: 1px solid var(--border-black);
+  background: #ffffff;
+  white-space: nowrap;
+}
+
+.v00-month-table tbody tr:last-child .v00-row-label,
+.v00-month-table tbody tr:last-child .v00-cell {
+  border-bottom: none;
+}
+
+.v00-cell {
+  border-right: 1px solid var(--border-black);
+  border-bottom: 1px solid var(--border-black);
+  text-align: center;
+  height: 18px;
+  font-size: 7pt;
+  font-weight: 600;
+  padding: 0;
+  background: #ffffff;
+}
+
+.v00-cell:last-child {
+  border-right: none;
+}
+
+.v00-cell.has-val {
+  font-weight: 700;
+  background: #f8fafc;
+}
+
+/* ==========================================================================
+   ESTILOS DO MODO CALENDÁRIO VISUAL (ExemploExcel.png)
+   ========================================================================== */
+.calendar-mode .fr-header {
+  border: 1.5px solid #333333;
+  margin-bottom: 2mm;
+}
+.calendar-mode .fr-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-bottom: 1px solid #333333;
+  background: #f8fafc;
+}
+.calendar-mode .fr-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.calendar-mode .fr-senai-logo {
+  width: 90px;
+}
+.calendar-mode .fr-school-title {
+  display: flex;
+  flex-direction: column;
+}
+.calendar-mode .fr-school-network {
+  font-size: 6pt;
+  font-weight: 700;
+  color: #4b5563;
+}
+.calendar-mode .fr-school-name {
+  font-size: 8pt;
+  font-weight: 800;
+}
+.calendar-mode .fr-doc-type {
+  font-size: 8pt;
+  font-weight: 900;
+  color: var(--senai-blue);
+}
+.calendar-mode .fr-doc-code {
+  font-size: 7pt;
+  font-weight: 700;
+  background: #e5e7eb;
+  padding: 1px 4px;
+}
+
+.calendar-mode .fr-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  font-size: 6.8pt;
+}
+.calendar-mode .fr-meta-cell {
+  padding: 2px 4px;
+  border-right: 1px solid #9ca3af;
+  border-bottom: 1px solid #9ca3af;
+  display: flex;
+  gap: 4px;
+  white-space: nowrap;
+}
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+.col-span-4 { grid-column: span 4; }
+.col-span-5 { grid-column: span 5; }
+
+.calendar-mode .fr-months-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 1.5mm;
+  height: 100%;
+}
+.calendar-mode .fr-month-card {
+  border: 1px solid #333333;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.calendar-mode .fr-month-header {
+  background: #f1f5f9;
+  border-bottom: 1px solid #333333;
+  padding: 1px 4px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 6.5pt;
+  font-weight: 800;
+}
+.calendar-mode .fr-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 5.5pt;
+  font-weight: 800;
+  border-bottom: 1px solid #d1d5db;
+}
+.calendar-mode .fr-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 13px;
+  text-align: center;
+}
+.calendar-mode .cal-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 6pt;
+  font-weight: 600;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+.calendar-mode .cal-cell.is-class-day {
+  background: var(--senai-blue) !important;
+  color: #ffffff !important;
+  font-weight: 900;
+}
+.calendar-mode .cal-cell.is-holiday {
+  background: #d1d5db;
+}
+.calendar-mode .cal-cell.is-vacation {
+  background: #facc15;
+}
+.calendar-mode .cal-cell.is-sunday {
+  background: #f3f4f6;
+}
+.calendar-mode .fr-month-legend-text {
+  font-size: 4.8pt;
+  line-height: 1.1;
+  padding: 1px 3px;
+  color: #4b5563;
+  max-height: 14px;
+  overflow: hidden;
+}
+
+.calendar-mode .fr-footer {
+  border: 1px solid #333333;
+  padding: 2px 6px;
+  margin-top: 2mm;
+}
+.calendar-mode .fr-summary-and-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.calendar-mode .fr-totals-grid, .calendar-mode .fr-legend-items {
+  display: flex;
+  gap: 8px;
+  font-size: 6pt;
+}
+.legend-swatch {
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  border-radius: 1px;
+}
+.legend-swatch.class-day { background: var(--senai-blue); }
+.legend-swatch.holiday { background: #d1d5db; }
+.legend-swatch.vacation { background: #facc15; }
+.legend-swatch.non-school { background: #f3f4f6; }
+
+.schedule-error-banner {
+  padding: 20px;
+  background: #fef2f2;
+  border: 2px solid #ef4444;
+  border-radius: 8px;
+  text-align: center;
+  color: #991b1b;
+}

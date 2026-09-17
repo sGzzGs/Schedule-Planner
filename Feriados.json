@@ -1,0 +1,49 @@
+{
+  "ano": 2026,
+  "feriados": [
+    { "data": "2026-01-01", "descricao": "Confraternização Universal", "tipo": "feriado" },
+    { "data": "2026-01-25", "descricao": "Aniversário de São Paulo", "tipo": "feriado" },
+    { "data": "2026-02-14", "descricao": "Sábado de Carnaval", "tipo": "recesso" },
+    { "data": "2026-02-16", "descricao": "Segunda de Carnaval", "tipo": "recesso" },
+    { "data": "2026-02-17", "descricao": "Terça de Carnaval", "tipo": "feriado" },
+    { "data": "2026-04-03", "descricao": "Sexta-feira Santa/Paixão", "tipo": "feriado" },
+    { "data": "2026-04-04", "descricao": "Sábado de Aleluia (Emenda)", "tipo": "emenda" },
+    { "data": "2026-04-20", "descricao": "Emenda de feriado - Tiradentes", "tipo": "emenda" },
+    { "data": "2026-04-21", "descricao": "Tiradentes", "tipo": "feriado" },
+    { "data": "2026-05-01", "descricao": "Dia do Trabalho", "tipo": "feriado" },
+    { "data": "2026-06-04", "descricao": "Corpus Christi", "tipo": "feriado" },
+    { "data": "2026-06-05", "descricao": "Emenda de feriado - Corpus Christi", "tipo": "emenda" },
+    { "data": "2026-06-06", "descricao": "Emenda de feriado - Corpus Christi", "tipo": "emenda" },
+    { "data": "2026-06-24", "descricao": "Formatura CAI", "tipo": "evento_interno" },
+    { "data": "2026-07-09", "descricao": "Revolução Constitucionalista de 1932", "tipo": "feriado" },
+    { "data": "2026-07-10", "descricao": "Emenda de feriado - Rev. Const.", "tipo": "emenda" },
+    { "data": "2026-07-11", "descricao": "Emenda de feriado - Rev. Const.", "tipo": "emenda" },
+    { "data": "2026-09-07", "descricao": "Independência do Brasil", "tipo": "feriado" },
+    { "data": "2026-10-12", "descricao": "Padroeira do Brasil", "tipo": "feriado" },
+    { "data": "2026-10-13", "descricao": "Dia dos Professores - Antecipado", "tipo": "recesso" },
+    { "data": "2026-11-02", "descricao": "Dia de Finados", "tipo": "feriado" },
+    { "data": "2026-11-15", "descricao": "Proclamação da República", "tipo": "feriado" },
+    { "data": "2026-11-20", "descricao": "Consciência Negra", "tipo": "feriado" },
+    { "data": "2026-12-21", "descricao": "Formatura CAI", "tipo": "evento_interno" },
+    { "data": "2026-12-22", "descricao": "Confraternização Escolar", "tipo": "evento_interno" },
+    { "data": "2026-12-25", "descricao": "Natal", "tipo": "feriado" },
+    { "data": "2026-12-31", "descricao": "Véspera de Ano Novo", "tipo": "recesso" }
+  ],
+  "periodosFerias": [
+    {
+      "descricao": "Recesso de Janeiro",
+      "inicio": "2026-01-02",
+      "fim": "2026-01-14"
+    },
+    {
+      "descricao": "Férias de Julho",
+      "inicio": "2026-07-13",
+      "fim": "2026-07-18"
+    },
+    {
+      "descricao": "Recesso de Fim de Ano",
+      "inicio": "2026-12-23",
+      "fim": "2026-12-31"
+    }
+  ]
+}

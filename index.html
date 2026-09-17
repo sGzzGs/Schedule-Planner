@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Cronograma de Aulas | SENAI FR-1.02-66A</title>
+  <meta name="description" content="Aplicação web para geração automatizada de cronogramas de aulas no modelo oficial SENAI FR-1.02-66A com cálculo de dias letivos, feriados e exportação para PDF.">
+
+  <!-- Estilos da Aplicação -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Biblioteca html2pdf para download direto de PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+  <!-- BARRA SUPERIOR (TOPBAR) -->
+  <header class="app-topbar no-print">
+    <div class="topbar-brand">
+      <img src="logo_senai_oficial.png" alt="SENAI" class="topbar-logo">
+      <div class="brand-title">
+        <h1>Gerador de Cronograma de Aulas</h1>
+        <span id="topbar-school-label">V.01</span>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <!-- Seletor Rápido de Presets / Cursos Exemplo -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <label for="presetSelect" style="color: #94a3b8; font-size: 12px; font-weight: 700;">Modelos Salvos:</label>
+        <select id="presetSelect" class="input-control" style="width: 260px; padding: 7px 10px; font-size: 12.5px; font-weight: 700;">
+          <!-- Preenchido dinamicamente no JS -->
+        </select>
+        <button id="btn-deletar-modelo" class="btn btn-secondary" style="background: #dc2626; border-color: #ef4444; padding: 6px 12px;" title="Excluir o modelo selecionado">
+          Excluir
+        </button>
+      </div>
+
+      <!-- Botão de Download Direto do PDF -->
+      <button id="btn-export-pdf" class="btn btn-success" title="Gerar e baixar o arquivo PDF">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Baixar PDF
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTAINER PRINCIPAL: SPLIT-SCREEN -->
+  <div class="app-container">
+    
+    <!-- PAINEL LATERAL DE CONTROLES (SIDEBAR) -->
+    <aside class="app-sidebar no-print">
+      <div class="sidebar-header">
+        <div style="display: flex; gap: 6px; align-items: center; width: 100%; justify-content: space-between;">
+          <select id="theme-selector" class="input-control" style="width: auto; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer;" title="Selecione o Tema da Interface">
+            <option value="solarized">Solarized</option>
+            <option value="claro">Claro</option>
+            <option value="conforto visual">Conforto Visual</option>
+          </select>
+          <div style="display: flex; gap: 6px;">
+            <button id="btn-salvar-modelo" class="btn btn-success btn-sm" title="Salvar dados do formulário como modelo">Salvar Modelo</button>
+            <button id="btn-reset-form" class="btn btn-secondary btn-sm" title="Limpar formulário">Limpar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-content">
+        
+        <!-- 1. IDENTIFICAÇÃO DO CURSO E TURMA -->
+        <section class="form-section">
+          <div class="section-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            Identificação
+          </div>
+
+          <div class="form-group">
+            <label for="nomeCurso">Nome do Curso / Ocupação</label>
+            <input type="text" id="nomeCurso" class="input-control" placeholder="...">
+          </div>
+
+          <div class="form-group">
+            <label for="codigoTurma">Código da Turma</label>
+            <input type="text" id="codigoTurma" class="input-control" placeholder="...">
+          </div>
+
+          <div class="form-group">
+            <label for="unidadeCurricular">Unidade Curricular (UC)</label>
+            <input type="text" id="unidadeCurricular" class="input-control" placeholder="...">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="docente">Professor / Responsável</label>
+              <input type="text" id="docente" class="input-control" placeholder="...">
+            </div>
+            <div class="form-group">
+              <label for="coordenador">Coordenador</label>
+              <input type="text" id="coordenador" class="input-control" placeholder="...">
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. CARGA HORÁRIA E HORÁRIOS -->
+        <section class="form-section">
+          <div class="section-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Horários e Carga Horária
+          </div>
+
+
+
+          <!-- Menu de Horários Pré-definidos -->
+          <div class="form-group">
+            <label for="horarioPresetSelect">Preenchimento Rápido de Horários:</label>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <select id="horarioPresetSelect" class="input-control" style="flex: 1;">
+                <option value="">-- Selecione um Horário Sugerido --</option>
+              </select>
+              <button type="button" id="btn-remover-horario-rapido" class="btn-remove-outline" title="Remover horário selecionado do preenchimento rápido">
+                ✕
+              </button>
+            </div>
+            <button type="button" id="btn-adicionar-horario-rapido" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center; margin-top: 5px; background: rgba(38, 139, 210, 0.12); border: 1px solid var(--accent-active); color: var(--accent-active);" title="Adicionar a combinação de horário configurada abaixo ao preenchimento rápido">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Adicionar horário ao preenchimento rápido
+            </button>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="horaInicio">Hora Início</label>
+              <input type="text" id="horaInicio" class="input-control" value="13:00">
+            </div>
+            <div class="form-group">
+              <label for="horaFim">Hora Fim</label>
+              <input type="text" id="horaFim" class="input-control" value="17:00">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cargaHorariaTotal">C.H. Total (Horas)</label>
+              <input type="text" id="cargaHorariaTotal" class="input-control" value="120" placeholder="Ex: 120 ou 33:50">
+            </div>
+            <div class="form-group">
+              <label for="horasPorDia">Horas / Aula (HH:MM)</label>
+              <input type="text" id="horasPorDia" class="input-control" value="04:00" placeholder="..." pattern="^[0-9]{2}:[0-9]{2}$">
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. CALENDÁRIO E DIAS DA SEMANA -->
+        <section class="form-section">
+          <div class="section-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Calendário e Dias com Aula
+          </div>
+
+          <div class="form-group">
+            <label for="dataInicioStr">Data de Início</label>
+            <input type="date" id="dataInicioStr" class="input-control" value="2026-04-14">
+          </div>
+
+          <div class="form-group">
+            <label>Dias da Semana Ativos</label>
+            <div class="weekday-selector">
+              <button type="button" class="day-btn" data-day="1">Seg</button>
+              <button type="button" class="day-btn" data-day="2">Ter</button>
+              <button type="button" class="day-btn" data-day="3">Qua</button>
+              <button type="button" class="day-btn" data-day="4">Qui</button>
+              <button type="button" class="day-btn" data-day="5">Sex</button>
+              <button type="button" class="day-btn" data-day="6">Sáb</button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 14px;">
+            <label for="escola">Escola</label>
+            <input type="text" id="escola" class="input-control" value="" placeholder="Nome da Escola SENAI...">
+          </div>
+        </section>
+
+        <!-- 4. PERFIL / BACKUP DE MODELOS (TROCA DE PCS) -->
+        <section class="form-section profile-section">
+          <div class="section-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Perfil de Modelos
+          </div>
+
+          <div class="profile-btn-group">
+            <div class="has-custom-tooltip" data-tooltip="Baixe este arquivo para transferir seu perfil para outro computador">
+              <button type="button" id="btn-export-profile" class="btn btn-primary btn-sm" title="Baixe este arquivo para transferir seu perfil para outro computador">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Exportar perfil
+              </button>
+            </div>
+
+            <div class="has-custom-tooltip" data-tooltip="Insira aqui seu perfil baixado de outro computador">
+              <button type="button" id="btn-import-profile" class="btn btn-secondary btn-sm" title="Insira aqui seu perfil baixado de outro computador">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Importar perfil
+              </button>
+            </div>
+
+            <input type="file" id="input-import-profile" accept=".json" style="display: none;">
+          </div>
+
+          <div class="profile-help-hint">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Seu perfil é pessoal e as informações são salvas localmente para sua segurança e privacidade: Nenhum dado é coletado</span>
+          </div>
+        </section>
+
+        <!-- 5. AJUSTE MANUAL DE DATAS (FORÇAR ADIÇÃO / REMOÇÃO) -->
+        <section class="form-section manual-dates-section">
+          <div class="section-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
+            Ajuste Manual de Datas
+          </div>
+
+          <div class="form-group">
+            <label for="input-manual-date">Data (dd/mm/aaaa ou aaaa-mm-dd):</label>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <input type="text" id="input-manual-date" class="input-control" placeholder="..." style="flex: 1;">
+              <button type="button" id="btn-manual-date-add" class="btn-outline-action btn-outline-add" title="Forçar Adição desta data ao calendário (+)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <button type="button" id="btn-manual-date-remove" class="btn-outline-action btn-outline-remove" title="Forçar Remoção desta data do calendário (-)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista de datas forçadas / exceções manuais ativas -->
+          <div id="manual-dates-list" class="manual-dates-list">
+            <!-- Gerado dinamicamente via JS -->
+          </div>
+        </section>
+        
+      </div>
+    </aside>
+
+    <!-- PAINEL DIREITO: PRÉ-VISUALIZAÇÃO A4 E GERENCIADOR INTERATIVO -->
+    <main id="preview-container">
+      <div id="cronograma-render-target">
+        <!-- Renderizado dinamicamente via JS: .page-a4 -->
+      </div>
+
+      <!-- PAINEL DE EDIÇÃO INTERATIVA DE AULAS (Abaixo da Folha A4) -->
+      <section id="interactive-editor-section" class="interactive-editor-card no-print">
+        <div class="editor-card-header">
+          <div class="editor-title-group">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <h3>Gerenciador Interativo de Aulas (Teoria / Prática / Ambientes) <span id="ch-progress-badge" class="ch-badge">0 / 0h</span></h3>
+          </div>
+          <span class="editor-subtitle">Clique com o botão esquerdo para alternar Teoria/Prática • Clique com o botão direito para desativar/reativar o dia</span>
+        </div>
+
+        <!-- Barra de Configuração de Ambientes e Ações Rápidas -->
+        <div class="editor-env-bar">
+          <div class="env-input-group env-teoria-group">
+            <span class="env-dot env-dot-teoria"></span>
+            <label for="editorAmbienteTeoria">Ambiente de Teoria:</label>
+            <input type="text" id="editorAmbienteTeoria" class="input-control env-control" value="S01" placeholder="...">
+          </div>
+
+          <div class="env-input-group env-pratica-group">
+            <span class="env-dot env-dot-pratica"></span>
+            <label for="editorAmbientePratica">Ambiente de Prática:</label>
+            <input type="text" id="editorAmbientePratica" class="input-control env-control" value="L01" placeholder="...">
+          </div>
+
+          <div class="editor-quick-actions">
+            <button type="button" id="btn-set-all-teoria" class="btn btn-sm btn-outline-teoria" title="Definir todas as aulas como Teoria">Todos Teoria</button>
+            <button type="button" id="btn-set-all-pratica" class="btn btn-sm btn-outline-pratica" title="Definir todas as aulas como Prática">Todos Prática</button>
+          </div>
+        </div>
+
+        <!-- Grade de Chips dos Dias de Aula -->
+        <div id="interactive-days-grid" class="interactive-days-grid">
+          <!-- Chips gerados dinamicamente via JS -->
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <!-- MODAL DE PERSONALIZAÇÃO INDIVIDUAL DO DIA (LONG-PRESS OU BOTÃO DO CARD) -->
+  <div id="day-options-modal" class="day-modal-backdrop" style="display: none;">
+    <div class="day-modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-day-title">
+      <div class="day-modal-header">
+        <div class="day-modal-title-group">
+          <div class="day-modal-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
+          <div>
+            <h3 id="modal-day-title" class="day-modal-title">Configurar Aula do Dia</h3>
+            <span id="modal-day-subtitle" class="day-modal-subtitle">DD/MM/AAAA • Aula X</span>
+          </div>
+        </div>
+        <button type="button" id="modal-btn-close" class="day-modal-close" title="Fechar janela">&times;</button>
+      </div>
+
+      <div class="day-modal-body">
+        <!-- 1. Ambiente deste Dia -->
+        <div class="modal-field-group" id="group-single-ambiente">
+          <label for="modal-input-ambiente">Ambiente deste dia:</label>
+          <input type="text" id="modal-input-ambiente" class="input-control" placeholder="Ex: S01 ou Lab Info 2">
+          <span class="modal-hint">Altera o ambiente especificamente para esta data.</span>
+        </div>
+
+        <!-- 2. Carga Horária deste Dia -->
+        <div class="modal-field-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="modal-input-horas">Carga Horária deste dia (HH:MM):</label>
+            <button type="button" id="modal-btn-reset-horas" class="btn-text-action" title="Restaurar para a carga padrão da turma">Restaurar Padrão</button>
+          </div>
+          <input type="text" id="modal-input-horas" class="input-control" placeholder="Ex: 04:00" pattern="^[0-9]{1,2}:[0-9]{2}$">
+          <span class="modal-hint">Permite definir uma quantidade de horas diferente da padrão para este dia.</span>
+        </div>
+
+        <!-- 3. Divisão do Dia em Teoria e Prática -->
+        <div class="modal-split-box">
+          <label class="modal-toggle-label">
+            <input type="checkbox" id="modal-toggle-split">
+            <span class="modal-toggle-slider"></span>
+            <span class="modal-toggle-text">Dividir este dia em Metade Teoria e Metade Prática</span>
+          </label>
+
+          <div id="modal-split-content" class="modal-split-content" style="display: none;">
+            <div class="modal-field-group" style="margin-top: 10px;">
+              <label>Ordem da Aula:</label>
+              <div class="split-order-selector">
+                <label class="radio-chip">
+                  <input type="radio" name="splitOrder" value="teoria-pratica" checked>
+                  <span>1º Teoria, 2º Prática</span>
+                </label>
+                <label class="radio-chip">
+                  <input type="radio" name="splitOrder" value="pratica-teoria">
+                  <span>1º Prática, 2º Teoria</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="split-columns-grid">
+              <!-- Coluna Teoria -->
+              <div class="split-col split-col-teoria">
+                <div class="split-col-header">
+                  <span class="env-dot env-dot-teoria"></span>
+                  <strong>Teoria</strong>
+                </div>
+                <div class="form-group">
+                  <label for="modal-split-teoria-horas">Horas (HH:MM):</label>
+                  <input type="text" id="modal-split-teoria-horas" class="input-control" placeholder="02:00">
+                </div>
+                <div class="form-group">
+                  <label for="modal-split-teoria-amb">Ambiente:</label>
+                  <input type="text" id="modal-split-teoria-amb" class="input-control" placeholder="S01">
+                </div>
+              </div>
+
+              <!-- Coluna Prática -->
+              <div class="split-col split-col-pratica">
+                <div class="split-col-header">
+                  <span class="env-dot env-dot-pratica"></span>
+                  <strong>Prática</strong>
+                </div>
+                <div class="form-group">
+                  <label for="modal-split-pratica-horas">Horas (HH:MM):</label>
+                  <input type="text" id="modal-split-pratica-horas" class="input-control" placeholder="02:00">
+                </div>
+                <div class="form-group">
+                  <label for="modal-split-pratica-amb">Ambiente:</label>
+                  <input type="text" id="modal-split-pratica-amb" class="input-control" placeholder="L01">
+                </div>
+              </div>
+            </div>
+
+            <button type="button" id="modal-btn-split-half" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 8px; justify-content: center;">
+              Dividir Carga Total em 50% / 50%
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-modal-footer">
+        <button type="button" id="modal-btn-restaurar-tudo" class="btn btn-secondary btn-sm" title="Remover todas as personalizações deste dia e voltar ao padrão">
+          Restaurar Padrão Geral
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="modal-btn-cancelar" class="btn btn-secondary btn-sm">Cancelar</button>
+          <button type="button" id="modal-btn-salvar" class="btn btn-success btn-sm">Salvar Alterações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts da Aplicação -->
+  <script src="js/app.js"></script>
+</body>
+</html>
