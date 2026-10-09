@@ -8,6 +8,12 @@
 
   <!-- Estilos da Aplicação -->
   <link rel="stylesheet" href="css/style.css">
+  <!-- Estilos da Aba de Compensação -->
+  <link rel="stylesheet" href="css/compensacao.css">
+  <!-- Estilos Exclusivos da Ficha de Compensação (Impressão e PDF) -->
+  <link rel="stylesheet" href="css/print-ficha.css">
+  <!-- Estilos da Aba de Calendário Anual -->
+  <link rel="stylesheet" href="css/calendario.css">
 
   <!-- Biblioteca html2pdf para download direto de PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -21,7 +27,7 @@
       <div class="brand-title">
         <h1>Gerador de Cronograma de Aulas</h1>
         <div class="version-badge-container">
-          <span id="topbar-school-label" class="version-label">V.01</span>
+          <span id="topbar-school-label" class="version-label">V.02</span>
           <div id="version-popup" class="version-popup-balloon" role="tooltip"></div>
         </div>
       </div>
@@ -39,6 +45,7 @@
         </button>
       </div>
 
+
       <!-- Botão de Download Direto do PDF -->
       <button id="btn-export-pdf" class="btn btn-success" title="Gerar e baixar o arquivo PDF">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
@@ -46,6 +53,30 @@
       </button>
     </div>
   </header>
+
+  <!-- BARRA DE ABAS -->
+  <nav class="app-tab-bar no-print" role="tablist" aria-label="Módulos da aplicação">
+    <button class="app-tab active" data-tab="tab-cronograma" role="tab" aria-selected="true" aria-controls="tab-cronograma" title="Gerador de Cronograma de Aulas">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Cronograma
+    </button>
+    <button class="app-tab" data-tab="tab-compensacao" role="tab" aria-selected="false" aria-controls="tab-compensacao" title="Gerador de Compensação de Ausências">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Compensação
+    </button>
+    <button class="app-tab" data-tab="tab-calendario" role="tab" aria-selected="false" aria-controls="tab-calendario" title="Calendário Escolar Anual e Feriados">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Calendário
+    </button>
+  </nav>
+
+  <!-- WRAPPER DE PÁGINAS (ANIMAÇÃO ENTRE ABAS) -->
+  <div class="app-pages">
+
+  <!-- ================================================================
+       PÁGINA 1 — CRONOGRAMA (ABA MÃE — NÃO ALTERADA)
+       ================================================================ -->
+  <div class="app-page page-active" id="tab-cronograma" role="tabpanel" aria-labelledby="tab-cronograma">
 
   <!-- CONTAINER PRINCIPAL: SPLIT-SCREEN -->
   <div class="app-container">
@@ -203,6 +234,8 @@
               </button>
             </div>
 
+
+
             <input type="file" id="input-import-profile" accept=".json" style="display: none;">
           </div>
 
@@ -240,6 +273,9 @@
         
       </div>
     </aside>
+
+    <!-- DIVISOR REDIMENSIONÁVEL (SPLITTER ENTRE SIDEBAR E PREVIEW) -->
+    <div class="panel-resizer no-print" id="resizer-cronograma" role="separator" aria-orientation="vertical" title="Arraste para redimensionar o painel lateral • Clique duplo para redefinir largura padrão"></div>
 
     <!-- PAINEL DIREITO: PRÉ-VISUALIZAÇÃO A4 E GERENCIADOR INTERATIVO -->
     <main id="preview-container">
@@ -284,7 +320,101 @@
       </section>
     </main>
 
-  </div>
+  </div><!-- /app-container -->
+
+  </div><!-- /tab-cronograma (app-page) -->
+
+  <!-- ================================================================
+       PÁGINA 2 — COMPENSAÇÃO DE AUSÊNCIAS (Badge t02)
+       ================================================================ -->
+  <div class="app-page" id="tab-compensacao" role="tabpanel" aria-labelledby="tab-compensacao">
+
+    <!-- Elementos ocultos para manter compatibilidade com referências existentes no JS -->
+    <div id="comp-variaveis-container" style="display:none;"></div>
+    <div id="comp-diasletivos-list" style="display:none;"></div>
+    <span id="comp-badge-total-dias" style="display:none;"></span>
+    <span id="comp-badge-ch-total" style="display:none;"></span>
+    <button type="button" id="comp-btn-reset-overrides" style="display:none;"></button>
+    <button type="button" id="comp-btn-gerar-relatorio" style="display:none;"></button>
+
+    <!-- PAINEL PRINCIPAL: DIÁRIO DINÂMICO OCUPANDO 100% DA LARGURA -->
+    <main class="comp-main">
+      <div class="comp-diary-card">
+        <div class="comp-diary-header">
+          <div class="comp-diary-title-nav" role="tablist" aria-label="Navegação do Diário">
+            <button type="button"
+                    id="comp-nav-tab-compensacao"
+                    class="comp-diary-nav-tab is-active"
+                    role="tab"
+                    aria-selected="true"
+                    onclick="compAlternarSubViewDiario('compensacao')"
+                    title="Diário de Compensação de Ausências (Ordem alfabética, evadidos no final)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>Diário de Compensação de Ausências</span>
+            </button>
+            <button type="button"
+                    id="comp-nav-tab-fisico"
+                    class="comp-diary-nav-tab"
+                    role="tab"
+                    aria-selected="false"
+                    onclick="compAlternarSubViewDiario('fisico')"
+                    title="Diário Físico (Ordem personalizada do professor, reordenação por arrasto)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <span>Diário Físico</span>
+            </button>
+          </div>
+
+          <!-- CONTROLES NA MESMA LINHA DO TÍTULO DO DIÁRIO (LINHA 1) -->
+          <div class="comp-diary-header-controls">
+            <!-- 1. Checkbox e Módulo de Minutos Editável -->
+            <div class="comp-header-control-item" style="display:flex;align-items:center;gap:5px;" title="Ativar cálculo por minutos de aula (padrão: 55min)">
+              <input type="checkbox" id="comp-sidebar-toggle-55min" style="cursor:pointer;" title="Ativar cálculo proporcional por minutos de aula">
+              <input type="number" id="comp-input-minutos-modulo" value="55" min="1" max="240" class="input-control" style="width:48px;padding:3px 4px;font-size:11.5px;font-weight:700;text-align:center;height:26px;" title="Minutos por aula/falta">
+              <span style="font-size:11.5px;font-weight:700;color:var(--text-primary);">min</span>
+            </div>
+
+            <!-- 2. Campo de Adição de Alunos -->
+            <div class="comp-header-add-aluno" style="display:flex;align-items:center;gap:6px;">
+              <input type="text" id="comp-aluno-input" class="input-control" placeholder="Inserir aluno(s)..." style="width: 200px; font-size: 11.5px; padding: 5px 8px;" title="Digite um ou mais alunos (separados por vírgula ou JSON de faltas)">
+              <button type="button" id="comp-btn-add-alunos" class="btn btn-secondary btn-sm" style="padding: 5px 10px; font-weight: 700;" title="Adicionar aluno(s) à turma">+ Aluno</button>
+            </div>
+
+            <!-- 3. Botão da Coordenação: SOMENTE O ÍCONE DO CADEADO -->
+            <button type="button" id="comp-btn-lock-coord" class="btn btn-secondary btn-sm" style="padding: 5px 9px; font-size: 14px; line-height: 1;" title="Área Restrita da Coordenação (Protegida por Senha)">
+              🔒
+            </button>
+
+            <!-- 4. Botão de Conteúdo Programático das Aulas -->
+            <button type="button" id="comp-btn-abrir-conteudo-programatico" class="btn btn-secondary btn-sm" style="padding: 5px 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;" title="Configurar plano de conteúdos programáticos das aulas">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              Conteúdo Programático
+            </button>
+
+            <!-- 5. Botão de Imprimir Pendentes (reposicionado na Linha 1) -->
+            <button type="button" id="comp-btn-imprimir-pendentes-header" class="btn btn-warning btn-sm" onclick="compImprimirPendentes()" style="padding: 5px 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;" title="Imprimir todos os discentes com pendência de compensação">
+              ⚠️ Imprimir Pendentes
+            </button>
+
+          </div><!-- /comp-diary-header-controls -->
+        </div>
+
+        <!-- Corpo do diário (tabela gerada dinamicamente) -->
+        <div id="comp-diary-body">
+          <!-- Renderizado pelo compensacao.js -->
+        </div>
+      </div>
+    </main>
+
+  </div><!-- /tab-compensacao (app-page) -->
+
+  <!-- ================================================================
+       PÁGINA 3 — CALENDÁRIO ESCOLAR ANUAL (Motor Universal SENAI)
+       ================================================================ -->
+  <div class="app-page" id="tab-calendario" role="tabpanel" aria-labelledby="tab-calendario">
+    <!-- Renderizado dinamicamente por js/calendario.js -->
+  </div><!-- /tab-calendario (app-page) -->
+
+  </div><!-- /app-pages -->
 
   <!-- MODAL DE PERSONALIZAÇÃO INDIVIDUAL DO DIA (LONG-PRESS OU BOTÃO DO CARD) -->
   <div id="day-options-modal" class="day-modal-backdrop" style="display: none;">
@@ -396,7 +526,563 @@
     </div>
   </div>
 
+
+
+  <!-- MODAL DE PERSONALIZAÇÃO DE FALTA POR DIA (LONG-PRESS OU CLIQUE DIREITO) -->
+  <div id="comp-lesson-modal" class="day-modal-backdrop" style="display: none;">
+    <div class="day-modal-card" style="max-width: 420px;" role="dialog" aria-modal="true" aria-labelledby="lesson-modal-title">
+      <div class="day-modal-header">
+        <div class="day-modal-title-group">
+          <div class="day-modal-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div>
+            <h3 id="lesson-modal-title" class="day-modal-title">Personalizar Falta da Aula</h3>
+            <span id="lesson-modal-subtitle" class="day-modal-subtitle">DD/MM/AAAA • Aluno</span>
+          </div>
+        </div>
+        <button type="button" id="comp-lesson-modal-close" class="day-modal-close" title="Fechar">&times;</button>
+      </div>
+      <div class="day-modal-body" style="padding: 16px 20px;">
+        <div class="modal-field-group" style="margin-bottom: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-size: 11px; font-weight: 700;">Registrar Quantidade de Faltas (1 a 8):</label>
+            <span id="comp-lesson-ch-max" style="font-size: 11px; font-weight: 700; color: var(--accent-active);">Carga: 4h</span>
+          </div>
+          <div id="comp-modal-grid-1a8" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px;">
+            <!-- Preenchido dinamicamente com botões de 0 a 8 faltas e carga correspondente -->
+          </div>
+        </div>
+
+        <div class="modal-field-group" style="margin-bottom: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label for="comp-lesson-horas-input">Ou informe Horas-Falta decimais:</label>
+            <span id="comp-modal-base-hint" style="font-size: 10px; color: var(--text-secondary);">Base: 1h/aula</span>
+          </div>
+          <input type="number" id="comp-lesson-horas-input" class="input-control" min="0" max="24" step="0.1" placeholder="0">
+        </div>
+
+        <div class="modal-field-group">
+          <label for="comp-lesson-obs-input">Observação da Falta (opcional):</label>
+          <input type="text" id="comp-lesson-obs-input" class="input-control" placeholder="Ex: Atestado médico, saída antecipada...">
+        </div>
+      </div>
+      <div class="day-modal-footer">
+        <div style="display: flex; gap: 8px; margin-left: auto;">
+          <button type="button" id="comp-lesson-modal-cancel" class="btn btn-secondary btn-sm">Cancelar</button>
+          <button type="button" id="comp-lesson-modal-save" class="btn btn-success btn-sm">Salvar Registro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE ANOTAÇÃO / OCORRÊNCIA DA FALTA NO CALENDÁRIO (BOTÃO DIREITO / LONG PRESS) -->
+  <div id="comp-note-modal" class="day-modal-backdrop" style="display: none;">
+    <div class="day-modal-card" style="max-width: 440px;" role="dialog" aria-modal="true" aria-labelledby="note-modal-title">
+      <div class="day-modal-header">
+        <div class="day-modal-title-group">
+          <div class="day-modal-icon" style="background: rgba(38, 139, 210, 0.12); color: var(--accent-active);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <div>
+            <h3 id="note-modal-title" class="day-modal-title">Anotação da Falta / Ocorrência</h3>
+            <span id="note-modal-subtitle" class="day-modal-subtitle">DD/MM/AAAA • Discente</span>
+          </div>
+        </div>
+        <button type="button" id="comp-note-modal-close" class="day-modal-close" title="Fechar">&times;</button>
+      </div>
+      <div class="day-modal-body" style="padding: 16px 20px;">
+        <div class="modal-field-group">
+          <label for="comp-note-input" style="font-size: 11px; font-weight: 700; margin-bottom: 6px; display: block;">Motivo da Falta / Observação:</label>
+          <textarea id="comp-note-input" class="input-control" rows="4" style="resize: vertical; font-size: 12px; line-height: 1.45;" placeholder="Informe a justificativa ou nota (ex: Atestado médico, consulta, saída antecipada, trabalho)..."></textarea>
+        </div>
+      </div>
+      <div class="day-modal-footer">
+        <button type="button" id="comp-note-modal-remove" class="comp-btn-banner-action btn-banner-danger" style="font-size: 11px;">Remover Nota</button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="comp-note-modal-cancel" class="comp-btn-banner-action" style="font-size: 11px;">Cancelar</button>
+          <button type="button" id="comp-note-modal-save" class="comp-btn-banner-action btn-banner-primary" style="font-size: 11px; font-weight: 800;">Salvar Nota</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIRMAÇÃO DE EVASÃO COM DATA -->
+  <div id="comp-modal-evasao" class="day-modal-backdrop" style="display: none;">
+    <div class="day-modal-card" style="max-width: 440px;" role="dialog" aria-modal="true" aria-labelledby="evasao-modal-title">
+      <div class="day-modal-header">
+        <div class="day-modal-title-group">
+          <div class="day-modal-icon" style="background: rgba(88, 110, 117, 0.18); color: var(--text-primary);">
+            <span style="font-weight: 900; font-size: 15px;">e</span>
+          </div>
+          <div>
+            <h3 id="evasao-modal-title" class="day-modal-title">Registrar Evasão do Discente</h3>
+            <span id="evasao-modal-subtitle" class="day-modal-subtitle">Discente</span>
+          </div>
+        </div>
+        <button type="button" id="comp-modal-evasao-close" class="day-modal-close" title="Fechar">&times;</button>
+      </div>
+      <div class="day-modal-body" style="padding: 16px 20px;">
+        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 14px;">
+          Ao marcar o discente como evadido, ele será movido para o final da chamada e suas presenças a partir da data de evasão serão exibidas em tom acinzentado no calendário.
+        </p>
+        <div class="modal-field-group">
+          <label for="comp-modal-evasao-data" style="font-size: 11.5px; font-weight: 700; display: block; margin-bottom: 6px;">
+            Data da Evasão:
+          </label>
+          <input type="date" id="comp-modal-evasao-data" class="input-control" style="width: 100%; font-size: 12px; padding: 7px 10px;">
+          <span style="font-size: 10.5px; color: var(--text-secondary); margin-top: 4px; display: block;">
+            Presenças a partir desta data ficarão acinzentadas na visão calendário.
+          </span>
+        </div>
+      </div>
+      <div class="day-modal-footer" style="padding: 10px 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="comp-modal-evasao-cancel" class="btn btn-secondary btn-sm">Cancelar</button>
+        <button type="button" id="comp-modal-evasao-confirm" class="btn btn-sm" style="background: #586e75; color: #fff; font-weight: 700;">Confirmar Evasão</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL/POPOVER DE PERSONALIZAÇÃO PRÉ-IMPRESSÃO: TABELA DE REPOSIÇÃO -->
+  <div id="comp-modal-reposicao-edit" class="day-modal-backdrop" style="display: none;">
+    <div class="day-modal-card comp-modal-reposicao-card" style="max-width: 980px; max-height: 90vh; display: flex; flex-direction: column;" role="dialog" aria-modal="true" aria-labelledby="reposicao-modal-title">
+      <div class="day-modal-header">
+        <div class="day-modal-title-group">
+          <div class="day-modal-icon" style="background: rgba(14, 165, 233, 0.15); color: #0284c7;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <div>
+            <h3 id="reposicao-modal-title" class="day-modal-title">Configurar Reposição & Impressão Oficial</h3>
+            <span id="reposicao-modal-subtitle" class="day-modal-subtitle">Discente • Por padrão os campos saem vazios para impressão</span>
+          </div>
+        </div>
+        <button type="button" id="comp-modal-reposicao-close" class="day-modal-close" title="Fechar">&times;</button>
+      </div>
+
+      <!-- NAVEGAÇÃO POR ABAS INTERNAS DO MODAL -->
+      <div class="comp-modal-tabs-header">
+        <button type="button" class="comp-modal-tab-btn is-active" id="comp-modal-tab-btn-reposicao" onclick="compAlternarAbaModalReposicao('reposicao')">
+          📋 Quadro de Reposição
+        </button>
+        <button type="button" class="comp-modal-tab-btn" id="comp-modal-tab-btn-coordenacao" onclick="compAlternarAbaModalReposicao('coordenacao')" style="display: none;">
+          🔒 Parecer da Coordenação
+        </button>
+      </div>
+
+      <div class="day-modal-body" style="padding: 14px 18px; overflow-y: auto; flex: 1;">
+        <!-- ABA 1: QUADRO DEMONSTRATIVO DA REPOSIÇÃO -->
+        <div id="comp-modal-tab-content-reposicao" class="comp-modal-tab-content">
+          <p style="font-size: 11.5px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+            Por padrão, todos os campos do <strong>Quadro Demonstrativo da Reposição</strong> saem vazios na impressão oficial. Utilize a grade abaixo caso deseje preencher os campos antes de imprimir:
+          </p>
+
+          <div style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 12px;">
+            <table class="comp-chamada-table" style="width: 100%; font-size: 11px;">
+              <thead>
+                <tr style="background: var(--bg-surface);">
+                  <th style="width: 30px; text-align: center;">#</th>
+                  <th style="width: 110px; text-align: center;">Data Prevista</th>
+                  <th style="width: 65px; text-align: center;">CH</th>
+                  <th style="width: 110px; text-align: center;">Data Falta</th>
+                  <th style="width: 65px; text-align: center;">CH</th>
+                  <th style="width: 110px; text-align: center;">Data Realizada</th>
+                  <th style="width: 65px; text-align: center;">CH</th>
+                  <th style="text-align: left;">Conteúdo Programático Reposto</th>
+                  <th style="width: 36px; text-align: center;">✕</th>
+                </tr>
+              </thead>
+              <tbody id="comp-modal-reposicao-tbody">
+                <!-- Preenchido dinamicamente com as linhas de reposição -->
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <button type="button" id="comp-modal-reposicao-btn-add-row" class="btn btn-secondary btn-sm" style="font-size: 11px;">
+                + Adicionar Linha
+              </button>
+              <button type="button" id="comp-modal-reposicao-btn-carregar-faltas" class="btn btn-secondary btn-sm" style="font-size: 11px;" title="Carregar datas e horas das faltas registradas no diário">
+                Carregar Faltas Registradas
+              </button>
+              <button type="button" id="comp-modal-reposicao-btn-limpar" class="btn btn-secondary btn-sm comp-btn-solarized-danger" style="font-size: 11px;" title="Limpar todos os campos (deixar 100% vazio)">
+                Limpar Campos
+              </button>
+              <button type="button" id="comp-modal-reposicao-btn-conteudo" class="btn btn-secondary btn-sm" style="font-size: 11px;" title="Configurar conteúdo programático dos dias letivos">
+                Conteúdo Programático
+              </button>
+            </div>
+            <div style="display: flex; gap: 14px; font-size: 11.5px; font-weight: 700; flex-wrap: wrap; color: var(--text-primary);">
+              <span>Previsto: <span id="comp-modal-reposicao-total-previsto" style="color: var(--text-primary);">0h00</span></span>
+              <span>Faltas: <span id="comp-modal-reposicao-total-faltas" style="color: var(--text-primary);">0h00</span></span>
+              <span>Realizado: <span id="comp-modal-reposicao-total-realizado" style="color: var(--text-primary);">0h00</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA 2: PAINEL EXCLUSIVO DA COORDENAÇÃO (EXIBIDO APENAS SE O CADEADO ESTIVER DESBLOQUEADO) -->
+        <div id="comp-modal-tab-content-coordenacao" class="comp-modal-tab-content" hidden>
+          <div id="comp-modal-reposicao-coord-section" class="comp-modal-coord-panel" style="display: block;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <strong style="font-size: 13px; color: var(--text-primary);">Parecer da Coordenação para: <span id="comp-modal-coord-aluno-nome" style="color: var(--accent-active); font-weight: 800;"></span></strong>
+              </div>
+              <button type="button" id="comp-modal-coord-btn-limpar" class="btn btn-secondary btn-sm comp-btn-solarized-danger" style="font-size: 10.5px; padding: 3px 10px;" title="Limpar parecer deste discente">Limpar Parecer deste Aluno</button>
+            </div>
+
+            <!-- Linha de Deferimento Tri-State -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
+              <strong style="font-size: 11.5px;">Solicitação Deferida?</strong>
+              <button type="button" id="comp-modal-coord-btn-tristate" class="comp-coord-tristate-button state-none">
+                <span id="comp-modal-coord-tristate-icon" class="comp-coord-tristate-box"></span>
+                <span id="comp-modal-coord-tristate-text" style="font-size: 11.5px; font-weight: 700;">Não Definido (Ambos Desmarcados)</span>
+              </button>
+              <span id="comp-modal-coord-tristate-hint" style="font-size: 11px; color: var(--text-secondary);">Na impressão: Sim [ ] &bull; Não [ ]</span>
+            </div>
+
+            <!-- Observação e Contador -->
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                <label for="comp-modal-coord-obs-textarea" style="font-size: 11.5px; font-weight: 700;">
+                  Observação da Coordenação (6 linhas da folha oficial):
+                </label>
+                <span id="comp-modal-coord-char-counter" style="font-size: 10.5px; font-weight: 700; color: var(--text-secondary);">
+                  0 / 805 caracteres (~105 na L1, ~140 nas L2 a L6)
+                </span>
+              </div>
+              <textarea id="comp-modal-coord-obs-textarea" class="input-control" rows="5" style="width: 100%; font-size: 12px; padding: 8px 10px; border-radius: 6px; resize: vertical;" placeholder="Digite o parecer ou observação específica para este aluno..."></textarea>
+              
+              <div id="comp-modal-coord-obs-alerta-overflow" style="display: none; margin-top: 8px; font-size: 11px; padding: 6px 10px; border-radius: 5px; background: rgba(220, 50, 47, 0.12); color: #dc322f; border: 1px solid rgba(220, 50, 47, 0.35);">
+                ⚠️ <strong>Texto excede a capacidade das 6 linhas da folha oficial.</strong> O excedente será truncado e descartado na impressão final.
+              </div>
+
+              <!-- Pré-visualização ao vivo das linhas do parecer -->
+              <div style="margin-top: 12px; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: 6px; padding: 10px 12px;">
+                <span style="font-size: 10.5px; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 6px;">
+                  Pré-visualização nas 6 linhas da folha:
+                </span>
+                <div style="font-family: Arial, sans-serif; font-size: 11px; color: var(--text-primary); line-height: 1.5;">
+                  <div style="border-bottom: 1px solid var(--border-color); min-height: 18px;"><strong>Observação:</strong> <span id="comp-modal-preview-line-1" style="color: var(--text-secondary); font-style: italic;">(Linha 1 vazia)</span></div>
+                  <div style="border-bottom: 1px solid var(--border-color); min-height: 18px; margin-top: 4px;"><span id="comp-modal-preview-line-2" style="color: var(--text-secondary); font-style: italic;">(Linha 2 vazia)</span></div>
+                  <div style="border-bottom: 1px solid var(--border-color); min-height: 18px; margin-top: 4px;"><span id="comp-modal-preview-line-3" style="color: var(--text-secondary); font-style: italic;">(Linha 3 vazia)</span></div>
+                  <div style="border-bottom: 1px solid var(--border-color); min-height: 18px; margin-top: 4px;"><span id="comp-modal-preview-line-4" style="color: var(--text-secondary); font-style: italic;">(Linha 4 vazia)</span></div>
+                  <div style="border-bottom: 1px solid var(--border-color); min-height: 18px; margin-top: 4px;"><span id="comp-modal-preview-line-5" style="color: var(--text-secondary); font-style: italic;">(Linha 5 vazia)</span></div>
+                  <div style="border-bottom: 1px solid var(--border-color); min-height: 18px; margin-top: 4px;"><span id="comp-modal-preview-line-6" style="color: var(--text-secondary); font-style: italic;">(Linha 6 vazia)</span></div>
+                  <div id="comp-modal-preview-overflow-container" style="display: none; min-height: 18px; margin-top: 6px; color: #dc322f;"><span id="comp-modal-preview-overflow-text"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-modal-footer" style="padding: 10px 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <button type="button" id="comp-modal-reposicao-btn-cancel" class="btn btn-secondary btn-sm">Fechar</button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="comp-modal-reposicao-btn-print-blank" class="btn btn-secondary btn-sm" title="Imprimir ficha oficial com tabela 100% vazia">
+            Imprimir em Branco
+          </button>
+          <button type="button" id="comp-modal-reposicao-btn-print" class="btn btn-primary btn-sm" style="font-weight: 700;" title="Imprimir ficha oficial com os dados configurados">
+            Ficha Oficial
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DROPDOWN FLUTUANTE DE SELEÇÃO DE DATAS DE FALTA DO DISCENTE -->
+  <div id="comp-dropdown-faltas-dias" class="comp-faltas-dropdown-card" style="display: none;">
+    <div class="comp-faltas-dropdown-header">
+      <span style="font-size: 11px; font-weight: 700;">Selecione a Falta Registrada:</span>
+      <button type="button" id="comp-dropdown-faltas-close" class="day-modal-close" style="font-size: 15px; line-height: 1;">&times;</button>
+    </div>
+    <div id="comp-dropdown-faltas-list" class="comp-faltas-dropdown-body">
+      <!-- Preenchido dinamicamente com as faltas do aluno -->
+    </div>
+  </div>
+
+  <!-- MODAL / POPOVER DE PREENCHIMENTO DE CONTEÚDO PROGRAMÁTICO DAS AULAS -->
+  <div id="comp-modal-conteudo-programatico" class="day-modal-backdrop" style="display: none;">
+    <div class="day-modal-card comp-modal-conteudo-card" style="max-width: 880px; max-height: 90vh; display: flex; flex-direction: column;" role="dialog" aria-modal="true" aria-labelledby="conteudo-modal-title">
+      <div class="day-modal-header">
+        <div class="day-modal-title-group">
+          <div class="day-modal-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          </div>
+          <div>
+            <h3 id="conteudo-modal-title" class="day-modal-title">Plano de Conteúdo Programático das Aulas</h3>
+            <span id="conteudo-modal-subtitle" class="day-modal-subtitle">Defina o conteúdo ministrado em cada aula para preenchimento automático na compensação</span>
+          </div>
+        </div>
+        <button type="button" id="comp-modal-conteudo-close" class="day-modal-close" title="Fechar">&times;</button>
+      </div>
+
+      <!-- Barra de Abas / Modos de Visualização das Drawers -->
+      <div class="comp-conteudo-tabs-bar">
+        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+          <button type="button" id="comp-conteudo-tab-btn-ambas" class="comp-conteudo-tab-btn is-active" onclick="compAlternarAbaConteudo('ambas')" title="Exibir ambas as seções com gavetas retráteis">
+            Exibir Ambas
+          </button>
+          <button type="button" id="comp-conteudo-tab-btn-aulas" class="comp-conteudo-tab-btn" onclick="compAlternarAbaConteudo('aulas')">
+            Aulas do Cronograma (<span id="comp-conteudo-badge-total-aulas">0</span>)
+          </button>
+          <button type="button" id="comp-conteudo-tab-btn-lote" class="comp-conteudo-tab-btn" onclick="compAlternarAbaConteudo('lote')">
+            Preenchimento em Lote
+          </button>
+        </div>
+        <span id="comp-conteudo-dica-modo" style="font-size: 11px; color: var(--text-secondary);">Disponível para todo o curso</span>
+      </div>
+
+      <div class="day-modal-body" style="padding: 12px 18px; flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;">
+        <!-- DRAWER 1: PREENCHIMENTO RÁPIDO EM LOTE (RETRAÍVEL) -->
+        <div id="comp-drawer-lote" class="comp-drawer-panel is-collapsed">
+          <div class="comp-drawer-header" onclick="compToggleDrawerLote()">
+            <div style="display: flex; align-items: center;">
+              <svg id="comp-drawer-lote-icon" class="comp-drawer-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <strong style="font-size: 12px; color: var(--text-primary);">Preenchimento Rápido em Lote</strong>
+              <span style="font-size: 11px; color: var(--text-secondary); margin-left: 8px;">(cole o plano separado por ":::")</span>
+            </div>
+            <button type="button" id="comp-drawer-lote-toggle-btn" class="comp-drawer-toggle-btn" onclick="compToggleDrawerLote(event)">
+              Descer / Expandir
+            </button>
+          </div>
+          <div id="comp-drawer-lote-body" class="comp-drawer-body">
+            <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.35;">
+              Cada bloco entre ":::" será atribuído em ordem ao próximo dia letivo do cronograma. Se sobrarem dias, o excesso será agrupado no último dia com aviso de overflow.
+            </p>
+            <textarea id="comp-conteudo-lote-input" class="input-control" rows="3" style="width: 100%; font-size: 11.5px; padding: 8px; border-radius: 6px; resize: vertical;" placeholder="Ex: Apresentação do curso e normas ::: Metrologia e leitura de paquímetro ::: Prática de ajustagem mecânica ::: Usinagem em torno CNC..."></textarea>
+          </div>
+        </div>
+
+        <!-- DRAWER 2: GRADE DE AULAS DO CRONOGRAMA COM SCROLL DEDICADO -->
+        <div id="comp-drawer-aulas" class="comp-drawer-panel" style="flex: 1; min-height: 0; display: flex; flex-direction: column; margin-bottom: 0;">
+          <div class="comp-drawer-header" onclick="compToggleDrawerAulas()">
+            <div style="display: flex; align-items: center;">
+              <svg id="comp-drawer-aulas-icon" class="comp-drawer-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <strong style="font-size: 12px; color: var(--text-primary);">Aulas do Cronograma (<span id="comp-conteudo-total-aulas-count">0</span> dias letivos)</strong>
+            </div>
+            <button type="button" id="comp-drawer-aulas-toggle-btn" class="comp-drawer-toggle-btn" onclick="compToggleDrawerAulas(event)">
+              Subir / Recolher
+            </button>
+          </div>
+          <div id="comp-drawer-aulas-body" class="comp-drawer-body" style="flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 10px 14px;">
+            <div class="comp-conteudo-table-scroll">
+              <table class="comp-chamada-table" style="width: 100%; font-size: 11px;">
+                <thead>
+                  <tr style="background: var(--bg-surface);">
+                    <th style="width: 220px; text-align: left; padding: 7px 10px;">Aula / Data</th>
+                    <th style="text-align: left; padding: 7px 10px;">Conteúdo Programático da Aula</th>
+                  </tr>
+                </thead>
+                <tbody id="comp-modal-conteudo-tbody">
+                  <!-- Preenchido dinamicamente com os dias letivos -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra Inferior do Modal com Botões de Ação Movidos para Baixo -->
+      <div class="day-modal-footer" style="padding: 10px 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button type="button" id="comp-btn-aplicar-conteudo-lote" class="btn btn-primary btn-sm" style="font-weight: 700;">
+            Distribuir Conteúdo nas Aulas
+          </button>
+          <button type="button" id="comp-btn-limpar-conteudos-todos" class="btn btn-secondary btn-sm comp-btn-solarized-danger" style="color: #ef4444;" title="Limpar todos os conteúdos cadastrados">
+            Limpar Todos
+          </button>
+        </div>
+
+        <div id="comp-conteudo-lote-alerta" style="display: none; font-size: 11px; padding: 4px 10px; border-radius: 6px; flex: 1; max-width: 360px; text-align: center;"></div>
+
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button type="button" id="comp-modal-conteudo-btn-fechar" class="btn btn-secondary btn-sm" style="font-weight: 700;">Concluído / Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE SENHA DA COORDENAÇÃO -->
+  <div id="comp-modal-coordenacao-auth" class="day-modal-backdrop" style="display: none;">
+    <div class="day-modal-card" style="max-width: 380px;" role="dialog" aria-modal="true" aria-labelledby="coord-auth-title">
+      <div class="day-modal-header">
+        <div class="day-modal-title-group">
+          <div class="day-modal-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+          <div>
+            <h3 id="coord-auth-title" class="day-modal-title">Acesso Restrito</h3>
+            <span class="day-modal-subtitle">Coordenação Técnico/Pedagógica</span>
+          </div>
+        </div>
+        <button type="button" id="comp-modal-coord-auth-close" class="day-modal-close" title="Fechar">&times;</button>
+      </div>
+      <div class="day-modal-body" style="padding: 18px 20px;">
+        <label for="comp-coord-password-input" style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px;">
+          Digite a senha de acesso da Coordenação:
+        </label>
+        <input type="password" id="comp-coord-password-input" class="input-control" style="width: 100%; font-size: 13px; padding: 7px 10px;" placeholder="Senha padrão: senai">
+        <div id="comp-coord-auth-error" style="display: none; color: #ef4444; font-size: 11px; margin-top: 6px; font-weight: 600;">Senha incorreta. Tente novamente.</div>
+      </div>
+      <div class="day-modal-footer" style="padding: 10px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="comp-modal-coord-auth-cancel" class="btn btn-secondary btn-sm">Cancelar</button>
+        <button type="button" id="comp-modal-coord-auth-submit" class="btn btn-primary btn-sm" style="font-weight: 700;">Desbloquear</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- MODAL / POPUP DE CONFIGURAÇÃO DA COORDENAÇÃO -->
+  <div id="comp-modal-coordenacao-settings" class="day-modal-backdrop" style="display: none;">
+    <div class="day-modal-card comp-modal-coordenacao-card" style="max-width: 620px; max-height: 90vh; display: flex; flex-direction: column;" role="dialog" aria-modal="true" aria-labelledby="coord-settings-title">
+      <div class="day-modal-header">
+        <div class="day-modal-title-group">
+          <div class="day-modal-icon" style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+          </div>
+          <div>
+            <h3 id="coord-settings-title" class="day-modal-title">Parecer da Coordenação Técnico/Pedagógica</h3>
+            <span class="day-modal-subtitle">Defina o parecer de deferimento e a observação oficial da ficha</span>
+          </div>
+        </div>
+        <button type="button" id="comp-modal-coord-settings-close" class="day-modal-close" title="Fechar">&times;</button>
+      </div>
+
+      <div class="day-modal-body" style="padding: 16px 20px; overflow-y: auto; flex: 1;">
+        <!-- Seção 1: Parecer Deferido / Indeferido (Tri-state) -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px;">
+            Solicitação deferida? (Controle Tri-State)
+          </label>
+          <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.35;">
+            Clique no botão abaixo para alternar: <strong>1 clique = [D] Deferido (X em Sim)</strong> &bull; <strong>2 cliques = [I] Indeferido (X em Não)</strong> &bull; <strong>3 cliques = Desmarcado (em branco)</strong>.
+          </p>
+
+          <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <button type="button" id="comp-coord-btn-tristate" class="comp-coord-tristate-button state-none">
+              <span id="comp-coord-tristate-icon" class="comp-coord-tristate-box"></span>
+              <span id="comp-coord-tristate-text" style="font-size: 12px; font-weight: 700;">Não Definido (Ambos Desmarcados)</span>
+            </button>
+            <span id="comp-coord-tristate-preview-hint" style="font-size: 11.5px; color: var(--text-secondary);">
+              No PDF: Sim [ ] &bull; Não [ ]
+            </span>
+          </div>
+        </div>
+
+        <!-- Seção 2: Observação (3 Linhas Oficiais com Alerta de Caracteres) -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; flex-wrap: wrap; gap: 6px;">
+            <label for="comp-coord-obs-textarea" style="font-size: 12px; font-weight: 700;">
+              Observação da Coordenação (3 linhas da folha oficial):
+            </label>
+            <span id="comp-coord-char-counter" style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">
+              0 / 270 caracteres (~90 por linha)
+            </span>
+          </div>
+
+          <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.35;">
+            O texto será distribuído pelas 3 linhas contínuas impressas. Se exceder a capacidade (~270 caracteres), o excesso será impresso logo abaixo como uma 4ª linha sem novo traço.
+          </p>
+
+          <textarea id="comp-coord-obs-textarea" class="input-control" rows="4" style="width: 100%; font-size: 12px; padding: 8px; border-radius: 6px; resize: vertical;" placeholder="Digite o parecer, orientações ou diretrizes pedagógicas..."></textarea>
+
+          <div id="comp-coord-obs-alerta-overflow" style="display: none; margin-top: 8px; font-size: 11px; padding: 6px 10px; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">
+            ⚠️ Texto longo detectado: excedeu as 3 linhas padrão. O excedente será escrito abaixo da 3ª linha na folha, sem criar uma nova linha de traço.
+          </div>
+
+          <!-- Pré-visualização da distribuição nas linhas -->
+          <div style="margin-top: 12px; background: var(--bg-secondary); border: 1px dashed var(--border-color); border-radius: 6px; padding: 10px 12px;">
+            <span style="font-size: 10.5px; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 6px;">
+              Pré-visualização da quebra na folha:
+            </span>
+            <div id="comp-coord-lines-preview" style="font-family: Arial, sans-serif; font-size: 11px; color: var(--text-primary); line-height: 1.45;">
+              <div style="border-bottom: 1px solid var(--border-color); min-height: 18px; padding-bottom: 2px;"><strong>Observação:</strong> <span id="comp-preview-line-1" style="color: var(--text-secondary); font-style: italic;">(Linha 1 vazia)</span></div>
+              <div style="border-bottom: 1px solid var(--border-color); min-height: 18px; margin-top: 4px; padding-bottom: 2px; margin-left: 70px;"><span id="comp-preview-line-2" style="color: var(--text-secondary); font-style: italic;">(Linha 2 vazia)</span></div>
+              <div style="border-bottom: 1px solid var(--border-color); min-height: 18px; margin-top: 4px; padding-bottom: 2px; margin-left: 70px;"><span id="comp-preview-line-3" style="color: var(--text-secondary); font-style: italic;">(Linha 3 vazia)</span></div>
+              <div id="comp-preview-line-4-container" style="display: none; min-height: 18px; margin-top: 4px; margin-left: 70px; color: #f59e0b;"><span id="comp-preview-line-4"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-modal-footer" style="padding: 10px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <button type="button" id="comp-coord-btn-limpar" class="btn btn-secondary btn-sm" style="color: #ef4444;">Limpar Parecer</button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="comp-modal-coord-settings-cancel" class="btn btn-secondary btn-sm">Fechar</button>
+          <button type="button" id="comp-modal-coord-settings-save" class="btn btn-primary btn-sm" style="font-weight: 700;">Salvar Alterações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TEMPORÁRIO PARA INSPEÇÃO DE TODAS AS VARIÁVEIS ATUAIS DA 2ª ABA -->
+  <div id="comp-modal-inspect-vars" class="day-modal-backdrop" style="display: none;">
+    <div class="day-modal-card" style="max-width: 900px; max-height: 88vh; display: flex; flex-direction: column;" role="dialog" aria-modal="true" aria-labelledby="inspect-vars-modal-title">
+      <div class="day-modal-header">
+        <div class="day-modal-title-group">
+          <div class="day-modal-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div>
+            <h3 id="inspect-vars-modal-title" class="day-modal-title">Variáveis em Uso (Segunda Aba • Compensação)</h3>
+            <span id="inspect-vars-modal-subtitle" class="day-modal-subtitle">Lista vertical completa de todas as variáveis, parâmetros de sistema, formulário e chamada</span>
+          </div>
+        </div>
+        <button type="button" id="comp-modal-inspect-close" class="day-modal-close" title="Fechar">&times;</button>
+      </div>
+
+      <div class="day-modal-body" style="padding: 14px 18px; overflow-y: auto; flex: 1;">
+        <!-- Faixa de contexto rápido -->
+        <div id="comp-inspect-context-banner" class="comp-inspect-banner">
+          <!-- Preenchido dinamicamente com discente, turma, carga horária e assiduidade -->
+        </div>
+
+        <!-- Barra de Ações Rápidas -->
+        <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between; margin: 12px 0; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 220px; position: relative;">
+            <input type="text" id="comp-inspect-search" class="input-control" placeholder="Buscar qualquer variável por chave, nome ou valor..." style="width: 100%; font-size: 12px; padding: 6px 10px;">
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button type="button" id="comp-inspect-btn-open-tab" class="btn btn-secondary btn-sm" style="background: rgba(2, 132, 199, 0.12); border-color: #0284c7; color: #0284c7; font-weight: 700;" title="Abrir estes dados formatados em uma 2ª aba do navegador">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Abrir na 2ª Aba (Navegador)
+            </button>
+            <button type="button" id="comp-inspect-btn-copy-json" class="btn btn-secondary btn-sm" title="Copiar todas as variáveis como objeto JSON">
+              📋 Copiar JSON
+            </button>
+            <button type="button" id="comp-inspect-btn-copy-md" class="btn btn-secondary btn-sm" title="Copiar tabela formatada em Markdown">
+              📋 Copiar MD
+            </button>
+          </div>
+        </div>
+
+        <!-- LISTA VERTICAL COMPLETA DE VARIÁVEIS -->
+        <div id="comp-inspect-vertical-list" class="comp-inspect-vertical-list">
+          <!-- Preenchido dinamicamente em lista vertical -->
+        </div>
+      </div>
+
+      <div class="day-modal-footer" style="padding: 10px 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 10.5px; color: var(--text-secondary);">
+          ⚡ Botão Temporário de Inspeção • Atualizado em tempo real conforme dados da turma e chamadas.
+        </span>
+        <button type="button" id="comp-modal-inspect-footer-close" class="btn btn-secondary btn-sm">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTAINER PARA TOASTS DE NOTIFICAÇÃO (MOCK-IMPRESSÃO) -->
+  <div id="comp-toast-container" class="comp-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Motor Universal de Feriados SENAI -->
+  <script src="js/holidayService.js"></script>
   <!-- Scripts da Aplicação -->
   <script src="js/app.js"></script>
+  <!-- Script da Aba de Compensação -->
+  <script src="js/compensacao.js"></script>
+  <!-- Script da Aba de Calendário Anual -->
+  <script src="js/calendario.js"></script>
 </body>
 </html>

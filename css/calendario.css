@@ -1,0 +1,547 @@
+/* Created at: 2026-10-09 13:25 */
+/**
+ * calendario.css
+ * Estilos da Aba 3: Calendário Escolar Anual (Motor Universal de Feriados SENAI)
+ * Grid 12 Meses com slots de cor temáticos, tooltips flutuantes e alta responsividade.
+ */
+
+:root,
+[data-theme="solarized"],
+:root[data-theme="solarized"],
+body[data-theme="solarized"] {
+  /* No tema Solarized, cores sólidas e de alto contraste idênticas ao tema Claro */
+  --cal-cor-1: #dc2626; /* Feriados - Vermelho SENAI */
+  --cal-cor-1-bg: #fee2e2;
+  --cal-cor-1-text: #991b1b;
+
+  --cal-cor-2: #ea580c; /* Emenda - Laranja/Âmbar */
+  --cal-cor-2-bg: #ffedd5;
+  --cal-cor-2-text: #9a3412;
+
+  --cal-cor-3: #0284c7; /* Ponto Facultativo - Azul/Ciano */
+  --cal-cor-3-bg: #e0f2fe;
+  --cal-cor-3-text: #075985;
+
+  --cal-cor-4: #7c3aed; /* Formatura - Violeta/Roxo */
+  --cal-cor-4-bg: #f3e8ff;
+  --cal-cor-4-text: #6b21a8;
+
+  --cal-cor-5: #059669; /* Férias FIC - Verde */
+  --cal-cor-5-bg: #d1fae5;
+  --cal-cor-5-text: #065f46;
+
+  --cal-cor-6: #475569; /* A Decidir - Cinza Grafite */
+  --cal-cor-6-bg: #f1f5f9;
+  --cal-cor-6-text: #334155;
+
+  --cal-card-bg: #eee8d5;
+  --cal-border: #d8d0bc;
+  --cal-day-hover: rgba(38, 139, 210, 0.22);
+  --cal-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="claro"] {
+  --cal-cor-1: #dc2626;
+  --cal-cor-1-bg: #fee2e2;
+  --cal-cor-1-text: #991b1b;
+
+  --cal-cor-2: #ea580c;
+  --cal-cor-2-bg: #ffedd5;
+  --cal-cor-2-text: #9a3412;
+
+  --cal-cor-3: #0284c7;
+  --cal-cor-3-bg: #e0f2fe;
+  --cal-cor-3-text: #075985;
+
+  --cal-cor-4: #7c3aed;
+  --cal-cor-4-bg: #f3e8ff;
+  --cal-cor-4-text: #6b21a8;
+
+  --cal-cor-5: #059669;
+  --cal-cor-5-bg: #d1fae5;
+  --cal-cor-5-text: #065f46;
+
+  --cal-cor-6: #475569;
+  --cal-cor-6-bg: #f1f5f9;
+  --cal-cor-6-text: #334155;
+
+  --cal-card-bg: #ffffff;
+  --cal-border: #e2e8f0;
+  --cal-day-hover: #f1f5f9;
+  --cal-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="conforto visual"] {
+  --cal-cor-1: #f87171;
+  --cal-cor-1-bg: rgba(239, 68, 68, 0.28);
+  --cal-cor-1-text: #fca5a5;
+
+  --cal-cor-2: #fb923c;
+  --cal-cor-2-bg: rgba(249, 115, 22, 0.28);
+  --cal-cor-2-text: #fdba74;
+
+  --cal-cor-3: #38bdf8;
+  --cal-cor-3-bg: rgba(56, 189, 248, 0.28);
+  --cal-cor-3-text: #7dd3fc;
+
+  --cal-cor-4: #a78bfa;
+  --cal-cor-4-bg: rgba(167, 139, 250, 0.28);
+  --cal-cor-4-text: #c4b5fd;
+
+  --cal-cor-5: #34d399;
+  --cal-cor-5-bg: rgba(52, 211, 153, 0.28);
+  --cal-cor-5-text: #6ee7b7;
+
+  --cal-cor-6: #94a3b8;
+  --cal-cor-6-bg: rgba(148, 163, 184, 0.28);
+  --cal-cor-6-text: #cbd5e1;
+
+  --cal-card-bg: #1a1d24;
+  --cal-border: #2b303c;
+  --cal-day-hover: rgba(255, 255, 255, 0.08);
+  --cal-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+/* ==========================================================================
+   CONTAINER E LAYOUT DA ABA CALENDÁRIO
+   ========================================================================== */
+#tab-calendario {
+  padding: 16px 22px;
+  overflow-y: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: var(--bg-primary);
+  box-sizing: border-box;
+}
+
+.cal-main-container {
+  max-width: 1560px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ==========================================================================
+   BARRA SUPERIOR DE CONTROLES DO CALENDÁRIO
+   ========================================================================== */
+.cal-topbar-card {
+  background: var(--cal-card-bg);
+  border: 1px solid var(--cal-border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--cal-shadow);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cal-header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cal-header-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(38, 139, 210, 0.15);
+  color: var(--accent-active);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-header-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.cal-header-subtitle {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.cal-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Seletor de Ano */
+.cal-year-picker {
+  display: flex;
+  align-items: center;
+  background: var(--bg-primary);
+  border: 1px solid var(--cal-border);
+  border-radius: 8px;
+  padding: 2px 4px;
+  gap: 4px;
+}
+
+.cal-year-nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.cal-year-nav-btn:hover {
+  background: var(--cal-day-hover);
+  color: var(--accent-active);
+}
+
+.cal-year-input {
+  width: 68px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+  padding: 2px 0;
+}
+
+/* ==========================================================================
+   BARRA DE LEGENDAS (SLOTS DE CORES 1 A 6 + PERSONALIZADO DO USUÁRIO)
+   ========================================================================== */
+.cal-legend-card {
+  background: var(--cal-card-bg);
+  border: 1px solid var(--cal-border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: var(--cal-shadow);
+}
+
+.cal-legend-items {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.cal-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.cal-legend-badge {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.badge-cor-1 { background-color: var(--cal-cor-1, #dc2626) !important; }
+.badge-cor-2 { background-color: var(--cal-cor-2, #ea580c) !important; }
+.badge-cor-3 { background-color: var(--cal-cor-3, #0284c7) !important; }
+.badge-cor-4 { background-color: var(--cal-cor-4, #7c3aed) !important; }
+.badge-cor-5 { background-color: var(--cal-cor-5, #059669) !important; }
+.badge-cor-6 { background-color: var(--cal-cor-6, #475569) !important; }
+
+/* Badge para eventos adicionados pelo usuário (Roxo forte) */
+.badge-cor-user {
+  background-color: #7c3aed !important;
+  border: 1.5px solid #4c1d95 !important;
+}
+
+.badge-cor-aula {
+  background-color: transparent;
+  border: 2px solid var(--accent-active);
+  position: relative;
+}
+.badge-cor-aula::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: var(--accent-active);
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   GRID ANUAL COM OS 12 MESES (3x4 ou 4x3)
+   ========================================================================== */
+.cal-months-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 1280px) {
+  .cal-months-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 860px) {
+  .cal-months-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 580px) {
+  .cal-months-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* CARD INDIVIDUAL DO MÊS */
+.cal-month-card {
+  background: var(--cal-card-bg);
+  border: 1px solid var(--cal-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--cal-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cal-month-card:hover {
+  border-color: rgba(38, 139, 210, 0.4);
+}
+
+.cal-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--cal-border);
+}
+
+.cal-month-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.cal-month-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: rgba(38, 139, 210, 0.12);
+  color: var(--accent-active);
+}
+
+/* GRADE DE DIAS */
+.cal-days-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.cal-week-header th {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 4px 0;
+  text-transform: uppercase;
+}
+
+.cal-day-cell {
+  height: 28px;
+  text-align: center;
+  vertical-align: middle;
+  padding: 1px;
+}
+
+.cal-day-box {
+  width: 26px;
+  height: 26px;
+  margin: 0 auto;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: transparent; /* Dias comuns são vazados */
+  border: 1px solid transparent;
+  cursor: default;
+  position: relative;
+  transition: all 0.12s ease;
+}
+
+/* Dias normais no hover */
+.cal-day-box:hover {
+  background: var(--cal-day-hover);
+}
+
+/* Domingo (dia não útil) sutilmente atenuado */
+.cal-day-sun {
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+/* DIAS COM FERIADOS / EVENTOS (PREENCHIMENTO TEMÁTICO) */
+.cal-event-day {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.cal-event-day.cal-cor-1 {
+  background-color: var(--cal-cor-1-bg);
+  color: var(--cal-cor-1-text);
+  border: 1px solid var(--cal-cor-1);
+}
+
+.cal-event-day.cal-cor-2 {
+  background-color: var(--cal-cor-2-bg);
+  color: var(--cal-cor-2-text);
+  border: 1px solid var(--cal-cor-2);
+}
+
+.cal-event-day.cal-cor-3 {
+  background-color: var(--cal-cor-3-bg);
+  color: var(--cal-cor-3-text);
+  border: 1px solid var(--cal-cor-3);
+}
+
+.cal-event-day.cal-cor-4 {
+  background-color: var(--cal-cor-4-bg);
+  color: var(--cal-cor-4-text);
+  border: 1px solid var(--cal-cor-4);
+}
+
+.cal-event-day.cal-cor-5 {
+  background-color: var(--cal-cor-5-bg);
+  color: var(--cal-cor-5-text);
+  border: 1px solid var(--cal-cor-5);
+}
+
+.cal-event-day.cal-cor-6 {
+  background-color: var(--cal-cor-6-bg);
+  color: var(--cal-cor-6-text);
+  border: 1px solid var(--cal-cor-6);
+}
+
+/* DIAS ADICIONADOS PELO USUÁRIO (ROXO FORTE, NEGRITO E BORDA ESPESSA) */
+.cal-event-day.cal-user-added,
+.cal-event-day.cal-cor-user {
+  background-color: #7c3aed !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  border: 2.5px solid #4c1d95 !important;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.45);
+}
+
+/* INDICADOR DE DIA DE AULA DA TURMA ATIVA */
+.cal-class-day::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--accent-active);
+}
+
+.cal-class-day.cal-class-only {
+  border: 1.5px solid var(--accent-active);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   TOOLTIP FLUTUANTE CUSTOMIZADO
+   ========================================================================== */
+.cal-tooltip {
+  position: fixed;
+  z-index: 99999;
+  background: var(--cal-card-bg);
+  border: 1px solid var(--cal-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  pointer-events: none;
+  font-size: 11.5px;
+  max-width: 280px;
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+  transition: opacity 0.12s ease;
+}
+
+.cal-tooltip-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.cal-tooltip-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.cal-tooltip-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.cal-tooltip-lesson {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--cal-border);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-active);
+}
+
+/* Botão de Impressão A4 do Calendário */
+.cal-btn-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cal-btn-print:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}

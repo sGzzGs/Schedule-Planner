@@ -1,0 +1,412 @@
+// Created at: 2026-10-07 20:02
+/**
+ * print-ficha.css
+ * Folha de Estilos Exclusiva para Impressão da Ficha de Compensação de Ausências (SENAI)
+ * Formato A4 retrato, 2 páginas exatas (Frente e Verso)
+ */
+
+@page {
+  size: A4 portrait;
+  margin: 0 !important; /* Suprime cabeçalhos e rodapés padrão do navegador (URL, data, numeração) */
+}
+
+.ficha-document,
+.ficha-page {
+  background: #ffffff;
+  width: 210mm;
+  min-width: 210mm;
+  max-width: 210mm;
+  height: 297mm;
+  min-height: 297mm;
+  max-height: 297mm;
+  box-sizing: border-box;
+  padding: 8mm 10mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.ficha-page-break {
+  page-break-after: always;
+  break-after: page;
+}
+
+@media screen {
+  body.ficha-preview-mode {
+    background: #525659;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  body.ficha-preview-mode .ficha-page {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    margin-bottom: 20px;
+  }
+}
+
+@media print {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .ficha-page {
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    box-sizing: border-box !important;
+    padding: 8mm 10mm !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+
+  .ficha-page-break {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+}
+
+/* ==========================================================================
+   TIPOGRAFIA E ESTRUTURA GERAL DA FICHA
+   ========================================================================== */
+.ficha-container {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000000;
+  font-size: 10pt;
+  line-height: 1.25;
+}
+
+.ficha-header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.ficha-header-logo {
+  display: block;
+  margin: 0 auto 6px auto;
+  max-width: 140px;
+  height: auto;
+}
+
+.ficha-header h2 {
+  font-size: 11.5pt;
+  font-weight: bold;
+  margin: 0 0 2px 0;
+  text-transform: none;
+}
+
+.ficha-header h1 {
+  font-size: 12pt;
+  font-weight: bold;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ficha-section-title {
+  font-size: 9.5pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 8px 0 5px 0;
+  border-bottom: 1.5px solid #000000;
+  padding-bottom: 2px;
+}
+
+/* ==========================================================================
+   CAMPOS DE IDENTIFICAÇÃO (PÁGINA 1)
+   ========================================================================== */
+.ficha-fields-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+  font-size: 10pt;
+}
+
+.ficha-field-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.ficha-field-label {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.ficha-field-value {
+  flex: 1;
+  border-bottom: 1px solid #000000;
+  padding-left: 4px;
+}
+
+.ficha-field-split {
+  display: flex;
+  gap: 16px;
+}
+
+.ficha-field-split > div {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.ficha-textarea-line {
+  border-bottom: 1px solid #000000;
+  height: 18px;
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   TERMO DE CIÊNCIA (PÁGINA 1)
+   ========================================================================== */
+.ficha-termo-box {
+  margin: 10px 0;
+  font-size: 8.5pt;
+  line-height: 1.35;
+  text-align: justify;
+}
+
+.ficha-termo-box h3 {
+  font-size: 9.5pt;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+  text-align: center;
+}
+
+.ficha-termo-box p {
+  margin: 3px 0;
+}
+
+.ficha-termo-box ol {
+  margin: 3px 0 3px 18px;
+  padding: 0;
+}
+
+.ficha-termo-box li {
+  margin-bottom: 2px;
+}
+
+/* ==========================================================================
+   TABELAS DEMONSTRATIVAS
+   ========================================================================== */
+.ficha-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 8.5pt;
+  text-align: center;
+}
+
+.ficha-table th, 
+.ficha-table td {
+  border: 1px solid #000000;
+  padding: 3px 4px;
+  vertical-align: middle;
+}
+
+.ficha-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+/* Quadro 1: Faltas Acumuladas */
+.ficha-table-faltas th {
+  font-size: 8.5pt;
+  padding: 6px 4px;
+}
+
+.ficha-table-faltas td {
+  font-size: 9.5pt;
+  font-weight: bold;
+  height: 48px;
+  padding: 6px 5px;
+}
+
+.ficha-checkbox-list {
+  text-align: left;
+  font-size: 8pt;
+  line-height: 1.3;
+  padding: 4px;
+}
+
+.ficha-checkbox-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-bottom: 3px;
+}
+
+.ficha-check-box {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 1.2px solid #000000;
+  flex-shrink: 0;
+  text-align: center;
+  line-height: 10px;
+  font-size: 9px;
+  font-weight: bold;
+}
+
+/* ==========================================================================
+   ASSINATURAS E DATAS
+   ========================================================================== */
+.ficha-signatures-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 20px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.ficha-sign-col {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.ficha-sign-single-col {
+  max-width: 320px;
+  margin-top: 18px;
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+.ficha-sign-line {
+  border-top: 1px solid #000000;
+  margin-bottom: 4px;
+}
+
+.ficha-sign-title {
+  font-size: 8.5pt;
+  font-weight: 500;
+}
+
+.ficha-date-row {
+  text-align: left;
+  font-size: 8.5pt;
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   PÁGINA 2 (VERSO): QUADRO DE REPOSIÇÃO (17 LINHAS FIXAS - ANCORADA AO FINAL)
+   ========================================================================== */
+.ficha-table-reposicao {
+  font-size: 8pt;
+  margin-top: auto; /* Ancorada no final: se houver folga vertical, ela inicia mais abaixo, mantendo a base fixa */
+  margin-bottom: 0;
+  table-layout: fixed; /* Tamanho fixo das colunas e linhas, não adaptável ao texto */
+  width: 100%;
+}
+
+.ficha-table-reposicao th {
+  padding: 2px 2px;
+  background-color: #e5e7eb;
+  vertical-align: middle;
+}
+
+.ficha-table-reposicao tbody tr {
+  height: 22px;
+  max-height: 22px;
+}
+
+.ficha-table-reposicao tbody td {
+  height: 22px;
+  max-height: 22px;
+  padding: 1px 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.ficha-table-reposicao tbody td.col-content {
+  text-align: left;
+  padding-left: 5px;
+  padding-right: 3px;
+  word-break: break-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 20px;
+  vertical-align: middle;
+}
+
+.ficha-table-reposicao tfoot tr {
+  height: 48px;
+  max-height: 48px;
+}
+
+.ficha-table-reposicao tfoot td {
+  height: 48px;
+  max-height: 48px;
+  padding: 2px 2px;
+  vertical-align: middle;
+  text-align: center;
+  white-space: normal;
+  overflow: hidden;
+  line-height: 1.15;
+  color: #000000;
+  box-sizing: border-box;
+}
+
+.ficha-table-reposicao tfoot td.col-obs {
+  text-align: left;
+  vertical-align: top;
+  padding: 3px 5px;
+  font-size: 8pt;
+  line-height: normal;
+}
+
+.ficha-table-totals {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: -1px;
+  font-size: 8pt;
+  text-align: center;
+}
+
+.ficha-table-totals td {
+  border: 1px solid #000000;
+  padding: 3px 4px;
+  font-weight: bold;
+}
+
+.ficha-obs-box {
+  margin-top: 8px;
+  font-size: 8.5pt;
+}
+
+.ficha-obs-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.ficha-obs-line {
+  border-bottom: 1px solid #000000;
+  height: 14px;
+}

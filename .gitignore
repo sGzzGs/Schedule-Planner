@@ -1,0 +1,11 @@
+# Desenvolvimento, Planejamento e IA
+ARTIFACTS_SCO/
+scratch/
+*.md
+
+# Amostras locais e documentos de teste
+_Assets/
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db

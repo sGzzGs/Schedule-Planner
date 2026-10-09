@@ -1,0 +1,350 @@
+{
+  "versao": "2.0",
+  "descricao": "Base universal dinâmica de feriados, emendas e eventos para cronograma escolar SENAI",
+  "legendas": [
+    {
+      "id": "feriado",
+      "nome": "Feriados",
+      "cor_tema": "cor 1",
+      "bloqueia_aula": true
+    },
+    {
+      "id": "emenda",
+      "nome": "Emenda de Feriado",
+      "cor_tema": "cor 2",
+      "bloqueia_aula": true
+    },
+    {
+      "id": "ponto_facultativo",
+      "nome": "Ponto Facultativo",
+      "cor_tema": "cor 3",
+      "bloqueia_aula": true
+    },
+    {
+      "id": "formatura",
+      "nome": "Formatura CAI/CT",
+      "cor_tema": "cor 4",
+      "bloqueia_aula": true
+    },
+    {
+      "id": "ferias_fic",
+      "nome": "Férias FIC",
+      "cor_tema": "cor 5",
+      "bloqueia_aula": true
+    },
+    {
+      "id": "a_decidir",
+      "nome": "A Decidir",
+      "cor_tema": "cor 6",
+      "bloqueia_aula": true
+    }
+  ],
+  "itens": [
+    {
+      "dia": 1,
+      "mes": 1,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": false,
+      "descricao": "Confraternização Universal"
+    },
+    {
+      "dia": 25,
+      "mes": 1,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": true,
+      "descricao": "Aniversário de São Paulo"
+    },
+    {
+      "dia": null,
+      "mes": 3,
+      "movel": true,
+      "offset_pascoa_dias": -50,
+      "categoria_id": "ponto_facultativo",
+      "emenda_original": false,
+      "descricao": "Sábado de Carnaval"
+    },
+    {
+      "dia": null,
+      "mes": 3,
+      "movel": true,
+      "offset_pascoa_dias": -48,
+      "categoria_id": "ponto_facultativo",
+      "emenda_original": false,
+      "descricao": "Segunda de Carnaval"
+    },
+    {
+      "dia": null,
+      "mes": 3,
+      "movel": true,
+      "offset_pascoa_dias": -47,
+      "categoria_id": "ponto_facultativo",
+      "emenda_original": false,
+      "descricao": "Terça de Carnaval"
+    },
+    {
+      "dia": null,
+      "mes": 4,
+      "movel": true,
+      "offset_pascoa_dias": -2,
+      "categoria_id": "feriado",
+      "emenda_original": true,
+      "descricao": "Sexta-feira Santa/Paixão"
+    },
+    {
+      "dia": null,
+      "mes": 4,
+      "movel": true,
+      "offset_pascoa_dias": -1,
+      "categoria_id": "emenda",
+      "emenda_original": false,
+      "descricao": "Sábado de Aleluia (Emenda Sexta-feira Santa)"
+    },
+    {
+      "dia": 21,
+      "mes": 4,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": true,
+      "descricao": "Tiradentes"
+    },
+    {
+      "dia": 1,
+      "mes": 5,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": false,
+      "descricao": "Dia do Trabalho"
+    },
+    {
+      "dia": null,
+      "mes": 6,
+      "movel": true,
+      "offset_pascoa_dias": 60,
+      "categoria_id": "feriado",
+      "emenda_original": true,
+      "descricao": "Corpus Christi"
+    },
+    {
+      "dia": null,
+      "mes": 6,
+      "movel": true,
+      "offset_pascoa_dias": 61,
+      "categoria_id": "emenda",
+      "emenda_original": false,
+      "descricao": "Emenda de feriado - Corpus Christi (Sexta)"
+    },
+    {
+      "dia": null,
+      "mes": 6,
+      "movel": true,
+      "offset_pascoa_dias": 62,
+      "categoria_id": "emenda",
+      "emenda_original": false,
+      "descricao": "Emenda de feriado - Corpus Christi (Sábado)"
+    },
+    {
+      "dia": 24,
+      "mes": 6,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "formatura",
+      "emenda_original": false,
+      "descricao": "Formatura CAI"
+    },
+    {
+      "dia": 9,
+      "mes": 7,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": true,
+      "descricao": "Revolução Constitucionalista de 1932"
+    },
+    {
+      "dia": 7,
+      "mes": 9,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": true,
+      "descricao": "Independência"
+    },
+    {
+      "dia": 12,
+      "mes": 10,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": false,
+      "descricao": "Padroeira do Brasil"
+    },
+    {
+      "dia": 13,
+      "mes": 10,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "ponto_facultativo",
+      "emenda_original": false,
+      "descricao": "Dia dos Professores - Antecipado"
+    },
+    {
+      "dia": 2,
+      "mes": 11,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": false,
+      "descricao": "Dia de Finados."
+    },
+    {
+      "dia": 15,
+      "mes": 11,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": false,
+      "descricao": "Proclamação da República"
+    },
+    {
+      "dia": 20,
+      "mes": 11,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": false,
+      "descricao": "Consciência Negra"
+    },
+    {
+      "dia": 21,
+      "mes": 12,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "formatura",
+      "emenda_original": false,
+      "descricao": "Formatura CAI"
+    },
+    {
+      "dia": 22,
+      "mes": 12,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "ponto_facultativo",
+      "emenda_original": false,
+      "descricao": "Confraternização Escolar"
+    },
+    {
+      "dia": 25,
+      "mes": 12,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "feriado",
+      "emenda_original": false,
+      "descricao": "Natal"
+    },
+    {
+      "dia": 31,
+      "mes": 12,
+      "movel": false,
+      "offset_pascoa_dias": null,
+      "categoria_id": "ponto_facultativo",
+      "emenda_original": false,
+      "descricao": "Véspera de Ano Novo"
+    }
+  ],
+  "excecoes_anuais": {
+    "2026": {
+      "remover": [],
+      "adicionar": [
+        {
+          "data": "2026-07-13",
+          "data_fim": "2026-07-18",
+          "descricao": "Férias de Julho / Férias FIC",
+          "categoria_id": "ferias_fic"
+        }
+      ]
+    },
+    "2027": {
+      "remover": [
+        "2027-03-27",
+        "2027-05-29"
+      ],
+      "adicionar": [
+        {
+          "data": "2027-04-19",
+          "descricao": "Folga Institucional / Emenda Tiradentes",
+          "categoria_id": "emenda"
+        },
+        {
+          "data": "2027-04-20",
+          "descricao": "Folga Institucional / Emenda Tiradentes",
+          "categoria_id": "emenda"
+        },
+        {
+          "data": "2027-06-05",
+          "descricao": "Folga Institucional",
+          "categoria_id": "emenda"
+        },
+        {
+          "data": "2027-07-10",
+          "descricao": "Folga Institucional",
+          "categoria_id": "emenda"
+        }
+      ]
+    },
+    "2028": {
+      "remover": [
+        "2028-04-15",
+        "2028-06-17",
+        "2028-09-09"
+      ],
+      "adicionar": [
+        {
+          "data": "2028-04-03",
+          "descricao": "Folga Institucional",
+          "categoria_id": "emenda"
+        },
+        {
+          "data": "2028-04-04",
+          "descricao": "Folga Institucional",
+          "categoria_id": "emenda"
+        },
+        {
+          "data": "2028-04-20",
+          "descricao": "Folga Institucional / Emenda Tiradentes",
+          "categoria_id": "emenda"
+        },
+        {
+          "data": "2028-06-05",
+          "descricao": "Folga Institucional",
+          "categoria_id": "emenda"
+        },
+        {
+          "data": "2028-06-06",
+          "descricao": "Folga Institucional",
+          "categoria_id": "emenda"
+        },
+        {
+          "data": "2028-06-24",
+          "descricao": "Formatura CAI",
+          "categoria_id": "formatura"
+        },
+        {
+          "data": "2028-07-10",
+          "descricao": "Folga Institucional",
+          "categoria_id": "emenda"
+        },
+        {
+          "data": "2028-07-11",
+          "descricao": "Folga Institucional",
+          "categoria_id": "emenda"
+        }
+      ]
+    }
+  }
+}

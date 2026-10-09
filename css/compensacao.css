@@ -1,0 +1,2885 @@
+/**
+ * compensacao.css
+ * Estilos da Aba: Gerador de Compensação de Ausências
+ * Badge: t01
+ * Design baseado no mesmo sistema visual do style.css principal
+ */
+
+/* ==========================================================================
+   SISTEMA DE ABAS (TAB SWITCHER)
+   ========================================================================== */
+.app-tab-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 0 18px;
+  border-bottom: 2px solid var(--border-color);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+  height: 38px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.app-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  bottom: -2px;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.app-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+.app-tab.active {
+  color: var(--accent-active);
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+  border-bottom-color: var(--bg-primary);
+  font-weight: 800;
+}
+
+.app-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--bg-primary);
+}
+
+.app-tab svg {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   CONTÊINER DE PÁGINAS / ANIMAÇÃO DE TRANSIÇÃO
+   ========================================================================== */
+.app-pages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.app-page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: row;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.app-page.page-active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+  position: relative;
+}
+
+.app-page.page-exit-left {
+  opacity: 0;
+  transform: translateX(-24px);
+}
+
+/* ==========================================================================
+   LAYOUT DA ABA DE COMPENSAÇÃO (MESMA ESTRUTURA QUE A ABA MÃE)
+   ========================================================================== */
+.comp-sidebar {
+  width: var(--sidebar-width, 270px);
+  min-width: 220px;
+  max-width: 340px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100%;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.comp-sidebar .sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comp-main {
+  flex: 1;
+  width: 100%;
+  background: var(--bg-primary);
+  background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+  background-size: 20px 20px;
+  overflow-y: auto;
+  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  padding: 14px 18px 40px 18px;
+  transition: background-color 0.3s ease;
+}
+
+/* ==========================================================================
+   SEÇÃO: ALUNOS (ENTRADA)
+   ========================================================================== */
+.comp-aluno-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comp-aluno-textarea {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: var(--text-primary);
+  font-size: 11.5px;
+  font-family: 'Inter', monospace, sans-serif;
+  width: 100%;
+  resize: vertical;
+  min-height: 68px;
+  transition: border-color 0.2s;
+}
+
+.comp-aluno-textarea:focus {
+  outline: none;
+  border-color: var(--accent-active);
+}
+
+.comp-input-mode-hint {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.comp-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  background: rgba(38, 139, 210, 0.12);
+  border: 1px solid var(--accent-active);
+  color: var(--accent-active);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.comp-add-btn:hover {
+  background: var(--accent-active);
+  color: #fff;
+}
+
+/* ==========================================================================
+   DIÁRIO DINÂMICO — GRADE DE CHAMADA
+   ========================================================================== */
+.comp-diary-card {
+  width: 100%;
+  max-width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.comp-diary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.comp-diary-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comp-diary-title-group h3 {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   NAVEGAÇÃO DE SUB-ABAS: DIÁRIO DE COMPENSAÇÃO vs DIÁRIO FÍSICO
+   ========================================================================== */
+.comp-diary-title-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-primary, rgba(0, 0, 0, 0.06));
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.comp-diary-nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.comp-diary-nav-tab:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.comp-diary-nav-tab.is-active {
+  color: var(--accent-active, #38bdf8);
+  background: var(--bg-surface);
+  border-color: var(--border-color);
+  font-weight: 800;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.comp-diary-nav-tab svg {
+  flex-shrink: 0;
+}
+
+.comp-diary-subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   FASE 2: TOOLBAR DO DIÁRIO, SELETOR DE ALUNOS & ALTERNÂNCIA DE VISUALIZAÇÃO
+   ========================================================================== */
+.comp-diary-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.comp-students-chips-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 2px;
+}
+
+.comp-student-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.comp-student-chip:hover {
+  border-color: var(--accent-active);
+  color: var(--text-primary);
+}
+
+.comp-student-chip.is-active {
+  background: rgba(38, 139, 210, 0.15);
+  border-color: var(--accent-active);
+  color: var(--accent-active);
+  font-weight: 800;
+}
+
+.comp-chip-remove-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1;
+  padding: 1px 3px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  margin-left: 2px;
+}
+
+.comp-chip-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.comp-chip-badge {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+}
+
+.comp-chip-badge.has-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.comp-chip-badge.has-warning {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+
+.comp-chip-badge.has-success {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+}
+
+.comp-view-toggle {
+  display: inline-flex;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.comp-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.comp-view-btn:hover {
+  color: var(--text-primary);
+}
+
+.comp-view-btn.is-active {
+  background: var(--accent-active);
+  color: #fff;
+}
+
+/* ==========================================================================
+   FASE 2: GRADE DE CARDS DO CALENDÁRIO DE CHAMADAS (FLIP INTERATIVO)
+   ========================================================================== */
+.comp-calendar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comp-student-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(38, 139, 210, 0.05);
+  border: 1px solid rgba(38, 139, 210, 0.2);
+  border-left: 3px solid var(--accent-active);
+  border-radius: 6px;
+}
+
+.comp-student-banner-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.comp-student-banner-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.comp-student-banner-metrics {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.comp-metric-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  font-weight: 700;
+}
+
+.comp-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  gap: 10px;
+}
+
+/* CARD DE AULA */
+.comp-lesson-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  padding: 9px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 110px;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.16s ease,
+              border-color 0.16s ease,
+              background-color 0.16s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.comp-lesson-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.12);
+  border-color: var(--accent-active);
+}
+
+.comp-lesson-card:active {
+  transform: scale(0.98);
+}
+
+/* Estado PRESENTE */
+.comp-lesson-card.is-present {
+  border-color: var(--border-color);
+}
+
+.comp-lesson-card.is-present:hover {
+  border-color: var(--accent-active);
+}
+
+/* Estado FALTA INTEGRAL */
+.comp-lesson-card.is-absent {
+  background: rgba(220, 50, 47, 0.05);
+  border-color: rgba(220, 50, 47, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.comp-lesson-card.is-absent:hover {
+  border-color: #dc322f;
+}
+
+/* Estado FALTA PARCIAL */
+.comp-lesson-card.is-partial {
+  background: rgba(181, 137, 0, 0.05);
+  border-color: rgba(181, 137, 0, 0.4);
+}
+
+.comp-lesson-card.is-partial:hover {
+  border-color: var(--accent-btn);
+}
+
+/* Cabeçalho do Card */
+.comp-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.comp-card-aula-num {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+}
+
+.comp-card-tipo {
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+/* Data no Card */
+.comp-card-date-box {
+  margin-bottom: 6px;
+}
+
+.comp-card-date {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.comp-card-weekday {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Carga Horária e Status no Card */
+.comp-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.comp-card-ch-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+}
+
+.comp-card-ch-label {
+  color: var(--text-secondary);
+  font-size: 9.5px;
+}
+
+.comp-card-ch-val {
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.comp-status-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 9.5px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: all 0.15s ease;
+}
+
+.comp-status-pill.status-present {
+  background: rgba(38, 139, 210, 0.08);
+  color: var(--accent-active);
+  border: 1px solid rgba(38, 139, 210, 0.25);
+}
+
+.comp-status-pill.status-absent {
+  background: rgba(220, 50, 47, 0.12);
+  color: #dc322f;
+  border: 1px solid rgba(220, 50, 47, 0.35);
+}
+
+.comp-status-pill.status-partial {
+  background: rgba(181, 137, 0, 0.12);
+  color: var(--accent-btn);
+  border: 1px solid rgba(181, 137, 0, 0.35);
+}
+
+.comp-status-pill.status-evadido {
+  background: rgba(148, 163, 184, 0.16);
+  color: #64748b;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+/* Card de aula após a data de evasão (cinza) */
+.comp-lesson-card.is-evadido-aula {
+  background: rgba(148, 163, 184, 0.06) !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+  opacity: 0.55;
+  filter: grayscale(0.85);
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.comp-lesson-card.is-evadido-aula:hover {
+  opacity: 0.8;
+  filter: grayscale(0.5);
+  border-color: #94a3b8 !important;
+}
+
+.comp-lesson-card.is-evadido-aula .comp-card-date,
+.comp-lesson-card.is-evadido-aula .comp-card-ch-val {
+  color: #64748b !important;
+}
+
+/* Rodapé do Card com instrução */
+.comp-card-footer {
+  font-size: 8px;
+  color: var(--text-secondary);
+  text-align: center;
+  opacity: 0.75;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 4px;
+  margin-top: 2px;
+}
+
+/* Tabela de chamada */
+.comp-chamada-table-wrap {
+  overflow-x: auto;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.comp-chamada-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 11.5px;
+  font-family: inherit;
+  min-width: 480px;
+}
+
+.comp-chamada-table th {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Variável de largura da coluna do discente */
+:root {
+  --comp-col-aluno-width: 200px;
+}
+
+/* Parte 1: Nome do Discente (Fixado à esquerda com borda divisória destacada e redimensionável) */
+.comp-chamada-table th.comp-part-aluno,
+.comp-chamada-table td.comp-part-aluno {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: var(--bg-surface);
+  border-right: 2px solid var(--border-color);
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.06);
+  width: var(--comp-col-aluno-width, 200px);
+  min-width: var(--comp-col-aluno-width, 200px);
+  max-width: var(--comp-col-aluno-width, 200px);
+  box-sizing: border-box;
+}
+
+.comp-chamada-table th.comp-part-aluno {
+  z-index: 6;
+  position: sticky;
+  position: -webkit-sticky;
+}
+
+.comp-chamada-table th.col-aluno {
+  width: var(--comp-col-aluno-width, 200px);
+  min-width: var(--comp-col-aluno-width, 200px);
+  max-width: var(--comp-col-aluno-width, 200px);
+  box-sizing: border-box;
+  padding: 7px 10px;
+  position: relative;
+}
+
+/* Conteúdo do cabeçalho da coluna do discente */
+.comp-th-aluno-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Manípulo divisório arrastável da coluna */
+.comp-col-resizer {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comp-col-resizer::after {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 60%;
+  background: var(--border-color);
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+
+.comp-col-resizer:hover::after,
+.comp-col-resizer.is-resizing::after {
+  background: var(--accent-active, #38bdf8);
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
+  height: 90%;
+  width: 3px;
+}
+
+body.is-col-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body.is-col-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+.comp-chamada-table tbody tr:hover td.comp-part-aluno {
+  background: var(--bg-surface);
+  filter: brightness(0.96);
+}
+
+:root[data-theme="conforto visual"] .comp-chamada-table tbody tr:hover td.comp-part-aluno,
+body[data-theme="conforto visual"] .comp-chamada-table tbody tr:hover td.comp-part-aluno {
+  filter: brightness(1.18);
+}
+
+/* Parte 3: Metadados e Ações com borda divisória destacada à esquerda */
+.comp-chamada-table th.comp-part-meta-divider,
+.comp-chamada-table td.comp-part-meta-divider {
+  border-left: 2px solid var(--border-color);
+}
+
+.comp-chamada-table th.col-date {
+  text-align: center;
+  width: 48px;
+  min-width: 44px;
+  max-width: 52px;
+  padding: 5px 2px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.comp-chamada-table th.col-date:hover {
+  background: rgba(38, 139, 210, 0.08);
+  color: var(--accent-active);
+}
+
+.comp-chamada-table th.col-date .col-date-text {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  line-height: 1.1;
+}
+
+.comp-chamada-table th.col-date .col-date-sub {
+  font-size: 8.5px;
+  opacity: 0.8;
+  line-height: 1;
+}
+
+.comp-chamada-table th.col-total {
+  text-align: center;
+  width: 70px;
+}
+
+.comp-chamada-table th.col-actions {
+  width: 36px;
+  text-align: center;
+}
+
+.comp-chamada-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+
+.comp-chamada-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.comp-chamada-table tbody tr:hover {
+  background: rgba(38, 139, 210, 0.05);
+}
+
+/* Células interativas de presença / falta na Tabela Geral (espaçamento horizontal 40% do original) */
+.comp-cell-falta {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  width: 48px;
+  min-width: 44px;
+  max-width: 52px;
+  padding: 4px 2px;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+/* Efeito sóbrio de destaque/iluminação da coluna da data */
+.comp-chamada-table th.col-date.is-col-destacada {
+  background: rgba(38, 139, 210, 0.16) !important;
+  color: var(--accent-active) !important;
+  box-shadow: inset 0 2px 0 0 var(--accent-active), inset 0 -2px 0 0 var(--accent-active);
+}
+
+.comp-chamada-table th.col-date.is-col-destacada .col-date-text {
+  font-weight: 900;
+  letter-spacing: -0.1px;
+}
+
+.comp-chamada-table td.comp-cell-falta.is-col-destacada {
+  background-color: rgba(38, 139, 210, 0.06) !important;
+  border-left: 1px solid rgba(38, 139, 210, 0.22);
+  border-right: 1px solid rgba(38, 139, 210, 0.22);
+}
+
+.comp-chamada-table tbody tr:hover td.comp-cell-falta.is-col-destacada {
+  background-color: rgba(38, 139, 210, 0.12) !important;
+}
+
+.comp-chamada-table td.comp-cell-falta.is-col-destacada .comp-cell-presence {
+  box-shadow: 0 0 0 1.5px rgba(38, 139, 210, 0.35);
+}
+
+/* Ajuste sóbrio para o tema Conforto Visual (Escuro) */
+:root[data-theme="conforto visual"] .comp-chamada-table th.col-date.is-col-destacada,
+body[data-theme="conforto visual"] .comp-chamada-table th.col-date.is-col-destacada {
+  background: rgba(96, 165, 250, 0.2) !important;
+  color: #93c5fd !important;
+  box-shadow: inset 0 2px 0 0 #60a5fa, inset 0 -2px 0 0 #60a5fa;
+}
+
+:root[data-theme="conforto visual"] .comp-chamada-table td.comp-cell-falta.is-col-destacada,
+body[data-theme="conforto visual"] .comp-chamada-table td.comp-cell-falta.is-col-destacada {
+  background-color: rgba(96, 165, 250, 0.08) !important;
+  border-left: 1px solid rgba(96, 165, 250, 0.3);
+  border-right: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+:root[data-theme="conforto visual"] .comp-chamada-table tbody tr:hover td.comp-cell-falta.is-col-destacada,
+body[data-theme="conforto visual"] .comp-chamada-table tbody tr:hover td.comp-cell-falta.is-col-destacada {
+  background-color: rgba(96, 165, 250, 0.16) !important;
+}
+
+:root[data-theme="conforto visual"] .comp-chamada-table td.comp-cell-falta.is-col-destacada .comp-cell-presence,
+body[data-theme="conforto visual"] .comp-chamada-table td.comp-cell-falta.is-col-destacada .comp-cell-presence {
+  box-shadow: 0 0 0 1.5px rgba(96, 165, 250, 0.45);
+}
+
+.comp-cell-presence {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: 5px;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  transition: all 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  line-height: 1;
+  padding: 0;
+  color: var(--text-primary);
+}
+
+.comp-cell-presence:hover {
+  transform: scale(1.08);
+  border-color: var(--accent-active);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.comp-cell-presence:active {
+  transform: scale(0.94);
+}
+
+/* Símbolo central da célula */
+.comp-presence-symbol {
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Design 1 Padrão: Ponto e Barra */
+.comp-cell-presence.design-ponto .comp-presence-symbol {
+  font-size: 16px;
+  line-height: 0.8;
+  margin-top: -2px;
+  color: #10b981;
+}
+
+.comp-cell-presence.design-barra .comp-presence-symbol {
+  font-size: 15px;
+  font-weight: 900;
+  color: #ef4444;
+}
+
+/* Estados da Célula */
+.comp-cell-presence.is-cell-presenca {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #10b981;
+}
+
+.comp-cell-presence.is-cell-presenca:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+}
+
+.comp-cell-presence.is-cell-falta {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: #ef4444;
+  color: #ef4444;
+  box-shadow: 0 1px 4px rgba(239, 68, 68, 0.15);
+}
+
+.comp-cell-presence.is-cell-falta:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #dc2626;
+}
+
+.comp-cell-presence.is-cell-parcial {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: #f59e0b;
+  color: #d97706;
+}
+
+.comp-cell-presence.is-cell-parcial:hover {
+  background: rgba(245, 158, 11, 0.22);
+}
+
+/* Sub-legenda de horas parciais */
+.comp-presence-hours-sub {
+  font-size: 8px;
+  font-weight: 800;
+  color: #b45309;
+  margin-top: 1px;
+}
+
+/* Botões da grade 1-8 faltas do modal */
+.comp-btn-falta-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  transition: all 0.14s ease;
+  line-height: 1.15;
+}
+
+.comp-btn-falta-slot:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-active);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Coluna de total de faltas */
+.comp-total-faltas {
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.comp-total-faltas.has-faltas {
+  color: #ef4444;
+}
+
+/* Botão de remover aluno (reduzido) */
+.comp-btn-remove-aluno {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  font-size: 9.5px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.comp-btn-remove-aluno:hover {
+  background: rgba(220, 50, 47, 0.15);
+  border-color: #dc322f;
+  color: #dc322f;
+  transform: scale(1.08);
+}
+
+/* Botão 'e' de Evasão (entre Impressão e X) */
+.comp-btn-evasao-aluno {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 800;
+  font-family: inherit;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.comp-btn-evasao-aluno:hover {
+  background: rgba(88, 110, 117, 0.18);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+  transform: scale(1.08);
+}
+
+.comp-btn-evasao-aluno.is-active {
+  background: #586e75 !important;
+  color: #ffffff !important;
+  border-color: #073642 !important;
+}
+
+/* Célula unificada de ações da tabela */
+.comp-actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 3px 4px !important;
+}
+
+/* Estilo para discente evadido: linha acinzentada, opacidade reduzida e contraste sóbrio */
+.comp-row-evadido {
+  opacity: 0.55;
+  filter: grayscale(0.9);
+  background: rgba(148, 163, 184, 0.08) !important;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.comp-row-evadido:hover {
+  opacity: 0.75;
+  filter: grayscale(0.6);
+}
+
+.comp-row-evadido td {
+  color: var(--text-secondary) !important;
+}
+
+.comp-badge-evadido {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+/* Linha de nome do aluno */
+.comp-aluno-nome-cell {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-primary);
+  width: var(--comp-col-aluno-width, 200px);
+  min-width: var(--comp-col-aluno-width, 200px);
+  max-width: var(--comp-col-aluno-width, 200px);
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 6px 8px !important;
+  white-space: nowrap;
+}
+
+.comp-aluno-cell-inner {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.comp-aluno-text-truncate {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.comp-chip-text-truncate {
+  display: inline-block;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.comp-banner-text-truncate {
+  display: inline-block;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* ==========================================================================
+   DIÁRIO FÍSICO — REORDENAÇÃO MANUAL POR DRAG & DROP
+   ========================================================================== */
+.comp-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 20px;
+  padding: 0;
+  margin-right: 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: grab;
+  transition: all 0.15s ease;
+  vertical-align: middle;
+  flex-shrink: 0;
+  user-select: none;
+  opacity: 0.65;
+}
+
+.comp-drag-handle:hover {
+  opacity: 1;
+  color: var(--accent-active, #38bdf8);
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.comp-drag-handle:active {
+  cursor: grabbing;
+}
+
+.comp-chamada-table tbody tr.is-dragging {
+  opacity: 0.45;
+  background: rgba(56, 189, 248, 0.08) !important;
+}
+
+.comp-chamada-table tbody tr.drag-over-top td {
+  border-top: 2.5px solid var(--accent-active, #38bdf8) !important;
+}
+
+.comp-chamada-table tbody tr.drag-over-bottom td {
+  border-bottom: 2.5px solid var(--accent-active, #38bdf8) !important;
+}
+
+/* Estado vazio */
+.comp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 20px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+}
+
+.comp-empty-state svg {
+  opacity: 0.4;
+}
+
+/* ==========================================================================
+   SEÇÃO: DIAS LETIVOS CARREGADOS (BADGE)
+   ========================================================================== */
+.comp-diasletivos-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(38, 139, 210, 0.15);
+  color: var(--accent-active);
+  border: 1px solid var(--accent-active);
+  letter-spacing: 0.2px;
+}
+
+.comp-diasletivos-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+  max-height: 110px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.comp-dia-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.comp-dia-tag.dia-inativo {
+  opacity: 0.45;
+  border-style: dashed;
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   SEÇÃO: VARIÁVEIS DO RELATÓRIO (CAMPOS)
+   ========================================================================== */
+.comp-variaveis-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.comp-var-item-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.2s;
+}
+
+.comp-var-item-card:hover {
+  border-color: var(--accent-active);
+}
+
+.comp-var-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.comp-var-key-tag {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--accent-active);
+  background: rgba(38, 139, 210, 0.1);
+  border: 1px solid rgba(38, 139, 210, 0.3);
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.2px;
+}
+
+.comp-var-hint-preview {
+  font-size: 9.5px;
+  color: var(--text-secondary);
+  font-style: italic;
+  max-width: 190px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.comp-var-inputs-3grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.comp-var-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.comp-var-field label {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.comp-var-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px 7px;
+  color: var(--text-primary);
+  font-size: 10.5px;
+  font-family: inherit;
+  width: 100%;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.comp-var-input:focus {
+  outline: none;
+  border-color: var(--accent-active);
+}
+
+/* ==========================================================================
+   BOTÃO GERAR RELATÓRIO
+   ========================================================================== */
+.comp-report-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  background: #10b981;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  width: 100%;
+}
+
+.comp-report-btn:hover {
+  background: #059669;
+}
+
+/* ==========================================================================
+   CABEÇALHO DE COLUNA DE DATAS (STICKY)
+   ========================================================================== */
+.comp-chamada-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* ==========================================================================
+   BADGES (t01 e t02)
+   ========================================================================== */
+.badge-t01 {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+}
+
+.badge-t02 {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.badge-t03 {
+  background: rgba(56, 189, 248, 0.15);
+  color: #0284c7;
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+/* ==========================================================================
+   INDICADORES DE OVERRIDE E COORDENAÇÃO
+   ========================================================================== */
+/* Mantém a cor de fundo original do card e suas bordas neutras; apenas o badge interno ganha destaque amarelo */
+.comp-var-item-card.is-overridden {
+  border-color: var(--border-color);
+  background: var(--bg-primary);
+}
+
+.comp-var-override-badge-yellow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #f59e0b;
+  text-transform: lowercase;
+}
+
+.comp-var-override-badge-yellow .override-x-btn {
+  background: transparent;
+  border: none;
+  color: #d97706;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  padding: 0 1px;
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.comp-var-override-badge-yellow .override-x-btn:hover {
+  color: #b91c1c;
+}
+
+.comp-var-override-badge {
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #f59e0b;
+  text-transform: uppercase;
+}
+
+.comp-var-calc-badge {
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #0284c7;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.comp-field-locked {
+  opacity: 0.6;
+  pointer-events: none;
+  background: var(--bg-surface) !important;
+  cursor: not-allowed;
+}
+
+.btn-coord-unlocked {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: #10b981 !important;
+  color: #10b981 !important;
+}
+
+/* ==========================================================================
+   SEÇÃO DE INFO CARREGADA DA ABA 1
+   ========================================================================== */
+.comp-loaded-info {
+  background: rgba(38, 139, 210, 0.06);
+  border: 1px solid rgba(38, 139, 210, 0.25);
+  border-left: 3px solid var(--accent-active);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.comp-loaded-info strong {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.comp-loaded-info .comp-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.comp-loaded-info .comp-info-val {
+  font-weight: 700;
+  color: var(--accent-active);
+  font-size: 11.5px;
+}
+
+/* ==========================================================================
+   INTEGRAÇÃO COM O LAYOUT PRINCIPAL (body flex column)
+   ========================================================================== */
+
+/* A tab-bar e o app-pages fazem parte do fluxo flex do body */
+.app-tab-bar {
+  flex-shrink: 0;
+}
+
+.app-pages {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Cada página ocupa 100% da área disponível */
+.app-page {
+  width: 100%;
+  height: 100%;
+}
+
+/* Override: com a tab-bar ativa, o app-container não deve usar 100vh mas 100% */
+.app-page .app-container {
+  height: 100%;
+}
+
+/* A aba de compensação herda o mesmo container split-screen da aba mãe */
+.app-page#tab-compensacao {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+/* Aba de cronograma: precisa de display flex para envolver o app-container */
+.app-page#tab-cronograma {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-page#tab-cronograma .app-container {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+/* Não exibir a tab-bar em impressão */
+@media print {
+  .app-tab-bar {
+    display: none !important;
+  }
+  .app-pages {
+    display: block !important;
+  }
+  #tab-compensacao {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   FASE 3+: BARRA DE DATA DE TESTE DE "HOJE" COM SETAS
+   ========================================================================== */
+.comp-test-date-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(38, 139, 210, 0.07);
+  border: 1px solid rgba(38, 139, 210, 0.25);
+  border-left: 3px solid var(--accent-active);
+  border-radius: 8px;
+}
+
+.comp-test-date-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comp-test-date-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.comp-test-date-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+
+/* Navegação por Meses & Seletor de Quantidade (n) */
+.comp-month-nav-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+.comp-month-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-secondary);
+  padding: 0 2px;
+}
+
+.comp-month-display-text {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 95px;
+  text-align: center;
+  user-select: none;
+}
+
+.comp-month-qty-select {
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  height: 25px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.comp-date-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  transition: all 0.15s ease;
+}
+
+.comp-date-nav-btn:hover {
+  background: rgba(38, 139, 210, 0.15);
+  color: var(--accent-active);
+  border-color: rgba(38, 139, 210, 0.3);
+}
+
+.comp-test-date-input {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 11.5px;
+  font-weight: 800;
+  font-family: inherit;
+  padding: 2px 4px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.comp-test-date-input:focus {
+  outline: none;
+  background: var(--bg-primary);
+  border-color: var(--accent-active);
+  border-radius: 4px;
+}
+
+.comp-print-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   ÍCONES DE FLAG DE ATENÇÃO (AMARELO '!' E VERMELHO '▲' EM CÍRCULO PREENCHIDO)
+   ========================================================================== */
+.comp-flag-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: transform 0.15s ease;
+  user-select: none;
+  animation: none !important;
+  line-height: 1;
+}
+
+.comp-flag-icon:hover {
+  transform: scale(1.18);
+}
+
+.comp-flag-warning {
+  animation: none !important;
+}
+
+.comp-flag-danger {
+  animation: none !important;
+}
+
+.comp-flag-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  color: transparent;
+  cursor: pointer;
+  border-radius: 50%;
+  vertical-align: middle;
+  opacity: 0.15;
+  transition: all 0.15s ease;
+}
+
+.comp-flag-placeholder:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.15);
+  opacity: 0.9;
+}
+
+/* Botão de Flagar Discente na Coluna de Ações */
+.comp-btn-flag-aluno {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+}
+
+.comp-btn-flag-aluno:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #f59e0b;
+  transform: scale(1.08);
+}
+
+.comp-btn-flag-aluno.is-flagged {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* ==========================================================================
+   TOAST DE NOTIFICAÇÃO (MOCK-IMPRESSÃO)
+   ========================================================================== */
+.comp-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.comp-toast {
+  pointer-events: auto;
+  min-width: 280px;
+  max-width: 380px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1.5px solid #10b981;
+  border-left: 4px solid #10b981;
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  font-size: 11.5px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: comp-toast-in 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.comp-toast.toast-warning {
+  border-color: #f59e0b;
+  border-left-color: #f59e0b;
+}
+
+.comp-toast.toast-hide {
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+}
+
+@keyframes comp-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.comp-toast-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.comp-toast-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.comp-toast-title {
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.comp-toast-body {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   BOTÃO TEMPORÁRIO E MODAL DE INSPEÇÃO DAS VARIÁVEIS ATUAIS (2ª ABA)
+   ========================================================================== */
+
+.btn-temp-inspect {
+  background: linear-gradient(135deg, #d97706, #b45309) !important;
+  color: #ffffff !important;
+  border: 1px solid #f59e0b !important;
+  font-weight: 700 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+}
+
+.btn-temp-inspect:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-temp-inspect:active {
+  transform: translateY(0);
+}
+
+.comp-inspect-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: var(--text-primary);
+  align-items: center;
+}
+
+.comp-inspect-banner-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comp-inspect-banner-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.comp-inspect-banner-val {
+  font-weight: 800;
+  color: var(--accent-active);
+}
+
+.comp-inspect-table-wrap {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+
+.comp-inspect-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.comp-inspect-table thead th {
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: left;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.comp-inspect-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s ease;
+}
+
+.comp-inspect-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.comp-inspect-table tbody tr:hover {
+  background: rgba(38, 139, 210, 0.05);
+}
+
+.comp-inspect-table td {
+  padding: 8px 12px;
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+
+.comp-inspect-key {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--accent-active);
+  font-weight: 700;
+  background: rgba(38, 139, 210, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.comp-inspect-val {
+  font-weight: 700;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.comp-inspect-badge-auto {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.comp-inspect-badge-override {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+/* ==========================================================================
+   LISTA VERTICAL DE TODAS AS VARIÁVEIS (ABA 2)
+   ========================================================================== */
+
+.comp-inspect-vertical-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.comp-inspect-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.comp-inspect-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+.comp-inspect-group-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.comp-inspect-group-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.comp-var-vertical-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  transition: all 0.15s ease;
+}
+
+.comp-var-vertical-item:hover {
+  border-color: var(--accent-active);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.comp-var-vert-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.comp-var-vert-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.comp-var-vert-num {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.comp-var-vert-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.comp-var-vert-key {
+  font-family: monospace;
+  font-size: 10.5px;
+  color: var(--accent-active);
+  background: rgba(38, 139, 210, 0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.comp-var-vert-legacy {
+  font-size: 9.5px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.comp-var-vert-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: var(--bg-surface);
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  margin: 2px 0;
+}
+
+.comp-var-vert-val-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.comp-var-vert-val-content {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.comp-var-vert-desc {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+/* ==========================================================================
+   HEADER DO DIÁRIO (LAYOUT COMPACTO E CONTROLES INTEGRADOS)
+   ========================================================================== */
+.comp-diary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 18px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.comp-diary-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comp-diary-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comp-header-control-item {
+  user-select: none;
+}
+
+/* ==========================================================================
+   POPOVER FLUTUANTE DE VARIÁVEIS (ANCORADO AO BOTÃO)
+   ========================================================================== */
+.comp-var-popover-anchor {
+  position: relative;
+  display: inline-block;
+}
+
+.comp-vars-popover-card {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 580px;
+  max-width: 90vw;
+  max-height: 75vh;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.28), 0 5px 12px rgba(0, 0, 0, 0.16);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: popoverFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.comp-vars-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.comp-vars-popover-body {
+  padding: 12px 14px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   BOTÃO DE IMPRESSÃO INDIVIDUAL NA TABELA E POPOVER DE REPOSIÇÃO
+   ========================================================================== */
+.comp-btn-print-aluno {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 13px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.comp-btn-print-aluno:hover {
+  background: rgba(2, 132, 199, 0.15);
+  border-color: #0284c7;
+  color: #0284c7;
+  transform: scale(1.08);
+}
+
+.comp-modal-reposicao-card {
+  width: 95vw;
+  max-width: 980px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-primary);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.38), 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+/* Abas internas do Modal de Reposição & Impressão */
+.comp-modal-tabs-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  padding: 0 18px;
+  gap: 4px;
+}
+
+.comp-modal-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.comp-modal-tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(38, 139, 210, 0.05);
+}
+
+.comp-modal-tab-btn.is-active {
+  color: var(--accent-active);
+  border-bottom-color: var(--accent-active);
+  background: rgba(38, 139, 210, 0.08);
+}
+
+.comp-modal-tab-content {
+  display: block;
+}
+
+.comp-modal-tab-content[hidden] {
+  display: none !important;
+}
+
+.comp-modal-reposicao-card .input-control {
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.comp-modal-reposicao-card .input-control:focus {
+  border-color: var(--accent-active);
+  box-shadow: 0 0 0 2px rgba(38, 139, 210, 0.25);
+  outline: none;
+}
+
+/* Painel de Parecer da Coordenação - Padrão Solarized */
+.comp-modal-coord-panel {
+  border: 1.5px solid var(--accent-active);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: rgba(38, 139, 210, 0.06);
+}
+
+/* Botão de ação com ênfase de perigo no Solarized (solarized red #dc322f) */
+.comp-btn-solarized-danger {
+  color: #dc322f !important;
+  border-color: rgba(220, 50, 47, 0.35) !important;
+  background: transparent !important;
+}
+
+.comp-btn-solarized-danger:hover {
+  background: rgba(220, 50, 47, 0.12) !important;
+  border-color: #dc322f !important;
+  color: #dc322f !important;
+}
+
+/* ==========================================================================
+   DROPDOWN FLUTUANTE DE DATAS DE FALTA DO DISCENTE
+   ========================================================================== */
+.comp-faltas-dropdown-card {
+  position: fixed;
+  width: 290px;
+  max-width: 90vw;
+  max-height: 280px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.18);
+  z-index: 10060;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: popoverFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.comp-faltas-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.comp-faltas-dropdown-body {
+  padding: 6px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.comp-faltas-dropdown-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  color: var(--text-primary);
+}
+
+.comp-faltas-dropdown-item:hover {
+  background: rgba(38, 139, 210, 0.12);
+  border-color: rgba(38, 139, 210, 0.35);
+}
+
+.comp-modal-conteudo-card {
+  width: 95vw;
+  max-width: 920px;
+  height: 88vh;
+  max-height: 88vh;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-primary);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.38), 0 6px 16px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.comp-conteudo-tabs-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 18px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.comp-conteudo-tab-btn {
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.comp-conteudo-tab-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.comp-conteudo-tab-btn.is-active {
+  background: var(--accent-active);
+  color: #ffffff;
+  border-color: var(--accent-active);
+  font-weight: 700;
+}
+
+.comp-drawer-panel {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.comp-drawer-panel.is-collapsed {
+  margin-bottom: 8px;
+}
+
+.comp-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 14px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.comp-drawer-panel:not(.is-collapsed) .comp-drawer-header {
+  border-bottom-color: var(--border-color);
+  background: rgba(38, 139, 210, 0.05);
+}
+
+.comp-drawer-header:hover {
+  background: var(--bg-secondary);
+}
+
+.comp-drawer-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  transition: transform 0.2s ease;
+  color: var(--text-secondary);
+  margin-right: 6px;
+}
+
+.comp-drawer-panel.is-collapsed .comp-drawer-chevron {
+  transform: rotate(-90deg);
+}
+
+.comp-drawer-toggle-btn {
+  font-size: 11px;
+  color: var(--accent-btn);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(181, 137, 0, 0.3);
+  background: transparent;
+  cursor: pointer;
+}
+
+.comp-drawer-toggle-btn:hover {
+  background: rgba(181, 137, 0, 0.12);
+}
+
+.comp-drawer-body {
+  padding: 12px 14px;
+  display: block;
+}
+
+.comp-drawer-panel.is-collapsed .comp-drawer-body {
+  display: none !important;
+}
+
+.comp-conteudo-table-scroll {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 180px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-surface);
+}
+
+.comp-conteudo-table-scroll table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg-surface);
+  box-shadow: 0 1px 0 var(--border-color);
+}
+
+/* ==========================================================================
+   MENU RESTRITO DA COORDENAÇÃO & BOTÃO TRI-STATE
+   ========================================================================== */
+.comp-modal-coordenacao-card {
+  width: 95vw;
+  max-width: 620px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-primary);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.38), 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.comp-coord-tristate-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  color: var(--text-primary);
+}
+
+.comp-coord-tristate-button:hover {
+  background: var(--bg-secondary);
+}
+
+.comp-coord-tristate-box {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  border: 1.5px solid var(--border-color);
+  background: transparent;
+  transition: all 0.18s ease;
+}
+
+/* Estado 0: Não Definido (Desmarcado) */
+.comp-coord-tristate-button.state-none {
+  border-color: var(--border-color);
+}
+.comp-coord-tristate-button.state-none .comp-coord-tristate-box {
+  border-color: var(--text-secondary);
+  color: transparent;
+  background: transparent;
+}
+
+/* Estado 1: [D] Deferido */
+.comp-coord-tristate-button.state-deferido {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+}
+.comp-coord-tristate-button.state-deferido .comp-coord-tristate-box {
+  border-color: #10b981;
+  background: #10b981;
+  color: #ffffff;
+}
+
+/* Estado 2: [I] Indeferido */
+.comp-coord-tristate-button.state-indeferido {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+}
+.comp-coord-tristate-button.state-indeferido .comp-coord-tristate-box {
+  border-color: #ef4444;
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* Botão Cadeado Desbloqueado */
+.btn-coord-unlocked {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+  border-color: #10b981 !important;
+}
+
+/* ==========================================================================
+   DROPDOWN DE SELEÇÃO DE ALUNOS NO MODO CALENDÁRIO
+   ========================================================================== */
+.comp-student-banner-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.comp-student-banner-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 3px 7px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  transition: all 0.15s ease;
+}
+
+.comp-student-banner-trigger:hover {
+  background: var(--bg-surface);
+  border-color: var(--border-color);
+}
+
+.comp-student-banner-trigger .comp-banner-arrow {
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.comp-student-banner-trigger.is-open .comp-banner-arrow {
+  transform: rotate(180deg);
+}
+
+.comp-student-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 280px;
+  max-width: 380px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+  z-index: 1000;
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.comp-student-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 12px;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.comp-student-dropdown-item:hover {
+  background: rgba(38, 139, 210, 0.1);
+}
+
+.comp-student-dropdown-item.is-selected {
+  font-weight: 800;
+  background: rgba(38, 139, 210, 0.15);
+  color: var(--accent-active);
+}
+
+.comp-student-dropdown-item.is-evadido {
+  opacity: 0.6;
+}
+
+/* ==========================================================================
+   BOTÕES SÓBRIOS/MONOCROMÁTICOS DO BANNER (Solarized / Outlined)
+   ========================================================================== */
+.comp-btn-banner-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.comp-btn-banner-action:hover {
+  background: var(--bg-surface);
+  border-color: var(--accent-active);
+  color: var(--text-primary);
+}
+
+.comp-btn-banner-action.btn-banner-primary {
+  background: rgba(38, 139, 210, 0.08);
+  border-color: rgba(38, 139, 210, 0.4);
+  color: var(--accent-active);
+}
+
+.comp-btn-banner-action.btn-banner-primary:hover {
+  background: rgba(38, 139, 210, 0.18);
+  border-color: var(--accent-active);
+  color: var(--text-primary);
+}
+
+.comp-btn-banner-action.btn-banner-danger {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.comp-btn-banner-action.btn-banner-danger:hover {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #ef4444;
+}
+
+/* Indicador de nota no card de aula */
+.comp-card-note-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(88, 110, 117, 0.08);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 2px 6px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Aviso de overflow com borda vermelha e destaque para campos de texto */
+.input-control.is-overflow,
+input.is-overflow,
+textarea.is-overflow {
+  border-color: #dc322f !important;
+  box-shadow: 0 0 0 1.5px rgba(220, 50, 47, 0.4) !important;
+  background-color: rgba(220, 50, 47, 0.05) !important;
+}
+
+

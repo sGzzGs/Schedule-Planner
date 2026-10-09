@@ -393,14 +393,70 @@ body {
 
 /* SIDEBAR */
 .app-sidebar {
-  width: 400px;
+  width: var(--sidebar-width, 400px);
+  min-width: 280px;
+  max-width: min(750px, 60vw);
   background: var(--bg-surface);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   height: 100%;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.app-sidebar.is-collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-right: none !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* DIVISOR REDIMENSIONÁVEL (SPLITTER ENTRE SIDEBAR E PAINEL PRINCIPAL) */
+.panel-resizer {
+  width: 8px;
+  margin: 0 -4px;
+  background: transparent;
+  cursor: col-resize;
+  position: relative;
+  z-index: 20;
+  flex-shrink: 0;
+  transition: background-color 0.18s ease;
+  user-select: none;
+  touch-action: none;
+}
+
+.panel-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: var(--border-color);
+  transition: background-color 0.18s ease, width 0.18s ease, left 0.18s ease;
+}
+
+.panel-resizer:hover::after,
+.panel-resizer.is-dragging::after {
+  background: var(--accent-active);
+  width: 4px;
+  left: 2px;
+}
+
+.panel-resizer:hover,
+.panel-resizer.is-dragging {
+  background: rgba(38, 139, 210, 0.12);
+}
+
+body.resizing-panels {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 
 .sidebar-header {
@@ -1518,6 +1574,7 @@ select.input-control {
   padding: 5px 10px;
   font-size: 11px;
 }
+
 
 .profile-help-hint {
   display: flex;

@@ -10,68 +10,36 @@ const PRESETS = {};
 
 // Variável com o histórico de alterações da versão atual
 const mudancasDeVersao = `
-<div class="version-popup-header">Alterações da versão V.01</div>
+<div class="version-popup-header">Alterações da versão V.02</div>
 <ul class="version-popup-list">
-  <li>Exibição de horas durante os dias, com destaque visual para dias com horários diferentes do padrão.</li>
-  <li>Mudanças individuais nos dias: Possibilidade de inserir a quantidade de horas-aulas individualmente para cada dia, bem como inserir um ambiente específico para cada dia.</li>
-  <li>Ao 'Segurar o clique' num dia específico, um menu será aberto, com a possibilidade de divisão entre prática e teoria no mesmo dia.</li>
+  <li>Adição dos calendários de 2027 e 2028 à geração de cronogramas.</li>
+  <li>Adição das abas de compensação de ausências, com preenchimento automático integrado entre as turmas (<em>Alpha</em>) e o calendário.</li>
+  <li>Aprimoramento da aba de compensação de ausências, com avisos, preenchimento automático dos dados dos discentes e geração de documentos prontos para impressão.</li>
+</ul>
+<div class="version-popup-header" style="margin-top: 10px; font-size: 12px; color: var(--text-primary);">Observações:</div>
+<ul class="version-popup-list">
+  <li>Calendários a partir de 2028 pendentes de revisão.</li>
+  <li>Identidade visual pendente de validação de uso por outros docentes.</li>
 </ul>
 `.trim();
 
-// 2. BASE DE FERIADOS E RECESSOS 2026
-const FERIADOS_MAP = new Map([
-  ["2026-01-01", "Confraternização Universal"],
-  ["2026-01-25", "Aniversário de São Paulo"],
-  ["2026-02-14", "Sábado de Carnaval"],
-  ["2026-02-16", "Segunda de Carnaval"],
-  ["2026-02-17", "Terça de Carnaval"],
-  ["2026-04-03", "Sexta-feira Santa/Paixão"],
-  ["2026-04-04", "Sábado de Aleluia (Emenda)"],
-  ["2026-04-20", "Emenda de feriado - Tiradentes"],
-  ["2026-04-21", "Tiradentes"],
-  ["2026-05-01", "Dia do Trabalho"],
-  ["2026-06-04", "Corpus Christi"],
-  ["2026-06-05", "Emenda de feriado - Corpus Christi"],
-  ["2026-06-06", "Emenda de feriado - Corpus Christi"],
-  ["2026-06-24", "Formatura CAI"],
-  ["2026-07-09", "Revolução Constitucionalista de 1932"],
-  ["2026-07-10", "Emenda de feriado - Rev. Const."],
-  ["2026-07-11", "Emenda de feriado - Rev. Const."],
-  ["2026-09-07", "Independência do Brasil"],
-  ["2026-10-12", "Padroeira do Brasil"],
-  ["2026-10-13", "Dia dos Professores - Antecipado"],
-  ["2026-11-02", "Dia de Finados"],
-  ["2026-11-15", "Proclamação da República"],
-  ["2026-11-20", "Consciência Negra"],
-  ["2026-12-21", "Formatura CAI"],
-  ["2026-12-22", "Confraternização Escolar"],
-  ["2026-12-25", "Natal"],
-  ["2026-12-31", "Véspera de Ano Novo"]
-]);
-
-const PERIODOS_FERIAS = [
-  { inicio: "2026-01-02", fim: "2026-01-14", descricao: "Recesso de Janeiro" },
-  { inicio: "2026-07-13", fim: "2026-07-18", descricao: "Férias de Julho" },
-  { inicio: "2026-12-23", fim: "2026-12-31", descricao: "Recesso de Fim de Ano" }
-];
-
-// Expandir férias no mapa
-for (const p of PERIODOS_FERIAS) {
-  const [sy, sm, sd] = p.inicio.split("-").map(Number);
-  const [ey, em, ed] = p.fim.split("-").map(Number);
-  let curr = new Date(sy, sm - 1, sd, 12, 0, 0);
-  const end = new Date(ey, em - 1, ed, 12, 0, 0);
-  while (curr <= end) {
-    const y = curr.getFullYear();
-    const m = String(curr.getMonth() + 1).padStart(2, "0");
-    const d = String(curr.getDate()).padStart(2, "0");
-    const k = `${y}-${m}-${d}`;
-    if (!FERIADOS_MAP.has(k)) {
-      FERIADOS_MAP.set(k, p.descricao);
+// 2. MOTOR UNIVERSAL DE FERIADOS (Conectado dinamicamente ao holidayService com lazy loading e multi-ano)
+// Objeto adaptador de compatibilidade com a API legada Map (.has / .get)
+const FERIADOS_MAP = {
+  has(dateKey) {
+    if (typeof holidayService !== "undefined" && holidayService && typeof holidayService.isBlocked === "function") {
+      return holidayService.isBlocked(dateKey);
     }
-    curr.setDate(curr.getDate() + 1);
+    return false;
+  },
+  get(dateKey) {
+    if (typeof holidayService !== "undefined" && holidayService && typeof holidayService.getDateInfo === "function") {
+      const info = holidayService.getDateInfo(dateKey);
+      return info ? info.descricao : undefined;
+    }
+    return undefined;
   }
-}
+};
 
 // 3. ESTADO GLOBAL DA APLICAÇÃO
 let currentDays = []; // Inicialmente nenhum dia da semana ativo (inicia vazio)
@@ -410,11 +378,20 @@ function fillFormData(data) {
     inactiveDateKeys = new Set();
   }
 
+  // Restaura customizações individuais de aulas (split, horário, ambiente)
+  if (data.customLessons && typeof data.customLessons === "object") {
+    lessonCustomizations = { ...data.customLessons };
+  } else if (data.lessonCustomizations && typeof data.lessonCustomizations === "object") {
+    lessonCustomizations = { ...data.lessonCustomizations };
+  } else {
+    lessonCustomizations = {};
+  }
+
   renderManualDatesList();
   updatePreview(true);
 }
 
-// 4.3 EXPORTAR PERFIL COMPLETO (USO NA TROCA DE PCS)
+// 4.3 EXPORTAR PERFIL COMPLETO (CONFIGURAÇÃO UNIVERSAL V3.0)
 function exportProfile() {
   let saved = getSavedModels();
 
@@ -459,22 +436,90 @@ function exportProfile() {
   const aa = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, "0");
   const dd = String(now.getDate()).padStart(2, "0");
-  const filename = `App_Cronograma_${primeiroNome}_${aa}.${mm}.${dd}.json`;
+  const filename = `App_Cronograma_Completo_${primeiroNome}_${aa}.${mm}.${dd}.json`;
 
-  // 3. Capturar o tema, horários rápidos e todos os campos preenchidos
+  // 3. Capturar tema, horários rápidos e dados do formulário do Cronograma (Aba 1)
   const temaAtual = localStorage.getItem("theme") || "solarized";
   const currentForm = getFormData();
   const horariosList = getCustomHorarios();
+  const sidebarWidthVal = localStorage.getItem("senai_panels_sidebar_width");
 
-  // 4. Montar objeto completo do perfil
+  // 4. Capturar banco de compensações (Aba 2)
+  if (typeof compSalvarTurmaAtualStorage === "function") {
+    try {
+      compSalvarTurmaAtualStorage();
+    } catch (e) {
+      console.warn("Aviso ao salvar turma atual de compensação:", e);
+    }
+  }
+  let compensacoesData = {};
+  let parecerCoordenacao = "";
+  let conteudoProgramatico = {};
+
+  try {
+    const rawComp = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+    if (rawComp) {
+      compensacoesData = JSON.parse(rawComp);
+    }
+    parecerCoordenacao = localStorage.getItem("SENAI_COMP_COORD_PARECER") || "";
+    const rawConteudo = localStorage.getItem("SENAI_COMP_CONTEUDO_DATA");
+    if (rawConteudo) {
+      conteudoProgramatico = JSON.parse(rawConteudo);
+    }
+  } catch (e) {
+    console.warn("Aviso ao ler dados de compensação para o perfil:", e);
+  }
+
+  // 5. Capturar modificações de calendário e feriados universais (Aba 3)
+  let modificacoesCalendario = { adicionais: [], removidos: [] };
+  try {
+    if (typeof holidayService !== "undefined" && typeof holidayService.getTodasModificacoesUsuario === "function") {
+      modificacoesCalendario = holidayService.getTodasModificacoesUsuario();
+    } else {
+      const rawCal = localStorage.getItem("senai_custom_holidays_v1");
+      if (rawCal) modificacoesCalendario = JSON.parse(rawCal);
+    }
+  } catch (e) {
+    console.warn("Aviso ao ler dados de calendário para o perfil:", e);
+  }
+
+  // 6. Montar objeto UNIVERSAL COMPLETO (v3.0) com total retrocompatibilidade
   const profilePayload = {
-    _tipo: "PERFIL_CRONOGRAMA_SENAI",
-    versao: "2.0",
+    _tipo: "CONFIGURACAO_COMPLETA_SENAI",
+    versao: "3.0",
+    exportadoEm: now.toISOString(),
     tema: temaAtual,
+    sidebarWidth: sidebarWidthVal ? parseInt(sidebarWidthVal, 10) : 400,
+
+    // ABA 1: CRONOGRAMA
+    cronograma: {
+      modelos: saved,
+      dadosFormulario: currentForm,
+      horariosRapidos: horariosList,
+      overrides: {
+        manualDateOverrides: { ...manualDateOverrides },
+        inactiveDates: Array.from(inactiveDateKeys),
+        customLessons: JSON.parse(JSON.stringify(lessonCustomizations))
+      }
+    },
+
+    // ABA 2: COMPENSAÇÃO DE AUSÊNCIAS
+    compensacao: {
+      turmasCompensacao: compensacoesData,
+      parecerCoordenacao: parecerCoordenacao,
+      conteudoProgramatico: conteudoProgramatico
+    },
+
+    // ABA 3: CALENDÁRIO UNIVERSAL
+    calendario: {
+      modificacoesUsuario: modificacoesCalendario
+    },
+
+    // CAMPOS DE RETROCOMPATIBILIDADE (Caso seja aberto em versões legadas V1/V2)
     turmas: saved,
     horariosRapidos: horariosList,
     dadosFormulario: currentForm,
-    exportadoEm: now.toISOString()
+    compensacoes: compensacoesData
   };
 
   const dataStr = JSON.stringify(profilePayload, null, 2);
@@ -488,9 +533,11 @@ function exportProfile() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+
+  return { filename, profilePayload };
 }
 
-// 4.4 IMPORTAR PERFIL COMPLETO (USO NA TROCA DE PCS)
+// 4.4 IMPORTAR PERFIL (COMPATIBILIDADE UNIVERSAL V3.0 E RETROCOMPATIBILIDADE TOTAL COM VERSÕES LEGADAS)
 function importProfile(event) {
   const file = event.target?.files?.[0];
   if (!file) return;
@@ -502,77 +549,182 @@ function importProfile(event) {
       const parsed = JSON.parse(content);
 
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-        throw new Error("O arquivo selecionado não contém um formato de perfil válido.");
+        throw new Error("O arquivo selecionado não contém um formato de configuração válido.");
       }
 
-      // 1. Restaura o tema se estiver presente no arquivo
-      const temaImportado = parsed.tema || parsed.theme;
-      if (temaImportado) {
-        applyTheme(temaImportado);
+      // Identifica se é o formato Universal v3.0 ou Legado
+      const isConfigCompleta = parsed._tipo === "CONFIGURACAO_COMPLETA_SENAI" || !!(parsed.cronograma && (parsed.compensacao || parsed.calendario));
+
+      if (isConfigCompleta) {
+        // ====================================================================
+        // FLUXO V3.0: RESTAURAÇÃO COMPLETA UNIVERSAL (ABAS 1, 2 E 3)
+        // ====================================================================
+
+        // 1. Tema e Layout
+        const temaImportado = parsed.tema || "solarized";
+        if (typeof applyTheme === "function") applyTheme(temaImportado);
         localStorage.setItem("theme", temaImportado);
         const themeSelector = document.getElementById("theme-selector");
-        if (themeSelector) {
-          themeSelector.value = temaImportado;
-        }
-      }
+        if (themeSelector) themeSelector.value = temaImportado;
 
-      // 2. Restaura horários do preenchimento rápido se presentes
-      if (Array.isArray(parsed.horariosRapidos)) {
-        saveCustomHorarios(parsed.horariosRapidos);
-        populateHorarioPresetDropdown();
-      } else if (Array.isArray(parsed.horarios)) {
-        saveCustomHorarios(parsed.horarios);
-        populateHorarioPresetDropdown();
-      }
-
-      // 3. Extrai e restaura os modelos de turma salvos
-      const turmasFonte = (parsed.turmas && typeof parsed.turmas === "object") ? parsed.turmas : parsed;
-      const currentSaved = getSavedModels();
-      let importedCount = 0;
-      let firstImportedKey = null;
-
-      for (const [key, modelData] of Object.entries(turmasFonte)) {
-        // Ignora metadados e chaves que não sejam modelos de turmas
-        if (
-          key.startsWith("_") ||
-          key === "tema" ||
-          key === "theme" ||
-          key === "versao" ||
-          key === "exportadoEm" ||
-          key === "horariosRapidos" ||
-          key === "horarios" ||
-          key === "dadosFormulario"
-        ) {
-          continue;
+        if (parsed.sidebarWidth) {
+          localStorage.setItem("senai_panels_sidebar_width", parsed.sidebarWidth);
+          document.documentElement.style.setProperty("--sidebar-width", `${parsed.sidebarWidth}px`);
         }
 
-        if (modelData && typeof modelData === "object" && modelData.codigoTurma) {
-          currentSaved[key] = modelData;
-          if (!firstImportedKey) firstImportedKey = key;
-          importedCount++;
+        // 2. Aba 1 - Cronograma: Horários Rápidos
+        const hList = parsed.cronograma?.horariosRapidos || parsed.horariosRapidos;
+        if (Array.isArray(hList) && hList.length > 0) {
+          saveCustomHorarios(hList);
+          populateHorarioPresetDropdown();
         }
-      }
 
-      saveModels(currentSaved);
-      populatePresetDropdown();
+        // 3. Aba 1 - Cronograma: Modelos Salvos
+        const turmasFonte = parsed.cronograma?.modelos || parsed.turmas || {};
+        const currentSaved = getSavedModels();
+        let totalModelos = 0;
+        let primeiroModeloKey = null;
 
-      // 4. Restaura os dados de todos os campos preenchidos, se houver
-      if (parsed.dadosFormulario && typeof parsed.dadosFormulario === "object") {
-        fillFormData(parsed.dadosFormulario);
-      } else if (firstImportedKey) {
-        const select = document.getElementById("presetSelect");
-        if (select) {
-          select.value = "SAVED_" + firstImportedKey;
+        for (const [key, modelData] of Object.entries(turmasFonte)) {
+          if (modelData && typeof modelData === "object" && (modelData.codigoTurma || modelData.nomeCurso)) {
+            const k = modelData.codigoTurma || key;
+            currentSaved[k] = modelData;
+            if (!primeiroModeloKey) primeiroModeloKey = k;
+            totalModelos++;
+          }
         }
-        applyPreset("SAVED_" + firstImportedKey);
-      }
+        saveModels(currentSaved);
+        populatePresetDropdown();
 
-      const infoTema = temaImportado ? ` Tema "${temaImportado}" restaurado.` : "";
-      const infoHorarios = Array.isArray(parsed.horariosRapidos) ? ` ${parsed.horariosRapidos.length} horário(s) de preenchimento rápido.` : "";
-      alert(`Perfil importado com sucesso! ${importedCount} modelo(s) de turma carregado(s).${infoHorarios}${infoTema}`);
+        // 4. Aba 1 - Cronograma: Dados do Formulário Ativo e Overrides
+        const formAtivo = parsed.cronograma?.dadosFormulario || parsed.dadosFormulario;
+        if (formAtivo && typeof formAtivo === "object") {
+          fillFormData(formAtivo);
+        } else if (primeiroModeloKey) {
+          const select = document.getElementById("presetSelect");
+          if (select) select.value = "SAVED_" + primeiroModeloKey;
+          applyPreset("SAVED_" + primeiroModeloKey);
+        }
+
+        const overridesCron = parsed.cronograma?.overrides;
+        if (overridesCron && typeof overridesCron === "object") {
+          if (overridesCron.manualDateOverrides) {
+            manualDateOverrides = { ...overridesCron.manualDateOverrides };
+          }
+          if (Array.isArray(overridesCron.inactiveDates)) {
+            inactiveDateKeys = new Set(overridesCron.inactiveDates);
+          }
+          if (overridesCron.customLessons) {
+            lessonCustomizations = { ...overridesCron.customLessons };
+          }
+          renderManualDatesList();
+          updatePreview(true);
+        }
+
+        // 5. Aba 2 - Compensação de Ausências
+        const dadosComp = parsed.compensacao?.turmasCompensacao || parsed.compensacoes;
+        if (dadosComp && typeof dadosComp === "object") {
+          try {
+            const rawAtual = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+            const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
+            const bancoMesclado = { ...bancoAtual, ...dadosComp };
+            localStorage.setItem("SENAI_COMP_TURMAS_DATA", JSON.stringify(bancoMesclado));
+          } catch (errC) {
+            console.warn("Erro ao mesclar turmas de compensação:", errC);
+          }
+        }
+
+        if (parsed.compensacao?.parecerCoordenacao) {
+          localStorage.setItem("SENAI_COMP_COORD_PARECER", parsed.compensacao.parecerCoordenacao);
+        }
+        if (parsed.compensacao?.conteudoProgramatico) {
+          localStorage.setItem("SENAI_COMP_CONTEUDO_DATA", JSON.stringify(parsed.compensacao.conteudoProgramatico));
+        }
+
+        if (typeof compSincronizarAbaMae === "function") compSincronizarAbaMae();
+        if (typeof compRenderizarDiario === "function") compRenderizarDiario();
+        if (typeof compRenderizarVariaveis === "function") compRenderizarVariaveis();
+
+        // 6. Aba 3 - Calendário e Feriados Universais
+        const modsCal = parsed.calendario?.modificacoesUsuario;
+        if (modsCal && typeof holidayService !== "undefined" && typeof holidayService.aplicarModificacoesUsuario === "function") {
+          holidayService.aplicarModificacoesUsuario(modsCal);
+          if (typeof calRenderizar === "function") calRenderizar();
+          updatePreview(true);
+        }
+
+        alert(`Configuração Completa do Sistema (V.03) importada com sucesso!\n\n• ${totalModelos} modelo(s) de cronograma carregado(s)\n• Compensações e diários sincronizados\n• Calendário e feriados universais restaurados\n• Tema "${temaImportado}" aplicado`);
+
+      } else {
+        // ====================================================================
+        // FLUXO LEGADO: RETROCOMPATIBILIDADE ESTRITA COM VERSÕES ANTIGAS
+        // Carrega as informações das turmas e ignora as demais configurações
+        // ====================================================================
+
+        const turmasFonte = (parsed.turmas && typeof parsed.turmas === "object") ? parsed.turmas : parsed;
+        const currentSaved = getSavedModels();
+        let importedCount = 0;
+        let firstImportedKey = null;
+
+        for (const [key, modelData] of Object.entries(turmasFonte)) {
+          // Ignora campos de controle, metadados ou propriedades não relacionadas a modelos de turma
+          if (
+            key.startsWith("_") ||
+            key === "tema" ||
+            key === "theme" ||
+            key === "versao" ||
+            key === "exportadoEm" ||
+            key === "horariosRapidos" ||
+            key === "horarios" ||
+            key === "dadosFormulario" ||
+            key === "compensacoes" ||
+            key === "sidebarWidth"
+          ) {
+            continue;
+          }
+
+          if (modelData && typeof modelData === "object" && (modelData.codigoTurma || modelData.nomeCurso)) {
+            const turmaKey = modelData.codigoTurma || key;
+            currentSaved[turmaKey] = modelData;
+            if (!firstImportedKey) firstImportedKey = turmaKey;
+            importedCount++;
+          }
+        }
+
+        saveModels(currentSaved);
+        populatePresetDropdown();
+
+        // Restaura tema se presente no arquivo legado
+        const temaImportado = parsed.tema || parsed.theme;
+        if (temaImportado) {
+          applyTheme(temaImportado);
+          localStorage.setItem("theme", temaImportado);
+          const themeSelector = document.getElementById("theme-selector");
+          if (themeSelector) themeSelector.value = temaImportado;
+        }
+
+        // Restaura horários rápidos se presentes no arquivo legado
+        if (Array.isArray(parsed.horariosRapidos)) {
+          saveCustomHorarios(parsed.horariosRapidos);
+          populateHorarioPresetDropdown();
+        }
+
+        // Restaura dados do formulário se houver, ou seleciona o primeiro modelo importado
+        if (parsed.dadosFormulario && typeof parsed.dadosFormulario === "object") {
+          fillFormData(parsed.dadosFormulario);
+        } else if (firstImportedKey) {
+          const select = document.getElementById("presetSelect");
+          if (select) {
+            select.value = "SAVED_" + firstImportedKey;
+          }
+          applyPreset("SAVED_" + firstImportedKey);
+        }
+
+        alert(`Arquivo legado importado com sucesso!\n\n• ${importedCount} turma(s) carregada(s) para a Aba Cronograma.\n• As configurações das demais abas foram preservadas.`);
+      }
     } catch (err) {
-      console.error("Erro na importação do perfil:", err);
-      alert("Erro ao importar o arquivo de perfil: " + err.message);
+      console.error("Erro na importação da configuração:", err);
+      alert("Erro ao importar o arquivo de configuração: " + err.message);
     } finally {
       // Limpa o valor do input para permitir selecionar o mesmo arquivo novamente se desejar
       event.target.value = "";
@@ -1609,10 +1761,29 @@ function updatePreview(preserveCustom = false) {
   // Atualiza também o subtítulo da barra superior com a versão
   const schoolLabel = document.getElementById("topbar-school-label");
   if (schoolLabel) {
-    schoolLabel.textContent = "V.01";
+    schoolLabel.textContent = "V.02";
   }
 
   renderInteractiveDaysGrid();
+
+  // Notifica a aba de Compensação que os dias letivos foram atualizados
+  document.dispatchEvent(new CustomEvent('comp:diasLetivosAtualizados'));
+
+  // Auto-Save Transparente do Rascunho do Formulário
+  salvarRascunhoFormularioDebounced();
+}
+
+let _draftSaveTimeout = null;
+function salvarRascunhoFormularioDebounced() {
+  if (_draftSaveTimeout) clearTimeout(_draftSaveTimeout);
+  _draftSaveTimeout = setTimeout(() => {
+    try {
+      const draft = getFormData();
+      if (draft && (draft.codigoTurma || draft.nomeCurso || draft.docente)) {
+        localStorage.setItem("SENAI_CRONOGRAMA_DRAFT", JSON.stringify(draft));
+      }
+    } catch (e) {}
+  }, 300);
 }
 
 // 9. PREENCHIMENTO AUTOMÁTICO COM PRESET
@@ -1778,6 +1949,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Inicializar o seletor de tema
   initThemeSystem();
 
+  // Inicializar redimensionamento dinâmico dos painéis laterais (Splitter)
+  initPanelResizer();
+
   populatePresetDropdown();
   populateHorarioPresetDropdown();
 
@@ -1937,6 +2111,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("input-import-profile")?.addEventListener("change", importProfile);
 
+
+
   // 11. SUPORTE A COLAR (CLIPBOARD) NO FORMATO DD/MM/AAAA NOS CAMPOS DE DATA
   const setupDatePasteSupport = (inputElement) => {
     if (!inputElement) return;
@@ -2025,13 +2201,29 @@ document.addEventListener("DOMContentLoaded", () => {
   renderManualDatesList();
   const saved = getSavedModels();
   const savedKeys = Object.keys(saved);
-  if (savedKeys.length > 0) {
-    const firstKey = savedKeys[0];
-    applyPreset("SAVED_" + firstKey);
-    if (presetSelect) presetSelect.value = "SAVED_" + firstKey;
-  } else {
-    updatePreview(false);
-    if (presetSelect) presetSelect.value = "";
+
+  // Auto-Save: Restaura rascunho persistido caso exista e nenhum preset tenha sido forçado
+  let draftCarregado = false;
+  try {
+    const rawDraft = localStorage.getItem("SENAI_CRONOGRAMA_DRAFT");
+    if (rawDraft) {
+      const draftObj = JSON.parse(rawDraft);
+      if (draftObj && (draftObj.codigoTurma || draftObj.nomeCurso || draftObj.docente)) {
+        fillFormData(draftObj);
+        draftCarregado = true;
+      }
+    }
+  } catch (e) {}
+
+  if (!draftCarregado) {
+    if (savedKeys.length > 0) {
+      const firstKey = savedKeys[0];
+      applyPreset("SAVED_" + firstKey);
+      if (presetSelect) presetSelect.value = "SAVED_" + firstKey;
+    } else {
+      updatePreview(false);
+      if (presetSelect) presetSelect.value = "";
+    }
   }
 });
 
@@ -2071,6 +2263,11 @@ function resetFormToEmpty() {
   manualDateOverrides = {};
   inactiveDateKeys.clear();
   renderManualDatesList();
+
+  // Limpa também o rascunho temporário do auto-save
+  try {
+    localStorage.removeItem("SENAI_CRONOGRAMA_DRAFT");
+  } catch (e) {}
 
   updatePreview(false);
 }
@@ -2148,4 +2345,108 @@ function removeManualDateRule(dateKey) {
     updatePreview(true);
   }
 }
+
+// ==========================================================================
+// REDIMENSIONAMENTO DINÂMICO DOS PAINÉIS LATERAIS (SPLITTER RESIZER)
+// Suporta ambas as páginas: Cronograma e Compensação
+// ==========================================================================
+function initPanelResizer() {
+  const STORAGE_KEY = "senai_panels_sidebar_width";
+  const DEFAULT_WIDTH = 400;
+  const MIN_WIDTH = 280;
+
+  // Aplica largura inicial salva
+  const savedWidth = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+  const maxInitial = Math.min(800, window.innerWidth * 0.65);
+  if (savedWidth && savedWidth >= MIN_WIDTH && savedWidth <= maxInitial) {
+    document.documentElement.style.setProperty("--sidebar-width", `${savedWidth}px`);
+  } else {
+    document.documentElement.style.setProperty("--sidebar-width", `${DEFAULT_WIDTH}px`);
+  }
+
+  const resizers = document.querySelectorAll(".panel-resizer");
+  if (!resizers || resizers.length === 0) return;
+
+  resizers.forEach((resizer) => {
+    let isDragging = false;
+    let startX = 0;
+    let startWidth = DEFAULT_WIDTH;
+
+    function getSidebarForResizer() {
+      return resizer.previousElementSibling;
+    }
+
+    function onStart(clientX) {
+      isDragging = true;
+      startX = clientX;
+      const sidebar = getSidebarForResizer();
+      startWidth = sidebar ? sidebar.getBoundingClientRect().width : DEFAULT_WIDTH;
+
+      resizer.classList.add("is-dragging");
+      document.body.classList.add("resizing-panels");
+    }
+
+    function onMove(clientX) {
+      if (!isDragging) return;
+      const deltaX = clientX - startX;
+      let newWidth = startWidth + deltaX;
+
+      const currentMax = Math.min(800, window.innerWidth * 0.65);
+      newWidth = Math.max(MIN_WIDTH, Math.min(currentMax, newWidth));
+
+      document.documentElement.style.setProperty("--sidebar-width", `${newWidth}px`);
+      localStorage.setItem(STORAGE_KEY, Math.round(newWidth));
+    }
+
+    function onEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      resizer.classList.remove("is-dragging");
+      document.body.classList.remove("resizing-panels");
+    }
+
+    // Eventos de Mouse
+    resizer.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      onStart(e.clientX);
+
+      function handleMouseMove(moveEvt) {
+        onMove(moveEvt.clientX);
+      }
+
+      function handleMouseUp() {
+        onEnd();
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      }
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    });
+
+    // Eventos de Touch
+    resizer.addEventListener("touchstart", (e) => {
+      if (e.touches && e.touches.length === 1) {
+        onStart(e.touches[0].clientX);
+      }
+    }, { passive: true });
+
+    resizer.addEventListener("touchmove", (e) => {
+      if (isDragging && e.touches && e.touches.length === 1) {
+        onMove(e.touches[0].clientX);
+      }
+    }, { passive: true });
+
+    resizer.addEventListener("touchend", () => {
+      onEnd();
+    });
+
+    // Clique duplo para restaurar largura padrão (400px)
+    resizer.addEventListener("dblclick", () => {
+      document.documentElement.style.setProperty("--sidebar-width", `${DEFAULT_WIDTH}px`);
+      localStorage.setItem(STORAGE_KEY, DEFAULT_WIDTH);
+    });
+  });
+}
+
 
