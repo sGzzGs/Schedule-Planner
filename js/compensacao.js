@@ -21,7 +21,7 @@
 // ==========================================================================
 const COMP_BADGE = 't04';
 const COMP_RELATORIO_FILENAME = `Variaveis_info_${COMP_BADGE}.md`;
-const COMP_SENHA_COORDENACAO = 'senai';
+const COMP_SENHA_COORDENACAO = 'cafe15';
 
 // Discentes pré-definidos (Inicia vazio para produção - cadastrados pelo usuário)
 const COMP_TURMAS_DISCENTES = {};
@@ -4998,7 +4998,7 @@ function compObterTodasVariaveisAba2(aluno) {
           legacyKey: 'coordLocked',
           nome: 'Área Restrita da Coordenação',
           valor: CompState.coordenacao.desbloqueada ? '🔓 Desbloqueada (Edição Liberada)' : '🔒 Bloqueada (Senha Requerida)',
-          origem: 'Segurança / Senha: senai',
+          origem: 'Segurança / Senha: cafe15',
           dica: 'Protege os pareceres conclusivos e assinaturas de autorização na página 2'
         }
       ]
