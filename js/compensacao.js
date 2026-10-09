@@ -426,7 +426,34 @@ function compSincronizarAbaMae() {
   function carregarBancoTurmas() {
     try {
       const bruto = localStorage.getItem(COMP_STORAGE_KEY);
-      return bruto ? JSON.parse(bruto) : {};
+      const banco = bruto ? JSON.parse(bruto) : {};
+      // Sanitização de produção: remove dados de teste simulados que possam ter ficado em cache local
+      const mockSet = new Set([
+        'Gabriel Costa Silva', 'Beatriz Souza Lima', 'Lucas Fernandes Ramos',
+        'Mariana Rocha Duarte', 'Thiago Martins Castro', 'Fernanda Oliveira Santos',
+        'Rafael Alves Moreira', 'Camila Ribeiro Barbosa', 'Felipe Carvalho Mendes',
+        'Larissa Moura Azevedo'
+      ]);
+      let alterado = false;
+      for (const tKey in banco) {
+        if (banco[tKey] && Array.isArray(banco[tKey].alunos)) {
+          const soTemMock = banco[tKey].alunos.length > 0 && banco[tKey].alunos.every(a => mockSet.has(a));
+          if (soTemMock) {
+            banco[tKey].alunos = [];
+            banco[tKey].ordemFisicaAlunos = [];
+            banco[tKey].faltasPorAluno = {};
+            banco[tKey].overrides = {};
+            banco[tKey].observacoesPorDia = {};
+            banco[tKey].manualFlagAlunos = {};
+            banco[tKey].evadidosPorAluno = {};
+            alterado = true;
+          }
+        }
+      }
+      if (alterado) {
+        salvarBancoTurmas(banco);
+      }
+      return banco;
     } catch (e) {
       return {};
     }
@@ -436,54 +463,6 @@ function compSincronizarAbaMae() {
     try {
       localStorage.setItem(COMP_STORAGE_KEY, JSON.stringify(banco));
     } catch (e) {}
-  }
-
-  function gerar5AlunosTeste(turmaKey, diasLetivos) {
-    const poolNomes = [
-      'Gabriel Costa Silva',
-      'Beatriz Souza Lima',
-      'Lucas Fernandes Ramos',
-      'Mariana Rocha Duarte',
-      'Thiago Martins Castro',
-      'Fernanda Oliveira Santos',
-      'Rafael Alves Moreira',
-      'Camila Ribeiro Barbosa',
-      'Felipe Carvalho Mendes',
-      'Larissa Moura Azevedo'
-    ];
-    // Sorteia ou seleciona deterministicamente 5 nomes baseados no hash da turma
-    let hash = 0;
-    for (let i = 0; i < turmaKey.length; i++) hash = (hash * 31 + turmaKey.charCodeAt(i)) >>> 0;
-    const offset = hash % 5;
-    const cincoAlunos = poolNomes.slice(offset, offset + 5);
-
-    const faltasSimuladas = {};
-    cincoAlunos.forEach(n => { faltasSimuladas[n] = {}; });
-
-    if (diasLetivos && diasLetivos.length > 0) {
-      const d1 = diasLetivos[0];
-      const d2 = diasLetivos[1] || d1;
-      const d3 = diasLetivos[2] || d2;
-      const h1 = compObterHorasAula(d1) || 4;
-      const h2 = compObterHorasAula(d2) || 4;
-
-      // Aluno 1: 2 faltas consecutivas (acima de 10% da CH) para acionar aviso de compensação
-      faltasSimuladas[cincoAlunos[0]][d1] = h1;
-      faltasSimuladas[cincoAlunos[0]][d2] = h2;
-
-      // Aluno 2: 1 falta completa
-      faltasSimuladas[cincoAlunos[1]][d1] = h1;
-
-      // Aluno 3: Falta parcial (metade da aula)
-      faltasSimuladas[cincoAlunos[2]][d1] = Math.max(1, Math.round(h1 / 2));
-
-      // Alunos 4 e 5: 100% frequência (sem faltas)
-    }
-
-    return {
-      alunos: cincoAlunos,
-      faltas: faltasSimuladas
-    };
   }
 
   // Se houver troca de turma (ou primeira inicialização)
@@ -512,7 +491,7 @@ function compSincronizarAbaMae() {
     // 2. Carrega ou inicializa a nova turma
     if (novaTurma) {
       if (bancoTurmas[novaTurma] && Array.isArray(bancoTurmas[novaTurma].alunos) && bancoTurmas[novaTurma].alunos.length > 0) {
-        // Carrega do armazenamento persistente
+        // Carrega do armazenamento persistente (alunos já cadastrados pelo professor)
         const salvo = bancoTurmas[novaTurma];
         CompState.alunos = [...salvo.alunos];
         CompState.ordemFisicaAlunos = Array.isArray(salvo.ordemFisicaAlunos) ? [...salvo.ordemFisicaAlunos] : [...salvo.alunos];
@@ -525,21 +504,11 @@ function compSincronizarAbaMae() {
         if (salvo.coordenacao) CompState.coordenacao = { ...salvo.coordenacao };
         CompState.coordenacaoPorAluno = salvo.coordenacaoPorAluno ? { ...salvo.coordenacaoPorAluno } : {};
         CompState.conteudoProgramaticoPorDia = salvo.conteudoProgramaticoPorDia ? { ...salvo.conteudoProgramaticoPorDia } : {};
-      } else if (COMP_TURMAS_DISCENTES[novaTurma]) {
-        // Modelo especial pré-cadastrado
-        CompState.alunos = [...COMP_TURMAS_DISCENTES[novaTurma]];
-        CompState.ordemFisicaAlunos = [...CompState.alunos];
-        CompState.faltasPorAluno = {};
-        CompState.manualFlagAlunos = {};
-        CompState.evadidosPorAluno = {};
-        CompState.coordenacaoPorAluno = {};
-        CompState.conteudoProgramaticoPorDia = {};
       } else {
-        // Nova turma qualquer: Gera automaticamente 5 discentes de teste com faltas simuladas
-        const gerado = gerar5AlunosTeste(novaTurma, CompState.diasLetivos);
-        CompState.alunos = [...gerado.alunos];
-        CompState.ordemFisicaAlunos = [...CompState.alunos];
-        CompState.faltasPorAluno = { ...gerado.faltas };
+        // Nova turma: Inicia estritamente vazia sem discentes até o cadastro pelo professor
+        CompState.alunos = [];
+        CompState.ordemFisicaAlunos = [];
+        CompState.faltasPorAluno = {};
         CompState.overrides = {};
         CompState.observacoesPorDia = {};
         CompState.manualFlagAlunos = {};
