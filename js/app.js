@@ -10,11 +10,12 @@ const PRESETS = {};
 
 // Variável com o histórico de alterações da versão atual
 const mudancasDeVersao = `
-<div class="version-popup-header">Alterações da versão V.2.1</div>
+<div class="version-popup-header">Alterações da versão V.2.2</div>
 <ul class="version-popup-list">
   <li>Adição dos calendários de 2027 e 2028 à geração de cronogramas.</li>
   <li>Adição das abas de compensação de ausências, com preenchimento automático integrado entre as turmas (<em>Alpha</em>) e o calendário.</li>
   <li>Aprimoramento da aba de compensação de ausências, com avisos, preenchimento automático dos dados dos discentes e geração de documentos prontos para impressão.</li>
+  <li>Separação dos campos "Horas / Aula" e "Aulas / Dia", eliminando ambiguidades e aperfeiçoando o cálculo de faltas na compensação.</li>
   <li>Suporte à exportação e restauração completa de perfis (incluindo discentes, faltas, diários e ordens físicas).</li>
 </ul>
 <div class="version-popup-header" style="margin-top: 10px; font-size: 12px; color: var(--text-primary);">Observações:</div>
@@ -355,6 +356,29 @@ function fillFormData(data) {
   if (data.horaFim !== undefined) setVal("horaFim", data.horaFim);
   if (data.cargaHorariaTotal !== undefined) setVal("cargaHorariaTotal", data.cargaHorariaTotal);
   if (data.horasPorDia !== undefined) setVal("horasPorDia", data.horasPorDia);
+
+  if (data.horasPorAula !== undefined) {
+    setVal("horasPorAula", data.horasPorAula);
+  } else if (data.horasPorDia) {
+    // Inferência inteligente para modelos legados: se o total do dia for fracionário (ex: 03:40 -> 4 aulas de 55m)
+    const minDia = timeToMinutes(data.horasPorDia);
+    if (minDia === 220 || minDia === 440) {
+      setVal("horasPorAula", "00:55");
+    } else {
+      setVal("horasPorAula", "01:00");
+    }
+  }
+
+  if (data.aulasPorDia !== undefined) {
+    setVal("aulasPorDia", data.aulasPorDia);
+  } else if (data.horasPorDia) {
+    const minDia = timeToMinutes(data.horasPorDia);
+    const haVal = document.getElementById("horasPorAula")?.value || "01:00";
+    const minAula = timeToMinutes(haVal) || 60;
+    const qtdCalc = Math.round(minDia / minAula) || 4;
+    setVal("aulasPorDia", qtdCalc);
+  }
+
   if (data.dataInicioStr !== undefined) setVal("dataInicioStr", data.dataInicioStr);
 
   if (Array.isArray(data.diasSemana)) {
@@ -926,6 +950,8 @@ function calculateDurationFromStartEnd() {
   const hi = document.getElementById("horaInicio")?.value;
   const hf = document.getElementById("horaFim")?.value;
   const hd = document.getElementById("horasPorDia");
+  const ha = document.getElementById("horasPorAula");
+  const ad = document.getElementById("aulasPorDia");
   if (!hd || !isValidTimeFormat(hi) || !isValidTimeFormat(hf)) return;
 
   const startMin = timeToMinutes(hi);
@@ -936,6 +962,12 @@ function calculateDurationFromStartEnd() {
   }
   if (diffMin > 0) {
     hd.value = minutesToHHMM(diffMin);
+    // Ajusta aulasPorDia ou horasPorAula para manter coerência
+    const minAula = ha && isValidTimeFormat(ha.value) ? timeToMinutes(ha.value) : 60;
+    if (ad && minAula > 0) {
+      const qtdAulas = Math.round(diffMin / minAula);
+      if (qtdAulas > 0) ad.value = String(qtdAulas);
+    }
   }
 }
 
@@ -943,22 +975,47 @@ function calculateEndFromStartAndDuration() {
   const hi = document.getElementById("horaInicio")?.value;
   const hd = document.getElementById("horasPorDia")?.value;
   const hf = document.getElementById("horaFim");
-  if (!hf || !isValidTimeFormat(hi) || !isValidTimeFormat(hd)) return;
+  const ha = document.getElementById("horasPorAula");
+  const ad = document.getElementById("aulasPorDia");
+  if (!isValidTimeFormat(hd)) return;
 
-  const startMin = timeToMinutes(hi);
   const durMin = timeToMinutes(hd);
-  if (durMin > 0) {
+  if (durMin > 0 && isValidTimeFormat(hi) && hf) {
+    const startMin = timeToMinutes(hi);
     const endMin = (startMin + durMin) % 1440;
     hf.value = minutesToHHMM(endMin);
   }
+
+  // Sincroniza aulasPorDia mantendo a coerência com horasPorAula
+  const minAula = ha && isValidTimeFormat(ha.value) ? timeToMinutes(ha.value) : 60;
+  if (ad && minAula > 0 && durMin > 0) {
+    const qtdCalc = Math.round(durMin / minAula);
+    if (qtdCalc > 0) ad.value = String(qtdCalc);
+  }
 }
 
-// 5. MOTOR DE CÁLCULO DE DIAS LETIVOS COM GESTÃO DE AULAS INDIVIDUAIS
+function calculateHorasPorDiaFromAulaAndQtd() {
+  const ha = document.getElementById("horasPorAula")?.value;
+  const ad = document.getElementById("aulasPorDia")?.value;
+  const hd = document.getElementById("horasPorDia");
+  if (!hd || !ha || !isValidTimeFormat(ha)) return;
+
+  const minAula = timeToMinutes(ha);
+  const qtd = parseInt(ad, 10) || 4;
+  const totalMin = Math.round(minAula * qtd);
+  if (totalMin > 0) {
+    hd.value = minutesToHHMM(totalMin);
+    calculateEndFromStartAndDuration();
+  }
+}
+
 function calculateSchedule(formData, preserveCustomLessons = false) {
   const {
     dataInicioStr,
     cargaHorariaTotal,
     horasPorDia,
+    horasPorAula = "01:00",
+    aulasPorDia = 4,
     diasSemana,
     ambienteTeoria = "S01",
     ambientePratica = "L01",
@@ -1111,6 +1168,8 @@ function calculateSchedule(formData, preserveCustomLessons = false) {
           minutos: minutosAula,
           baseMinutos: minutosDia,
           horas: minutosAula / 60,
+          horasPorAula: horasPorAula || "01:00",
+          aulasPorDia: parseInt(aulasPorDia, 10) || 4,
           tipo: tipo,
           ambiente: amb,
           isSplit: isSplit,
@@ -1153,6 +1212,8 @@ function calculateSchedule(formData, preserveCustomLessons = false) {
           minutos: 0,
           baseMinutos: minutosDia,
           horas: 0,
+          horasPorAula: horasPorAula || "01:00",
+          aulasPorDia: parseInt(aulasPorDia, 10) || 4,
           tipo: tipo,
           ambiente: amb,
           isSplit: false,
@@ -1953,6 +2014,8 @@ function getFormData() {
     horaInicio: document.getElementById("horaInicio")?.value || "13:00",
     horaFim: document.getElementById("horaFim")?.value || "17:00",
     cargaHorariaTotal: document.getElementById("cargaHorariaTotal")?.value || "120",
+    horasPorAula: document.getElementById("horasPorAula")?.value || "01:00",
+    aulasPorDia: parseInt(document.getElementById("aulasPorDia")?.value, 10) || 4,
     horasPorDia: document.getElementById("horasPorDia")?.value || "04:00",
     dataInicioStr: document.getElementById("dataInicioStr")?.value || "2026-04-14",
     diasSemana: [...currentDays],
@@ -1983,7 +2046,7 @@ function updatePreview(preserveCustom = false) {
   // Atualiza também o subtítulo da barra superior com a versão
   const schoolLabel = document.getElementById("topbar-school-label");
   if (schoolLabel) {
-    schoolLabel.textContent = "V.2.1";
+    schoolLabel.textContent = "V.2.2";
   }
 
   renderInteractiveDaysGrid();
@@ -2041,6 +2104,25 @@ function applyPreset(presetKey) {
   setVal("horaFim", p.horaFim);
   setVal("cargaHorariaTotal", p.cargaHorariaTotal);
   setVal("horasPorDia", p.horasPorDia || "04:00");
+  if (p.horasPorAula !== undefined) {
+    setVal("horasPorAula", p.horasPorAula);
+  } else if (p.horasPorDia) {
+    const minDia = timeToMinutes(p.horasPorDia);
+    setVal("horasPorAula", (minDia === 220 || minDia === 440) ? "00:55" : "01:00");
+  } else {
+    setVal("horasPorAula", "01:00");
+  }
+
+  if (p.aulasPorDia !== undefined) {
+    setVal("aulasPorDia", p.aulasPorDia);
+  } else if (p.horasPorDia) {
+    const minDia = timeToMinutes(p.horasPorDia);
+    const haVal = document.getElementById("horasPorAula")?.value || "01:00";
+    const minAula = timeToMinutes(haVal) || 60;
+    setVal("aulasPorDia", Math.round(minDia / minAula) || 4);
+  } else {
+    setVal("aulasPorDia", 4);
+  }
   setVal("dataInicioStr", p.dataInicioStr);
 
   currentDays = Array.isArray(p.diasSemana) ? [...p.diasSemana] : [];
@@ -2251,6 +2333,42 @@ document.addEventListener("DOMContentLoaded", () => {
       calculateEndFromStartAndDuration();
       updatePreview(true);
     });
+  }
+
+  // Máscara e recálculo para Horas/Aula e Aulas/Dia
+  const ha = document.getElementById("horasPorAula");
+  if (ha) {
+    ha.addEventListener("input", (e) => {
+      let val = e.target.value.replace(/\D/g, "");
+      if (val.length > 4) val = val.slice(0, 4);
+      if (val.length > 2) {
+        val = val.slice(0, 2) + ":" + val.slice(2);
+      }
+      e.target.value = val;
+
+      if (val.length === 5) {
+        calculateHorasPorDiaFromAulaAndQtd();
+      }
+      updatePreview(true);
+    });
+
+    ha.addEventListener("change", () => {
+      calculateHorasPorDiaFromAulaAndQtd();
+      updatePreview(true);
+    });
+  }
+
+  const ad = document.getElementById("aulasPorDia");
+  if (ad) {
+    const handleAdChange = (e) => {
+      let val = e.target.value.replace(/\D/g, "");
+      if (val.length > 2) val = val.slice(0, 2);
+      if (e.target.value !== val) e.target.value = val;
+      calculateHorasPorDiaFromAulaAndQtd();
+      updatePreview(true);
+    };
+    ad.addEventListener("input", handleAdChange);
+    ad.addEventListener("change", handleAdChange);
   }
 
   // 3. Vincular Botões de Dias da Semana
@@ -2466,6 +2584,8 @@ function resetFormToEmpty() {
   setVal("horaInicio", "");
   setVal("horaFim", "");
   setVal("cargaHorariaTotal", "");
+  setVal("horasPorAula", "01:00");
+  setVal("aulasPorDia", "4");
   setVal("horasPorDia", "");
   setVal("dataInicioStr", "");
 

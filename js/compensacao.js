@@ -411,12 +411,18 @@ function compSincronizarAbaMae() {
   const elTurma   = document.getElementById('codigoTurma');
   const elDocente = document.getElementById('docente');
   const elChTotal = document.getElementById('cargaHorariaTotal');
+  const elHorasPorAula = document.getElementById('horasPorAula');
+  const elAulasPorDia  = document.getElementById('aulasPorDia');
+  const elHorasPorDia  = document.getElementById('horasPorDia');
 
   const novaTurma = elTurma ? elTurma.value.trim() : '';
   const turmaAnterior = CompState.turmaInfo.turma;
   CompState.turmaInfo.curso   = elCurso ? elCurso.value.trim() : '';
   CompState.turmaInfo.turma   = novaTurma;
   CompState.turmaInfo.docente = elDocente ? elDocente.value.trim() : '';
+  CompState.turmaInfo.horasPorAula = elHorasPorAula ? elHorasPorAula.value.trim() : '01:00';
+  CompState.turmaInfo.aulasPorDia  = elAulasPorDia ? (parseInt(elAulasPorDia.value, 10) || 4) : 4;
+  CompState.turmaInfo.horasPorDia  = elHorasPorDia ? elHorasPorDia.value.trim() : '04:00';
 
   // ========================================================================
   // PERSISTÊNCIA ISOLADA POR TURMA & GERADOR DE TESTES
@@ -631,6 +637,8 @@ function compSincronizarAbaMae() {
       dataKey: dateKey,
       horas: horas,
       minutos: aula.minutos || (horas * 60),
+      horasPorAula: aula.horasPorAula || CompState.turmaInfo.horasPorAula || '01:00',
+      aulasPorDia: aula.aulasPorDia || CompState.turmaInfo.aulasPorDia || 4,
       tipo: aula.tipo || 'teoria',
       diaSemanaNome: aula.diaSemanaNome || '',
       ambiente: aula.ambiente || '',
@@ -643,22 +651,19 @@ function compSincronizarAbaMae() {
 
   // ========================================================================
   // AUTO-DETECÇÃO DE AULAS DE 55 MINUTOS vs 1 HORA (60 min)
-  // Regra: se a quantidade de horas de aula por dia for inteiro (ex: 1, 2, 3, 4h),
-  // toggle fica desativado (1h). Se for não-inteiro (ex: 7:20, 3:40, 7.33), ativado (55min).
+  // Baseada no campo explícito "Horas / Aula", eliminando qualquer ambiguidade.
   // ========================================================================
   if (!CompState.aula55minManual) {
-    let temFracionario = false;
-    for (const dKey of CompState.diasLetivos) {
-      const a = CompState.aulasMap.get(dKey);
-      if (a && a.horas) {
-        // Se a diferença para o inteiro mais próximo for maior que 0.001
-        if (Math.abs(a.horas - Math.round(a.horas)) > 0.01) {
-          temFracionario = true;
-          break;
-        }
-      }
+    const haVal = CompState.turmaInfo.horasPorAula || '01:00';
+    const minAula = (typeof timeToMinutes === 'function') ? timeToMinutes(haVal) : (haVal === '00:55' ? 55 : 60);
+
+    if (minAula > 0 && minAula !== 60) {
+      CompState.aula55min = true;
+      CompState.minutosModulo = minAula;
+    } else {
+      CompState.aula55min = false;
+      CompState.minutosModulo = 60;
     }
-    CompState.aula55min = temFracionario;
   }
 
   // ========================================================================
@@ -717,22 +722,47 @@ function compAtualizarInfoDiasLetivos() {
 // ==========================================================================
 // MOTOR DE CÁLCULO DAS 24 VARIÁVEIS (AUTO-FILL & REGRAS DE NEGÓCIO)
 /**
- * Retorna a carga horária de uma aula específica (dateKey), respeitando se
- * as aulas estão operando em modo minutos/módulo personalizado (onde cada aula de 1h equivale a minutosModulo/60h)
- * ou em modo padrão 1 hora.
+ * Retorna a duração em horas decimais de 1 aula individual (para cálculo de 1 falta).
+ * Respeita a duração real da aula configurada na turma (ex: 55min -> 55/60 = 0.9167h; 60min -> 1.0h).
+ * @param {string} dateKey
+ * @returns {number}
+ */
+function compObterDuracaoAulaIndividual(dateKey) {
+  const aula = CompState.aulasMap.get(dateKey);
+  if (CompState.aula55min) {
+    const minutos = CompState.minutosModulo || 55;
+    return minutos / 60;
+  }
+  const haVal = (aula && aula.horasPorAula) ? aula.horasPorAula : (CompState.turmaInfo.horasPorAula || '01:00');
+  const minAula = (typeof timeToMinutes === 'function') ? timeToMinutes(haVal) : (haVal === '00:55' ? 55 : 60);
+  return (minAula > 0) ? (minAula / 60) : 1.0;
+}
+
+/**
+ * Retorna a carga horária TOTAL de uma aula específica (dateKey) em horas decimais.
  * @param {string} dateKey
  * @returns {number}
  */
 function compObterHorasAula(dateKey) {
   const aula = CompState.aulasMap.get(dateKey);
   if (!aula) return 4;
-  if (CompState.aula55min) {
-    // Modo proporcional em minutos: converte a base de minutos (ou horas) pelo fator minutosModulo/60
-    const minutos = CompState.minutosModulo || 55;
-    const baseHoras = aula.horas || (aula.minutos ? aula.minutos / 60 : 4);
-    return Math.round((baseHoras * (minutos / 60)) * 100) / 100;
+
+  if (typeof aula.minutos === 'number' && aula.minutos > 0) {
+    // Se o usuário ativou manualmente o toggle de 55min e a aula original foi configurada como 60min
+    if (CompState.aula55min && CompState.aula55minManual) {
+      const minAulaOriginal = (aula.horasPorAula && typeof timeToMinutes === 'function')
+        ? timeToMinutes(aula.horasPorAula)
+        : 60;
+      if (minAulaOriginal === 60) {
+        const minModulo = CompState.minutosModulo || 55;
+        const qtdAulas = aula.aulasPorDia || 4;
+        return Math.round(((qtdAulas * minModulo) / 60) * 100) / 100;
+      }
+    }
+    return Math.round((aula.minutos / 60) * 100) / 100;
   }
-  return aula.horas || (aula.minutos ? aula.minutos / 60 : 4);
+
+  return Math.round((aula.horas || 4) * 100) / 100;
 }
 
 /**
@@ -3375,9 +3405,11 @@ function compAbrirModalPersonalizarFalta(aluno, isoDate) {
   const idxAula = CompState.diasLetivos.indexOf(isoDate) + 1;
   if (titleEl) titleEl.textContent = `Aula ${idxAula} • ${compIsoToDDMMAAAA(isoDate)}`;
   if (subEl) subEl.textContent = `Discente: ${aluno} • Carga do Dia: ${compFormatarHorasDecimais(horasAula)}`;
-  const minutos = CompState.minutosModulo || 55;
+  const duracao1Aula = compObterDuracaoAulaIndividual(isoDate);
+  const min1Aula = Math.round(duracao1Aula * 60);
+
   if (baseHintEl) {
-    baseHintEl.textContent = CompState.aula55min ? `Base: ${minutos} min/falta` : 'Base: 1h/falta (1:00h)';
+    baseHintEl.textContent = `Base: ${min1Aula} min/falta (${compFormatarHorasDecimais(duracao1Aula)})`;
   }
   if (inputHoras) {
     inputHoras.max = String(horasAula);
@@ -3385,10 +3417,14 @@ function compAbrirModalPersonalizarFalta(aluno, isoDate) {
   }
   if (inputObs) inputObs.value = obsAluno;
 
-  // Monta botões dinâmicos de 0 (Presença), 1 a 8 faltas e Integral
+  // Monta botões dinâmicos de 0 (Presença), 1 a N faltas e Integral
   if (grid1a8) {
     grid1a8.innerHTML = '';
-    const fatorHora = CompState.aula55min ? (minutos / 60) : 1.0;
+    const aulaObj = CompState.aulasMap.get(isoDate);
+    const maxAulasDia = (aulaObj && aulaObj.aulasPorDia)
+      ? aulaObj.aulasPorDia
+      : (CompState.turmaInfo.aulasPorDia || Math.round(horasAula / duracao1Aula) || 4);
+    const totalSlots = Math.min(Math.max(maxAulasDia, 2), 8);
 
     // Botão 0 Faltas (Presença Plena)
     const btnZero = document.createElement('button');
@@ -3399,9 +3435,9 @@ function compAbrirModalPersonalizarFalta(aluno, isoDate) {
     btnZero.onclick = () => { if (inputHoras) inputHoras.value = '0'; };
     grid1a8.appendChild(btnZero);
 
-    // Botões de 1 a 8 faltas
-    for (let f = 1; f <= 8; f++) {
-      let hVal = f * fatorHora;
+    // Botões de 1 a totalSlots faltas
+    for (let f = 1; f <= totalSlots; f++) {
+      let hVal = f * duracao1Aula;
       if (hVal > horasAula) hVal = horasAula;
       hVal = Math.round(hVal * 100) / 100;
 
