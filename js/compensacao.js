@@ -492,6 +492,9 @@ function compSincronizarAbaMae() {
 
     // 2. Carrega ou inicializa a nova turma
     if (novaTurma) {
+      const savedModels = (typeof getSavedModels === 'function') ? getSavedModels() : {};
+      const modelTurma = savedModels[novaTurma];
+
       if (bancoTurmas[novaTurma] && Array.isArray(bancoTurmas[novaTurma].alunos)) {
         // Carrega do armazenamento persistente (alunos e configurações já cadastrados pelo professor)
         const salvo = bancoTurmas[novaTurma];
@@ -507,6 +510,36 @@ function compSincronizarAbaMae() {
         CompState.coordenacaoPorAluno = salvo.coordenacaoPorAluno ? { ...salvo.coordenacaoPorAluno } : {};
         CompState.conteudoProgramaticoPorDia = salvo.conteudoProgramaticoPorDia ? { ...salvo.conteudoProgramaticoPorDia } : {};
         CompState.ultimasFaltasImpressas = salvo.ultimasFaltasImpressas ? { ...salvo.ultimasFaltasImpressas } : {};
+      } else if (bancoTurmas['_TURMA_GERAL_'] && Array.isArray(bancoTurmas['_TURMA_GERAL_'].alunos) && bancoTurmas['_TURMA_GERAL_'].alunos.length > 0) {
+        // Migra alunos cadastrados antes de preencher o código da turma
+        const salvo = bancoTurmas['_TURMA_GERAL_'];
+        CompState.alunos = [...salvo.alunos];
+        CompState.ordemFisicaAlunos = Array.isArray(salvo.ordemFisicaAlunos) ? [...salvo.ordemFisicaAlunos] : [...salvo.alunos];
+        if (salvo.subViewDiario) CompState.subViewDiario = salvo.subViewDiario;
+        CompState.faltasPorAluno = salvo.faltasPorAluno || {};
+        CompState.overrides = salvo.overrides || {};
+        CompState.observacoesPorDia = salvo.observacoesPorDia || {};
+        CompState.manualFlagAlunos = salvo.manualFlagAlunos ? { ...salvo.manualFlagAlunos } : {};
+        CompState.evadidosPorAluno = salvo.evadidosPorAluno ? { ...salvo.evadidosPorAluno } : {};
+        if (salvo.coordenacao) CompState.coordenacao = { ...salvo.coordenacao };
+        CompState.coordenacaoPorAluno = salvo.coordenacaoPorAluno ? { ...salvo.coordenacaoPorAluno } : {};
+        CompState.conteudoProgramaticoPorDia = salvo.conteudoProgramaticoPorDia ? { ...salvo.conteudoProgramaticoPorDia } : {};
+        CompState.ultimasFaltasImpressas = salvo.ultimasFaltasImpressas ? { ...salvo.ultimasFaltasImpressas } : {};
+        delete bancoTurmas['_TURMA_GERAL_'];
+      } else if (modelTurma && Array.isArray(modelTurma.alunos) && modelTurma.alunos.length > 0) {
+        // Carrega discentes anexados ao modelo do Cronograma
+        CompState.alunos = [...modelTurma.alunos];
+        CompState.ordemFisicaAlunos = Array.isArray(modelTurma.ordemFisicaAlunos) ? [...modelTurma.ordemFisicaAlunos] : [...modelTurma.alunos];
+        CompState.faltasPorAluno = modelTurma.faltasPorAluno ? { ...modelTurma.faltasPorAluno } : {};
+        CompState.overrides = modelTurma.overrides ? { ...modelTurma.overrides } : {};
+        CompState.observacoesPorDia = modelTurma.observacoesPorDia ? { ...modelTurma.observacoesPorDia } : {};
+        CompState.manualFlagAlunos = modelTurma.manualFlagAlunos ? { ...modelTurma.manualFlagAlunos } : {};
+        CompState.evadidosPorAluno = modelTurma.evadidosPorAluno ? { ...modelTurma.evadidosPorAluno } : {};
+        CompState.coordenacaoPorAluno = modelTurma.coordenacaoPorAluno ? { ...modelTurma.coordenacaoPorAluno } : {};
+        CompState.conteudoProgramaticoPorDia = modelTurma.conteudoProgramaticoPorDia ? { ...modelTurma.conteudoProgramaticoPorDia } : {};
+      } else if (!CompState.ultimaTurmaCarregada && CompState.alunos && CompState.alunos.length > 0) {
+        // Mantém alunos já digitados na tela na primeira atribuição de código de turma
+        CompState.alunosPorTurma[novaTurma] = [...CompState.alunos];
       } else {
         // Nova turma: Inicia estritamente vazia sem discentes até o cadastro pelo professor
         CompState.alunos = [];

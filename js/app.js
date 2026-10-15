@@ -10,11 +10,12 @@ const PRESETS = {};
 
 // Variável com o histórico de alterações da versão atual
 const mudancasDeVersao = `
-<div class="version-popup-header">Alterações da versão V.02</div>
+<div class="version-popup-header">Alterações da versão V.2.1</div>
 <ul class="version-popup-list">
   <li>Adição dos calendários de 2027 e 2028 à geração de cronogramas.</li>
   <li>Adição das abas de compensação de ausências, com preenchimento automático integrado entre as turmas (<em>Alpha</em>) e o calendário.</li>
   <li>Aprimoramento da aba de compensação de ausências, com avisos, preenchimento automático dos dados dos discentes e geração de documentos prontos para impressão.</li>
+  <li>Suporte à exportação e restauração completa de perfis (incluindo discentes, faltas, diários e ordens físicas).</li>
 </ul>
 <div class="version-popup-header" style="margin-top: 10px; font-size: 12px; color: var(--text-primary);">Observações:</div>
 <ul class="version-popup-list">
@@ -387,6 +388,29 @@ function fillFormData(data) {
     lessonCustomizations = {};
   }
 
+  // Restaura alunos e chamadas associados à turma se presentes
+  if (Array.isArray(data.alunos) && data.alunos.length > 0) {
+    if (typeof CompState !== "undefined" && CompState) {
+      CompState.alunos = [...data.alunos];
+      CompState.ordemFisicaAlunos = Array.isArray(data.ordemFisicaAlunos) ? [...data.ordemFisicaAlunos] : [...data.alunos];
+      if (data.faltasPorAluno) CompState.faltasPorAluno = JSON.parse(JSON.stringify(data.faltasPorAluno));
+      if (data.overrides) CompState.overrides = JSON.parse(JSON.stringify(data.overrides));
+      if (data.observacoesPorDia) CompState.observacoesPorDia = JSON.parse(JSON.stringify(data.observacoesPorDia));
+      if (data.manualFlagAlunos) CompState.manualFlagAlunos = JSON.parse(JSON.stringify(data.manualFlagAlunos));
+      if (data.evadidosPorAluno) CompState.evadidosPorAluno = JSON.parse(JSON.stringify(data.evadidosPorAluno));
+      if (data.coordenacaoPorAluno) CompState.coordenacaoPorAluno = JSON.parse(JSON.stringify(data.coordenacaoPorAluno));
+      if (data.conteudoProgramaticoPorDia) CompState.conteudoProgramaticoPorDia = JSON.parse(JSON.stringify(data.conteudoProgramaticoPorDia));
+
+      if (data.codigoTurma) {
+        CompState.turmaInfo.turma = data.codigoTurma;
+        CompState.ultimaTurmaCarregada = data.codigoTurma;
+        if (typeof compSalvarTurmaAtualStorage === "function") {
+          compSalvarTurmaAtualStorage();
+        }
+      }
+    }
+  }
+
   renderManualDatesList();
   updatePreview(true);
 }
@@ -395,10 +419,63 @@ function fillFormData(data) {
 function exportProfile() {
   let saved = getSavedModels();
 
-  // Se o usuário estiver editando uma turma válida no formulário,
-  // salvamos/atualizamos uma cópia nos modelos para garantir que nenhuma alteração seja perdida
+  // 1. Força auto-save da chamada e compensações da turma ativa antes de extrair
+  if (typeof compSalvarTurmaAtualStorage === "function") {
+    try { compSalvarTurmaAtualStorage(); } catch (_) {}
+  }
+  let compensacaoPayload = null;
+  if (typeof compExportarDadosCompletos === "function") {
+    try {
+      compensacaoPayload = compExportarDadosCompletos();
+    } catch (e) {
+      console.warn("Aviso ao exportar compensações completas via compExportarDadosCompletos:", e);
+    }
+  }
+
+  if (!compensacaoPayload) {
+    let compData = {};
+    let parecer = "";
+    let conteudo = {};
+    try {
+      const rawComp = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+      if (rawComp) compData = JSON.parse(rawComp);
+      parecer = localStorage.getItem("SENAI_COMP_COORD_PARECER") || "";
+      const rawCont = localStorage.getItem("SENAI_COMP_CONTEUDO_DATA");
+      if (rawCont) conteudo = JSON.parse(rawCont);
+    } catch (_) {}
+
+    const colW = parseInt(localStorage.getItem("SENAI_COMP_COL_ALUNO_WIDTH"), 10) || 200;
+    compensacaoPayload = {
+      turmasCompensacao: compData,
+      colAlunoWidth: colW,
+      parecerCoordenacao: parecer,
+      conteudoProgramatico: conteudo,
+      configuracoes: {
+        colAlunoWidth: colW
+      }
+    };
+  }
+
+  // 2. Extrai dados do formulário ativo com os discentes vinculados
   const currentTurmaInput = document.getElementById("codigoTurma")?.value?.trim();
   const currentForm = getFormData();
+
+  const turmasComp = compensacaoPayload?.turmasCompensacao || {};
+  const turmaAtivaCod = currentForm.codigoTurma || currentTurmaInput || "";
+  const alunosAtivos = (typeof CompState !== "undefined" && Array.isArray(CompState.alunos) && CompState.alunos.length > 0)
+    ? [...CompState.alunos]
+    : (turmasComp[turmaAtivaCod]?.alunos || currentForm.alunos || []);
+  const ordemFisicaAtiva = (typeof CompState !== "undefined" && Array.isArray(CompState.ordemFisicaAlunos) && CompState.ordemFisicaAlunos.length > 0)
+    ? [...CompState.ordemFisicaAlunos]
+    : (turmasComp[turmaAtivaCod]?.ordemFisicaAlunos || currentForm.ordemFisicaAlunos || alunosAtivos);
+  const faltasAtivas = (typeof CompState !== "undefined" && CompState.faltasPorAluno)
+    ? JSON.parse(JSON.stringify(CompState.faltasPorAluno))
+    : (turmasComp[turmaAtivaCod]?.faltasPorAluno || currentForm.faltasPorAluno || {});
+
+  currentForm.alunos = alunosAtivos;
+  currentForm.ordemFisicaAlunos = ordemFisicaAtiva;
+  currentForm.faltasPorAluno = faltasAtivas;
+
   if (currentTurmaInput && currentForm && currentForm.codigoTurma) {
     currentForm._savedAt = Date.now();
     saved[currentForm.codigoTurma] = currentForm;
@@ -411,7 +488,27 @@ function exportProfile() {
     populatePresetDropdown();
   }
 
-  // 1. Obter primeiro nome do professor/responsável
+  // Garante que TODOS os modelos salvos possuam seus discentes anexados
+  for (const key of Object.keys(saved)) {
+    if (turmasComp[key] && Array.isArray(turmasComp[key].alunos)) {
+      saved[key].alunos = [...turmasComp[key].alunos];
+      saved[key].ordemFisicaAlunos = [...(turmasComp[key].ordemFisicaAlunos || turmasComp[key].alunos)];
+      saved[key].faltasPorAluno = JSON.parse(JSON.stringify(turmasComp[key].faltasPorAluno || {}));
+      saved[key].overrides = JSON.parse(JSON.stringify(turmasComp[key].overrides || {}));
+      saved[key].observacoesPorDia = JSON.parse(JSON.stringify(turmasComp[key].observacoesPorDia || {}));
+      saved[key].manualFlagAlunos = JSON.parse(JSON.stringify(turmasComp[key].manualFlagAlunos || {}));
+      saved[key].evadidosPorAluno = JSON.parse(JSON.stringify(turmasComp[key].evadidosPorAluno || {}));
+      saved[key].coordenacaoPorAluno = JSON.parse(JSON.stringify(turmasComp[key].coordenacaoPorAluno || {}));
+      saved[key].conteudoProgramaticoPorDia = JSON.parse(JSON.stringify(turmasComp[key].conteudoProgramaticoPorDia || {}));
+    } else if (key === turmaAtivaCod && alunosAtivos.length > 0) {
+      saved[key].alunos = alunosAtivos;
+      saved[key].ordemFisicaAlunos = ordemFisicaAtiva;
+      saved[key].faltasPorAluno = faltasAtivas;
+    }
+  }
+  saveModels(saved);
+
+  // 3. Obter primeiro nome do professor/responsável
   const docenteVal = document.getElementById("docente")?.value?.trim() || "";
   let primeiroNome = "";
 
@@ -436,56 +533,19 @@ function exportProfile() {
   primeiroNome = primeiroNome.replace(/[^a-zA-Z0-9À-ÿ_-]/g, "");
   if (!primeiroNome) primeiroNome = "Perfil";
 
-  // 2. Formatar data atual no padrão AA.MM.DD
+  // 4. Formatar data atual no padrão AA.MM.DD
   const now = new Date();
   const aa = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, "0");
   const dd = String(now.getDate()).padStart(2, "0");
   const filename = `App_Cronograma_Completo_${primeiroNome}_${aa}.${mm}.${dd}.json`;
 
-  // 3. Capturar tema, horários rápidos e dados do formulário do Cronograma (Aba 1)
+  // 5. Capturar tema, horários rápidos e dados do formulário do Cronograma (Aba 1)
   const temaAtual = localStorage.getItem("theme") || "solarized";
   const horariosList = getCustomHorarios();
   const sidebarWidthVal = localStorage.getItem("senai_panels_sidebar_width");
 
-  // 4. Capturar banco completo de compensações (Aba 2 - Diário, Faltas, Ordem Física e Alunos)
-  let compensacaoPayload = null;
-  if (typeof compExportarDadosCompletos === "function") {
-    try {
-      compensacaoPayload = compExportarDadosCompletos();
-    } catch (e) {
-      console.warn("Aviso ao exportar compensações completas via compExportarDadosCompletos:", e);
-    }
-  }
-
-  if (!compensacaoPayload) {
-    if (typeof compSalvarTurmaAtualStorage === "function") {
-      try { compSalvarTurmaAtualStorage(); } catch (_) {}
-    }
-    let compData = {};
-    let parecer = "";
-    let conteudo = {};
-    try {
-      const rawComp = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
-      if (rawComp) compData = JSON.parse(rawComp);
-      parecer = localStorage.getItem("SENAI_COMP_COORD_PARECER") || "";
-      const rawCont = localStorage.getItem("SENAI_COMP_CONTEUDO_DATA");
-      if (rawCont) conteudo = JSON.parse(rawCont);
-    } catch (_) {}
-
-    const colW = parseInt(localStorage.getItem("SENAI_COMP_COL_ALUNO_WIDTH"), 10) || 200;
-    compensacaoPayload = {
-      turmasCompensacao: compData,
-      colAlunoWidth: colW,
-      parecerCoordenacao: parecer,
-      conteudoProgramatico: conteudo,
-      configuracoes: {
-        colAlunoWidth: colW
-      }
-    };
-  }
-
-  // 5. Capturar modificações de calendário e feriados universais (Aba 3)
+  // 6. Capturar modificações de calendário e feriados universais (Aba 3)
   let modificacoesCalendario = { adicionais: [], removidos: [] };
   try {
     if (typeof holidayService !== "undefined" && typeof holidayService.getTodasModificacoesUsuario === "function") {
@@ -498,13 +558,18 @@ function exportProfile() {
     console.warn("Aviso ao ler dados de calendário para o perfil:", e);
   }
 
-  // 6. Montar objeto UNIVERSAL COMPLETO (v3.0) com total integridade e retrocompatibilidade
+  // 7. Montar objeto UNIVERSAL COMPLETO (v3.0) com total integridade de discentes
   const profilePayload = {
     _tipo: "CONFIGURACAO_COMPLETA_SENAI",
     versao: "3.0",
     exportadoEm: now.toISOString(),
     tema: temaAtual,
     sidebarWidth: sidebarWidthVal ? parseInt(sidebarWidthVal, 10) : 400,
+
+    // ALUNOS NO NÍVEL RAIZ PARA GARANTIA TOTAL DE ACESSO DIRETO
+    alunos: alunosAtivos,
+    ordemFisicaAlunos: ordemFisicaAtiva,
+    faltasPorAluno: faltasAtivas,
 
     // ABA 1: CRONOGRAMA
     cronograma: {
@@ -590,53 +655,8 @@ function importProfile(event) {
           populateHorarioPresetDropdown();
         }
 
-        // 3. Aba 1 - Cronograma: Modelos Salvos
-        const turmasFonte = parsed.cronograma?.modelos || parsed.turmas || {};
-        const currentSaved = getSavedModels();
-        let totalModelos = 0;
-        let primeiroModeloKey = null;
-
-        for (const [key, modelData] of Object.entries(turmasFonte)) {
-          if (modelData && typeof modelData === "object" && (modelData.codigoTurma || modelData.nomeCurso)) {
-            const k = modelData.codigoTurma || key;
-            currentSaved[k] = modelData;
-            if (!primeiroModeloKey) primeiroModeloKey = k;
-            totalModelos++;
-          }
-        }
-        saveModels(currentSaved);
-        populatePresetDropdown();
-
-        // 4. Aba 1 - Cronograma: Dados do Formulário Ativo e Overrides
-        const formAtivo = parsed.cronograma?.dadosFormulario || parsed.dadosFormulario;
-        if (formAtivo && typeof formAtivo === "object") {
-          fillFormData(formAtivo);
-          try {
-            localStorage.setItem("SENAI_CRONOGRAMA_DRAFT", JSON.stringify(formAtivo));
-          } catch (_) {}
-        } else if (primeiroModeloKey) {
-          const select = document.getElementById("presetSelect");
-          if (select) select.value = "SAVED_" + primeiroModeloKey;
-          applyPreset("SAVED_" + primeiroModeloKey);
-        }
-
-        const overridesCron = parsed.cronograma?.overrides;
-        if (overridesCron && typeof overridesCron === "object") {
-          if (overridesCron.manualDateOverrides) {
-            manualDateOverrides = { ...overridesCron.manualDateOverrides };
-          }
-          if (Array.isArray(overridesCron.inactiveDates)) {
-            inactiveDateKeys = new Set(overridesCron.inactiveDates);
-          }
-          if (overridesCron.customLessons) {
-            lessonCustomizations = { ...overridesCron.customLessons };
-          }
-          renderManualDatesList();
-          updatePreview(true);
-        }
-
-        // 5. Aba 2 - Compensação de Ausências & Diário Físico (Restauração Total)
-        const compPayload = parsed.compensacao || { turmasCompensacao: parsed.compensacoes };
+        // 3. Aba 2 - Compensação de Ausências & Diário Físico (Restauração Imediata das Turmas e Alunos)
+        const compPayload = parsed.compensacao || { turmasCompensacao: parsed.compensacoes || parsed.turmasCompensacao || {} };
         if (typeof compImportarDadosCompletos === "function") {
           try {
             compImportarDadosCompletos(compPayload);
@@ -666,14 +686,90 @@ function importProfile(event) {
             localStorage.setItem("SENAI_COMP_COL_ALUNO_WIDTH", String(parsed.compensacao.colAlunoWidth));
             document.documentElement.style.setProperty("--comp-col-aluno-width", `${parsed.compensacao.colAlunoWidth}px`);
           }
-
-          if (typeof window.CompState === "object" && window.CompState) {
-            window.CompState.ultimaTurmaCarregada = null;
-          }
-          if (typeof compSincronizarAbaMae === "function") compSincronizarAbaMae();
-          if (typeof compRenderizarDiario === "function") compRenderizarDiario();
-          if (typeof compRenderizarVariaveis === "function") compRenderizarVariaveis();
         }
+
+        // 4. Aba 1 - Cronograma: Modelos Salvos (com alunos vinculados)
+        const turmasFonte = parsed.cronograma?.modelos || parsed.turmas || {};
+        const currentSaved = getSavedModels();
+        let totalModelos = 0;
+        let primeiroModeloKey = null;
+
+        try {
+          const rawAtual = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+          const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
+          for (const [key, modelData] of Object.entries(turmasFonte)) {
+            if (modelData && typeof modelData === "object" && (modelData.codigoTurma || modelData.nomeCurso)) {
+              const k = modelData.codigoTurma || key;
+              currentSaved[k] = modelData;
+              if (!primeiroModeloKey) primeiroModeloKey = k;
+              totalModelos++;
+
+              // Se o modelo trouxer alunos, vincula ao banco persistente de compensação
+              if (Array.isArray(modelData.alunos) && modelData.alunos.length > 0) {
+                if (!bancoAtual[k]) bancoAtual[k] = { alunos: [] };
+                bancoAtual[k].alunos = [...modelData.alunos];
+                bancoAtual[k].ordemFisicaAlunos = Array.isArray(modelData.ordemFisicaAlunos) ? [...modelData.ordemFisicaAlunos] : [...modelData.alunos];
+                if (modelData.faltasPorAluno) bancoAtual[k].faltasPorAluno = { ...modelData.faltasPorAluno };
+                if (modelData.overrides) bancoAtual[k].overrides = { ...modelData.overrides };
+                if (modelData.observacoesPorDia) bancoAtual[k].observacoesPorDia = { ...modelData.observacoesPorDia };
+                if (modelData.manualFlagAlunos) bancoAtual[k].manualFlagAlunos = { ...modelData.manualFlagAlunos };
+                if (modelData.evadidosPorAluno) bancoAtual[k].evadidosPorAluno = { ...modelData.evadidosPorAluno };
+                if (modelData.coordenacaoPorAluno) bancoAtual[k].coordenacaoPorAluno = { ...modelData.coordenacaoPorAluno };
+                if (modelData.conteudoProgramaticoPorDia) bancoAtual[k].conteudoProgramaticoPorDia = { ...modelData.conteudoProgramaticoPorDia };
+              }
+            }
+          }
+          localStorage.setItem("SENAI_COMP_TURMAS_DATA", JSON.stringify(bancoAtual));
+        } catch (_) {}
+        saveModels(currentSaved);
+        populatePresetDropdown();
+
+        // 5. Aba 1 - Cronograma: Dados do Formulário Ativo e Overrides
+        const formAtivo = parsed.cronograma?.dadosFormulario || parsed.dadosFormulario;
+        if (formAtivo && typeof formAtivo === "object") {
+          fillFormData(formAtivo);
+          try {
+            localStorage.setItem("SENAI_CRONOGRAMA_DRAFT", JSON.stringify(formAtivo));
+          } catch (_) {}
+        } else if (primeiroModeloKey) {
+          const select = document.getElementById("presetSelect");
+          if (select) select.value = "SAVED_" + primeiroModeloKey;
+          applyPreset("SAVED_" + primeiroModeloKey);
+        }
+
+        // Restaura alunos do nível raiz caso existam e a turma ativa não possua alunos
+        if (Array.isArray(parsed.alunos) && parsed.alunos.length > 0) {
+          if (typeof CompState !== "undefined" && CompState && (!CompState.alunos || CompState.alunos.length === 0)) {
+            CompState.alunos = [...parsed.alunos];
+            CompState.ordemFisicaAlunos = Array.isArray(parsed.ordemFisicaAlunos) ? [...parsed.ordemFisicaAlunos] : [...parsed.alunos];
+            if (parsed.faltasPorAluno) CompState.faltasPorAluno = { ...parsed.faltasPorAluno };
+            if (typeof compSalvarTurmaAtualStorage === "function") {
+              compSalvarTurmaAtualStorage();
+            }
+          }
+        }
+
+        const overridesCron = parsed.cronograma?.overrides;
+        if (overridesCron && typeof overridesCron === "object") {
+          if (overridesCron.manualDateOverrides) {
+            manualDateOverrides = { ...overridesCron.manualDateOverrides };
+          }
+          if (Array.isArray(overridesCron.inactiveDates)) {
+            inactiveDateKeys = new Set(overridesCron.inactiveDates);
+          }
+          if (overridesCron.customLessons) {
+            lessonCustomizations = { ...overridesCron.customLessons };
+          }
+          renderManualDatesList();
+          updatePreview(true);
+        }
+
+        if (typeof window.CompState === "object" && window.CompState) {
+          window.CompState.ultimaTurmaCarregada = null;
+        }
+        if (typeof compSincronizarAbaMae === "function") compSincronizarAbaMae();
+        if (typeof compRenderizarDiario === "function") compRenderizarDiario();
+        if (typeof compRenderizarVariaveis === "function") compRenderizarVariaveis();
 
         // 6. Aba 3 - Calendário e Feriados Universais
         const modsCal = parsed.calendario?.modificacoesUsuario;
@@ -690,6 +786,21 @@ function importProfile(event) {
         // FLUXO LEGADO: RETROCOMPATIBILIDADE ESTRITA COM VERSÕES ANTIGAS
         // Carrega as informações das turmas e ignora as demais configurações
         // ====================================================================
+
+        // Restaura compensações se presentes no arquivo legado ANTES de renderizar
+        const dadosCompLegado = parsed.compensacao || (parsed.compensacoes ? { turmasCompensacao: parsed.compensacoes } : null);
+        if (dadosCompLegado) {
+          if (typeof compImportarDadosCompletos === "function") {
+            compImportarDadosCompletos(dadosCompLegado);
+          } else {
+            try {
+              const rawAtual = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+              const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
+              const bancoMesclado = { ...bancoAtual, ...(dadosCompLegado.turmasCompensacao || dadosCompLegado) };
+              localStorage.setItem("SENAI_COMP_TURMAS_DATA", JSON.stringify(bancoMesclado));
+            } catch (_) {}
+          }
+        }
 
         const turmasFonte = (parsed.turmas && typeof parsed.turmas === "object") ? parsed.turmas : parsed;
         const currentSaved = getSavedModels();
@@ -753,26 +864,24 @@ function importProfile(event) {
           applyPreset("SAVED_" + firstImportedKey);
         }
 
-        // Restaura compensações se presentes no arquivo legado
-        const dadosCompLegado = parsed.compensacao || (parsed.compensacoes ? { turmasCompensacao: parsed.compensacoes } : null);
-        if (dadosCompLegado) {
-          if (typeof compImportarDadosCompletos === "function") {
-            compImportarDadosCompletos(dadosCompLegado);
-          } else {
-            try {
-              const rawAtual = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
-              const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
-              const bancoMesclado = { ...bancoAtual, ...(dadosCompLegado.turmasCompensacao || dadosCompLegado) };
-              localStorage.setItem("SENAI_COMP_TURMAS_DATA", JSON.stringify(bancoMesclado));
-              if (typeof window.CompState === "object" && window.CompState) {
-                window.CompState.ultimaTurmaCarregada = null;
-              }
-              if (typeof compSincronizarAbaMae === "function") compSincronizarAbaMae();
-              if (typeof compRenderizarDiario === "function") compRenderizarDiario();
-              if (typeof compRenderizarVariaveis === "function") compRenderizarVariaveis();
-            } catch (_) {}
+        // Restaura alunos do nível raiz caso existam no arquivo legado
+        if (Array.isArray(parsed.alunos) && parsed.alunos.length > 0) {
+          if (typeof CompState !== "undefined" && CompState) {
+            CompState.alunos = [...parsed.alunos];
+            CompState.ordemFisicaAlunos = Array.isArray(parsed.ordemFisicaAlunos) ? [...parsed.ordemFisicaAlunos] : [...parsed.alunos];
+            if (parsed.faltasPorAluno) CompState.faltasPorAluno = { ...parsed.faltasPorAluno };
+            if (typeof compSalvarTurmaAtualStorage === "function") {
+              compSalvarTurmaAtualStorage();
+            }
           }
         }
+
+        if (typeof window.CompState === "object" && window.CompState) {
+          window.CompState.ultimaTurmaCarregada = null;
+        }
+        if (typeof compSincronizarAbaMae === "function") compSincronizarAbaMae();
+        if (typeof compRenderizarDiario === "function") compRenderizarDiario();
+        if (typeof compRenderizarVariaveis === "function") compRenderizarVariaveis();
 
         // Restaura calendário se presente no arquivo legado
         if (parsed.calendario?.modificacoesUsuario && typeof holidayService !== "undefined" && typeof holidayService.aplicarModificacoesUsuario === "function") {
@@ -1790,9 +1899,51 @@ function updateEnvironmentBatch(tipoAlvo, novoAmbiente) {
 
 // 8. EXTRAÇÃO DOS DADOS DO FORMULÁRIO E RENDERIZAÇÃO
 function getFormData() {
+  const codTurma = document.getElementById("codigoTurma")?.value?.trim() || "";
+  let alunosTurma = [];
+  let ordemFisica = [];
+  let faltas = {};
+  let overridesTurma = {};
+  let obsTurma = {};
+  let flagsTurma = {};
+  let evadidosTurma = {};
+  let coordTurma = {};
+  let conteudoTurma = {};
+
+  if (typeof CompState !== "undefined" && CompState) {
+    if (Array.isArray(CompState.alunos) && CompState.alunos.length > 0) {
+      alunosTurma = [...CompState.alunos];
+      ordemFisica = [...(CompState.ordemFisicaAlunos || CompState.alunos)];
+      faltas = JSON.parse(JSON.stringify(CompState.faltasPorAluno || {}));
+      overridesTurma = JSON.parse(JSON.stringify(CompState.overrides || {}));
+      obsTurma = JSON.parse(JSON.stringify(CompState.observacoesPorDia || {}));
+      flagsTurma = JSON.parse(JSON.stringify(CompState.manualFlagAlunos || {}));
+      evadidosTurma = JSON.parse(JSON.stringify(CompState.evadidosPorAluno || {}));
+      coordTurma = JSON.parse(JSON.stringify(CompState.coordenacaoPorAluno || {}));
+      conteudoTurma = JSON.parse(JSON.stringify(CompState.conteudoProgramaticoPorDia || {}));
+    } else if (codTurma) {
+      try {
+        const raw = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+        const banco = raw ? JSON.parse(raw) : {};
+        if (banco[codTurma]) {
+          const salvo = banco[codTurma];
+          alunosTurma = Array.isArray(salvo.alunos) ? [...salvo.alunos] : [];
+          ordemFisica = Array.isArray(salvo.ordemFisicaAlunos) ? [...salvo.ordemFisicaAlunos] : [...alunosTurma];
+          faltas = salvo.faltasPorAluno || {};
+          overridesTurma = salvo.overrides || {};
+          obsTurma = salvo.observacoesPorDia || {};
+          flagsTurma = salvo.manualFlagAlunos || {};
+          evadidosTurma = salvo.evadidosPorAluno || {};
+          coordTurma = salvo.coordenacaoPorAluno || {};
+          conteudoTurma = salvo.conteudoProgramaticoPorDia || {};
+        }
+      } catch (_) {}
+    }
+  }
+
   return {
     nomeCurso: document.getElementById("nomeCurso")?.value || "",
-    codigoTurma: document.getElementById("codigoTurma")?.value || "",
+    codigoTurma: codTurma,
     escola: document.getElementById("escola")?.value || "",
     ambienteTeoria: document.getElementById("editorAmbienteTeoria")?.value || "",
     ambientePratica: document.getElementById("editorAmbientePratica")?.value || "",
@@ -1807,7 +1958,17 @@ function getFormData() {
     diasSemana: [...currentDays],
     manualDateOverrides: { ...manualDateOverrides },
     inactiveDates: Array.from(inactiveDateKeys),
-    customLessons: JSON.parse(JSON.stringify(lessonCustomizations))
+    customLessons: JSON.parse(JSON.stringify(lessonCustomizations)),
+    // Vínculo integral dos discentes à turma
+    alunos: alunosTurma,
+    ordemFisicaAlunos: ordemFisica,
+    faltasPorAluno: faltas,
+    overrides: overridesTurma,
+    observacoesPorDia: obsTurma,
+    manualFlagAlunos: flagsTurma,
+    evadidosPorAluno: evadidosTurma,
+    coordenacaoPorAluno: coordTurma,
+    conteudoProgramaticoPorDia: conteudoTurma
   };
 }
 
@@ -1822,7 +1983,7 @@ function updatePreview(preserveCustom = false) {
   // Atualiza também o subtítulo da barra superior com a versão
   const schoolLabel = document.getElementById("topbar-school-label");
   if (schoolLabel) {
-    schoolLabel.textContent = "V.02";
+    schoolLabel.textContent = "V.2.1";
   }
 
   renderInteractiveDaysGrid();
