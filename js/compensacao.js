@@ -482,7 +482,9 @@ function compSincronizarAbaMae() {
         evadidosPorAluno: { ...(CompState.evadidosPorAluno || {}) },
         coordenacao: { ...CompState.coordenacao },
         coordenacaoPorAluno: { ...(CompState.coordenacaoPorAluno || {}) },
-        conteudoProgramaticoPorDia: { ...(CompState.conteudoProgramaticoPorDia || {}) }
+        conteudoProgramaticoPorDia: { ...(CompState.conteudoProgramaticoPorDia || {}) },
+        ultimasFaltasImpressas: { ...(CompState.ultimasFaltasImpressas || {}) },
+        _atualizadoEm: new Date().toISOString()
       };
       salvarBancoTurmas(bancoTurmas);
       CompState.alunosPorTurma[CompState.ultimaTurmaCarregada] = [...CompState.alunos];
@@ -490,8 +492,8 @@ function compSincronizarAbaMae() {
 
     // 2. Carrega ou inicializa a nova turma
     if (novaTurma) {
-      if (bancoTurmas[novaTurma] && Array.isArray(bancoTurmas[novaTurma].alunos) && bancoTurmas[novaTurma].alunos.length > 0) {
-        // Carrega do armazenamento persistente (alunos já cadastrados pelo professor)
+      if (bancoTurmas[novaTurma] && Array.isArray(bancoTurmas[novaTurma].alunos)) {
+        // Carrega do armazenamento persistente (alunos e configurações já cadastrados pelo professor)
         const salvo = bancoTurmas[novaTurma];
         CompState.alunos = [...salvo.alunos];
         CompState.ordemFisicaAlunos = Array.isArray(salvo.ordemFisicaAlunos) ? [...salvo.ordemFisicaAlunos] : [...salvo.alunos];
@@ -504,6 +506,7 @@ function compSincronizarAbaMae() {
         if (salvo.coordenacao) CompState.coordenacao = { ...salvo.coordenacao };
         CompState.coordenacaoPorAluno = salvo.coordenacaoPorAluno ? { ...salvo.coordenacaoPorAluno } : {};
         CompState.conteudoProgramaticoPorDia = salvo.conteudoProgramaticoPorDia ? { ...salvo.conteudoProgramaticoPorDia } : {};
+        CompState.ultimasFaltasImpressas = salvo.ultimasFaltasImpressas ? { ...salvo.ultimasFaltasImpressas } : {};
       } else {
         // Nova turma: Inicia estritamente vazia sem discentes até o cadastro pelo professor
         CompState.alunos = [];
@@ -515,6 +518,7 @@ function compSincronizarAbaMae() {
         CompState.evadidosPorAluno = {};
         CompState.coordenacaoPorAluno = {};
         CompState.conteudoProgramaticoPorDia = {};
+        CompState.ultimasFaltasImpressas = {};
       }
 
       CompState.alunosPorTurma[novaTurma] = [...CompState.alunos];
@@ -527,10 +531,13 @@ function compSincronizarAbaMae() {
         faltasPorAluno: { ...CompState.faltasPorAluno },
         overrides: { ...CompState.overrides },
         observacoesPorDia: { ...CompState.observacoesPorDia },
+        manualFlagAlunos: { ...(CompState.manualFlagAlunos || {}) },
         evadidosPorAluno: { ...(CompState.evadidosPorAluno || {}) },
         coordenacao: { ...CompState.coordenacao },
         coordenacaoPorAluno: { ...(CompState.coordenacaoPorAluno || {}) },
-        conteudoProgramaticoPorDia: { ...(CompState.conteudoProgramaticoPorDia || {}) }
+        conteudoProgramaticoPorDia: { ...(CompState.conteudoProgramaticoPorDia || {}) },
+        ultimasFaltasImpressas: { ...(CompState.ultimasFaltasImpressas || {}) },
+        _atualizadoEm: new Date().toISOString()
       };
       salvarBancoTurmas(bancoTurmas);
     } else {
@@ -538,6 +545,7 @@ function compSincronizarAbaMae() {
       CompState.ordemFisicaAlunos = [];
       CompState.faltasPorAluno = {};
       CompState.evadidosPorAluno = {};
+      CompState.ultimasFaltasImpressas = {};
     }
 
     CompState.alunoAtivo = CompState.alunos.length > 0 ? CompState.alunos[0] : null;
@@ -4427,12 +4435,163 @@ function compSalvarTurmaAtualStorage() {
       coordenacao: { ...CompState.coordenacao },
       coordenacaoPorAluno: { ...(CompState.coordenacaoPorAluno || {}) },
       conteudoProgramaticoPorDia: { ...(CompState.conteudoProgramaticoPorDia || {}) },
+      ultimasFaltasImpressas: { ...(CompState.ultimasFaltasImpressas || {}) },
       _atualizadoEm: new Date().toISOString()
     };
     localStorage.setItem('SENAI_COMP_TURMAS_DATA', JSON.stringify(banco));
   } catch (e) {
     console.warn("Erro no auto-save de presenças:", e);
   }
+}
+
+/**
+ * Exporta todos os dados, alunos, ordens físicas, faltas e configurações da Aba 2 (Compensação).
+ * Garante que nenhuma alteração realizada pelo docente seja perdida.
+ */
+function compExportarDadosCompletos() {
+  // 1. Sincroniza turma atual com o DOM se disponível
+  const elTurma = document.getElementById('codigoTurma');
+  if (elTurma && elTurma.value.trim()) {
+    CompState.turmaInfo.turma = elTurma.value.trim();
+  }
+
+  // 2. Força persistência da turma ativa no banco de dados local
+  compSalvarTurmaAtualStorage();
+
+  // 3. Lê o banco consolidado do localStorage
+  let turmasCompensacao = {};
+  try {
+    const raw = localStorage.getItem('SENAI_COMP_TURMAS_DATA');
+    if (raw) turmasCompensacao = JSON.parse(raw);
+  } catch (e) {
+    console.warn("Erro ao ler turmas de compensação:", e);
+  }
+
+  // 4. Garante que a turma atualmente aberta no CompState está presente com os dados mais recentes
+  const turmaKey = CompState.turmaInfo.turma || elTurma?.value?.trim() || '_TURMA_GERAL_';
+  if (turmaKey) {
+    turmasCompensacao[turmaKey] = {
+      alunos: [...(CompState.alunos || [])],
+      ordemFisicaAlunos: [...(CompState.ordemFisicaAlunos || CompState.alunos || [])],
+      subViewDiario: CompState.subViewDiario || 'compensacao',
+      faltasPorAluno: JSON.parse(JSON.stringify(CompState.faltasPorAluno || {})),
+      overrides: JSON.parse(JSON.stringify(CompState.overrides || {})),
+      observacoesPorDia: JSON.parse(JSON.stringify(CompState.observacoesPorDia || {})),
+      manualFlagAlunos: JSON.parse(JSON.stringify(CompState.manualFlagAlunos || {})),
+      evadidosPorAluno: JSON.parse(JSON.stringify(CompState.evadidosPorAluno || {})),
+      coordenacao: JSON.parse(JSON.stringify(CompState.coordenacao || {})),
+      coordenacaoPorAluno: JSON.parse(JSON.stringify(CompState.coordenacaoPorAluno || {})),
+      conteudoProgramaticoPorDia: JSON.parse(JSON.stringify(CompState.conteudoProgramaticoPorDia || {})),
+      ultimasFaltasImpressas: JSON.parse(JSON.stringify(CompState.ultimasFaltasImpressas || {})),
+      _atualizadoEm: new Date().toISOString()
+    };
+  }
+
+  // 5. Captura largura da coluna, parecer geral e conteúdos
+  const colWidth = parseInt(localStorage.getItem('SENAI_COMP_COL_ALUNO_WIDTH'), 10) || CompState.colAlunoWidth || 200;
+  const parecerCoord = localStorage.getItem('SENAI_COMP_COORD_PARECER') || '';
+  let conteudoProgGlobal = {};
+  try {
+    const rawCont = localStorage.getItem('SENAI_COMP_CONTEUDO_DATA');
+    if (rawCont) conteudoProgGlobal = JSON.parse(rawCont);
+  } catch (_) {}
+
+  return {
+    turmasCompensacao: turmasCompensacao,
+    colAlunoWidth: colWidth,
+    parecerCoordenacao: parecerCoord,
+    conteudoProgramatico: conteudoProgGlobal,
+    configuracoes: {
+      subViewDiario: CompState.subViewDiario || 'compensacao',
+      viewMode: CompState.viewMode || 'table',
+      iconDesign: CompState.iconDesign || '1',
+      aula55min: !!CompState.aula55min,
+      aula55minManual: !!CompState.aula55minManual,
+      minutosModulo: CompState.minutosModulo || 55,
+      thresholdFaltaFlag: CompState.thresholdFaltaFlag || 10,
+      colAlunoWidth: colWidth,
+      variaveisConfig: JSON.parse(JSON.stringify(CompState.variaveisConfig || {}))
+    }
+  };
+}
+
+/**
+ * Importa e restaura integralmente o banco de compensação, diário físico, faltas e configurações.
+ */
+function compImportarDadosCompletos(dados) {
+  if (!dados || typeof dados !== 'object') return;
+
+  const turmas = dados.turmasCompensacao || dados.compensacoes || (dados.turmas ? dados.turmas : null);
+  if (turmas && typeof turmas === 'object') {
+    try {
+      const rawAtual = localStorage.getItem('SENAI_COMP_TURMAS_DATA');
+      const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
+      const bancoMesclado = { ...bancoAtual, ...turmas };
+      localStorage.setItem('SENAI_COMP_TURMAS_DATA', JSON.stringify(bancoMesclado));
+    } catch (e) {
+      console.warn("Erro ao mesclar turmas importadas no localStorage:", e);
+    }
+  }
+
+  if (dados.parecerCoordenacao) {
+    try {
+      localStorage.setItem('SENAI_COMP_COORD_PARECER', dados.parecerCoordenacao);
+    } catch (_) {}
+  }
+
+  if (dados.conteudoProgramatico) {
+    try {
+      localStorage.setItem('SENAI_COMP_CONTEUDO_DATA', typeof dados.conteudoProgramatico === 'string' ? dados.conteudoProgramatico : JSON.stringify(dados.conteudoProgramatico));
+    } catch (_) {}
+  }
+
+  const colWidth = dados.colAlunoWidth || dados.configuracoes?.colAlunoWidth;
+  if (colWidth) {
+    const wNum = parseInt(colWidth, 10);
+    if (!isNaN(wNum) && wNum >= 75 && wNum <= 450) {
+      localStorage.setItem('SENAI_COMP_COL_ALUNO_WIDTH', String(wNum));
+      CompState.colAlunoWidth = wNum;
+      document.documentElement.style.setProperty('--comp-col-aluno-width', `${wNum}px`);
+    }
+  }
+
+  const cfg = dados.configuracoes || {};
+  if (cfg.viewMode) CompState.viewMode = cfg.viewMode;
+  if (cfg.subViewDiario) CompState.subViewDiario = cfg.subViewDiario;
+  if (cfg.iconDesign) CompState.iconDesign = cfg.iconDesign;
+  if (typeof cfg.aula55min === 'boolean') CompState.aula55min = cfg.aula55min;
+  if (typeof cfg.aula55minManual === 'boolean') CompState.aula55minManual = cfg.aula55minManual;
+  if (cfg.minutosModulo) CompState.minutosModulo = cfg.minutosModulo;
+  if (cfg.thresholdFaltaFlag) CompState.thresholdFaltaFlag = cfg.thresholdFaltaFlag;
+  if (cfg.variaveisConfig && typeof cfg.variaveisConfig === 'object') {
+    CompState.variaveisConfig = { ...CompState.variaveisConfig, ...cfg.variaveisConfig };
+  }
+
+  // Atualiza controles na interface
+  const iconSelect = document.getElementById('comp-icon-design-select');
+  if (iconSelect && CompState.iconDesign) {
+    iconSelect.value = CompState.iconDesign;
+  }
+  const toggle55 = document.getElementById('comp-toggle-55min');
+  if (toggle55) {
+    toggle55.checked = CompState.aula55min;
+  }
+  const inputMin = document.getElementById('comp-input-minutos-modulo');
+  if (inputMin && CompState.minutosModulo) {
+    inputMin.value = CompState.minutosModulo;
+  }
+
+  // Alterna para a sub-visão correta (Compensação ou Físico)
+  if (typeof compAlternarSubViewDiario === 'function' && CompState.subViewDiario) {
+    compAlternarSubViewDiario(CompState.subViewDiario);
+  }
+
+  // Força reset da última turma carregada para re-sincronizar do banco
+  CompState.ultimaTurmaCarregada = null;
+
+  if (typeof compSincronizarAbaMae === 'function') compSincronizarAbaMae();
+  if (typeof compRenderizarDiario === 'function') compRenderizarDiario();
+  if (typeof compRenderizarVariaveis === 'function') compRenderizarVariaveis();
 }
 
 function compAdicionarAluno(nome) {
@@ -5743,6 +5902,14 @@ window.compAbrirModalEvasaoAluno = compAbrirModalEvasaoAluno;
 window.compFecharModalEvasaoAluno = compFecharModalEvasaoAluno;
 window.compConfirmarEvasaoAlunoComData = compConfirmarEvasaoAlunoComData;
 window.compObterDataEvasaoAluno = compObterDataEvasaoAluno;
+window.compSalvarTurmaAtualStorage = compSalvarTurmaAtualStorage;
+window.compExportarDadosCompletos = compExportarDadosCompletos;
+window.compImportarDadosCompletos = compImportarDadosCompletos;
+window.compSincronizarAbaMae = compSincronizarAbaMae;
+window.compRenderizarDiario = compRenderizarDiario;
+window.compRenderizarVariaveis = compRenderizarVariaveis;
+window.compAlternarSubViewDiario = compAlternarSubViewDiario;
+window.CompState = CompState;
 
 
 if (document.readyState === 'loading') {

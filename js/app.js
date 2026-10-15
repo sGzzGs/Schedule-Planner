@@ -395,15 +395,20 @@ function fillFormData(data) {
 function exportProfile() {
   let saved = getSavedModels();
 
-  // Se a lista estiver vazia, tenta incluir o modelo aberto na tela
-  if (Object.keys(saved).length === 0) {
-    const current = getFormData();
-    if (current && current.codigoTurma) {
-      current._savedAt = Date.now();
-      saved[current.codigoTurma] = current;
-      saveModels(saved);
-      populatePresetDropdown();
-    }
+  // Se o usuário estiver editando uma turma válida no formulário,
+  // salvamos/atualizamos uma cópia nos modelos para garantir que nenhuma alteração seja perdida
+  const currentTurmaInput = document.getElementById("codigoTurma")?.value?.trim();
+  const currentForm = getFormData();
+  if (currentTurmaInput && currentForm && currentForm.codigoTurma) {
+    currentForm._savedAt = Date.now();
+    saved[currentForm.codigoTurma] = currentForm;
+    saveModels(saved);
+    populatePresetDropdown();
+  } else if (Object.keys(saved).length === 0 && currentForm && currentForm.codigoTurma) {
+    currentForm._savedAt = Date.now();
+    saved[currentForm.codigoTurma] = currentForm;
+    saveModels(saved);
+    populatePresetDropdown();
   }
 
   // 1. Obter primeiro nome do professor/responsável
@@ -440,34 +445,44 @@ function exportProfile() {
 
   // 3. Capturar tema, horários rápidos e dados do formulário do Cronograma (Aba 1)
   const temaAtual = localStorage.getItem("theme") || "solarized";
-  const currentForm = getFormData();
   const horariosList = getCustomHorarios();
   const sidebarWidthVal = localStorage.getItem("senai_panels_sidebar_width");
 
-  // 4. Capturar banco de compensações (Aba 2)
-  if (typeof compSalvarTurmaAtualStorage === "function") {
+  // 4. Capturar banco completo de compensações (Aba 2 - Diário, Faltas, Ordem Física e Alunos)
+  let compensacaoPayload = null;
+  if (typeof compExportarDadosCompletos === "function") {
     try {
-      compSalvarTurmaAtualStorage();
+      compensacaoPayload = compExportarDadosCompletos();
     } catch (e) {
-      console.warn("Aviso ao salvar turma atual de compensação:", e);
+      console.warn("Aviso ao exportar compensações completas via compExportarDadosCompletos:", e);
     }
   }
-  let compensacoesData = {};
-  let parecerCoordenacao = "";
-  let conteudoProgramatico = {};
 
-  try {
-    const rawComp = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
-    if (rawComp) {
-      compensacoesData = JSON.parse(rawComp);
+  if (!compensacaoPayload) {
+    if (typeof compSalvarTurmaAtualStorage === "function") {
+      try { compSalvarTurmaAtualStorage(); } catch (_) {}
     }
-    parecerCoordenacao = localStorage.getItem("SENAI_COMP_COORD_PARECER") || "";
-    const rawConteudo = localStorage.getItem("SENAI_COMP_CONTEUDO_DATA");
-    if (rawConteudo) {
-      conteudoProgramatico = JSON.parse(rawConteudo);
-    }
-  } catch (e) {
-    console.warn("Aviso ao ler dados de compensação para o perfil:", e);
+    let compData = {};
+    let parecer = "";
+    let conteudo = {};
+    try {
+      const rawComp = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+      if (rawComp) compData = JSON.parse(rawComp);
+      parecer = localStorage.getItem("SENAI_COMP_COORD_PARECER") || "";
+      const rawCont = localStorage.getItem("SENAI_COMP_CONTEUDO_DATA");
+      if (rawCont) conteudo = JSON.parse(rawCont);
+    } catch (_) {}
+
+    const colW = parseInt(localStorage.getItem("SENAI_COMP_COL_ALUNO_WIDTH"), 10) || 200;
+    compensacaoPayload = {
+      turmasCompensacao: compData,
+      colAlunoWidth: colW,
+      parecerCoordenacao: parecer,
+      conteudoProgramatico: conteudo,
+      configuracoes: {
+        colAlunoWidth: colW
+      }
+    };
   }
 
   // 5. Capturar modificações de calendário e feriados universais (Aba 3)
@@ -483,7 +498,7 @@ function exportProfile() {
     console.warn("Aviso ao ler dados de calendário para o perfil:", e);
   }
 
-  // 6. Montar objeto UNIVERSAL COMPLETO (v3.0) com total retrocompatibilidade
+  // 6. Montar objeto UNIVERSAL COMPLETO (v3.0) com total integridade e retrocompatibilidade
   const profilePayload = {
     _tipo: "CONFIGURACAO_COMPLETA_SENAI",
     versao: "3.0",
@@ -503,12 +518,8 @@ function exportProfile() {
       }
     },
 
-    // ABA 2: COMPENSAÇÃO DE AUSÊNCIAS
-    compensacao: {
-      turmasCompensacao: compensacoesData,
-      parecerCoordenacao: parecerCoordenacao,
-      conteudoProgramatico: conteudoProgramatico
-    },
+    // ABA 2: COMPENSAÇÃO DE AUSÊNCIAS & DIÁRIO FÍSICO
+    compensacao: compensacaoPayload,
 
     // ABA 3: CALENDÁRIO UNIVERSAL
     calendario: {
@@ -519,7 +530,7 @@ function exportProfile() {
     turmas: saved,
     horariosRapidos: horariosList,
     dadosFormulario: currentForm,
-    compensacoes: compensacoesData
+    compensacoes: compensacaoPayload.turmasCompensacao || compensacaoPayload
   };
 
   const dataStr = JSON.stringify(profilePayload, null, 2);
@@ -600,6 +611,9 @@ function importProfile(event) {
         const formAtivo = parsed.cronograma?.dadosFormulario || parsed.dadosFormulario;
         if (formAtivo && typeof formAtivo === "object") {
           fillFormData(formAtivo);
+          try {
+            localStorage.setItem("SENAI_CRONOGRAMA_DRAFT", JSON.stringify(formAtivo));
+          } catch (_) {}
         } else if (primeiroModeloKey) {
           const select = document.getElementById("presetSelect");
           if (select) select.value = "SAVED_" + primeiroModeloKey;
@@ -621,29 +635,45 @@ function importProfile(event) {
           updatePreview(true);
         }
 
-        // 5. Aba 2 - Compensação de Ausências
-        const dadosComp = parsed.compensacao?.turmasCompensacao || parsed.compensacoes;
-        if (dadosComp && typeof dadosComp === "object") {
+        // 5. Aba 2 - Compensação de Ausências & Diário Físico (Restauração Total)
+        const compPayload = parsed.compensacao || { turmasCompensacao: parsed.compensacoes };
+        if (typeof compImportarDadosCompletos === "function") {
           try {
-            const rawAtual = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
-            const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
-            const bancoMesclado = { ...bancoAtual, ...dadosComp };
-            localStorage.setItem("SENAI_COMP_TURMAS_DATA", JSON.stringify(bancoMesclado));
+            compImportarDadosCompletos(compPayload);
           } catch (errC) {
-            console.warn("Erro ao mesclar turmas de compensação:", errC);
+            console.warn("Erro ao restaurar compensações:", errC);
           }
-        }
+        } else {
+          const dadosComp = parsed.compensacao?.turmasCompensacao || parsed.compensacoes;
+          if (dadosComp && typeof dadosComp === "object") {
+            try {
+              const rawAtual = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+              const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
+              const bancoMesclado = { ...bancoAtual, ...dadosComp };
+              localStorage.setItem("SENAI_COMP_TURMAS_DATA", JSON.stringify(bancoMesclado));
+            } catch (errC) {
+              console.warn("Erro ao mesclar turmas de compensação:", errC);
+            }
+          }
 
-        if (parsed.compensacao?.parecerCoordenacao) {
-          localStorage.setItem("SENAI_COMP_COORD_PARECER", parsed.compensacao.parecerCoordenacao);
-        }
-        if (parsed.compensacao?.conteudoProgramatico) {
-          localStorage.setItem("SENAI_COMP_CONTEUDO_DATA", JSON.stringify(parsed.compensacao.conteudoProgramatico));
-        }
+          if (parsed.compensacao?.parecerCoordenacao) {
+            localStorage.setItem("SENAI_COMP_COORD_PARECER", parsed.compensacao.parecerCoordenacao);
+          }
+          if (parsed.compensacao?.conteudoProgramatico) {
+            localStorage.setItem("SENAI_COMP_CONTEUDO_DATA", JSON.stringify(parsed.compensacao.conteudoProgramatico));
+          }
+          if (parsed.compensacao?.colAlunoWidth) {
+            localStorage.setItem("SENAI_COMP_COL_ALUNO_WIDTH", String(parsed.compensacao.colAlunoWidth));
+            document.documentElement.style.setProperty("--comp-col-aluno-width", `${parsed.compensacao.colAlunoWidth}px`);
+          }
 
-        if (typeof compSincronizarAbaMae === "function") compSincronizarAbaMae();
-        if (typeof compRenderizarDiario === "function") compRenderizarDiario();
-        if (typeof compRenderizarVariaveis === "function") compRenderizarVariaveis();
+          if (typeof window.CompState === "object" && window.CompState) {
+            window.CompState.ultimaTurmaCarregada = null;
+          }
+          if (typeof compSincronizarAbaMae === "function") compSincronizarAbaMae();
+          if (typeof compRenderizarDiario === "function") compRenderizarDiario();
+          if (typeof compRenderizarVariaveis === "function") compRenderizarVariaveis();
+        }
 
         // 6. Aba 3 - Calendário e Feriados Universais
         const modsCal = parsed.calendario?.modificacoesUsuario;
@@ -653,7 +683,7 @@ function importProfile(event) {
           updatePreview(true);
         }
 
-        alert(`Configuração Completa do Sistema (V.03) importada com sucesso!\n\n• ${totalModelos} modelo(s) de cronograma carregado(s)\n• Compensações e diários sincronizados\n• Calendário e feriados universais restaurados\n• Tema "${temaImportado}" aplicado`);
+        alert(`Configuração Completa do Sistema (V.03) importada com sucesso!\n\n• ${totalModelos} modelo(s) de cronograma carregado(s)\n• Diário de compensação, diário físico e faltas restaurados com sucesso\n• Calendário e feriados universais restaurados\n• Tema "${temaImportado}" aplicado`);
 
       } else {
         // ====================================================================
@@ -712,12 +742,43 @@ function importProfile(event) {
         // Restaura dados do formulário se houver, ou seleciona o primeiro modelo importado
         if (parsed.dadosFormulario && typeof parsed.dadosFormulario === "object") {
           fillFormData(parsed.dadosFormulario);
+          try {
+            localStorage.setItem("SENAI_CRONOGRAMA_DRAFT", JSON.stringify(parsed.dadosFormulario));
+          } catch (_) {}
         } else if (firstImportedKey) {
           const select = document.getElementById("presetSelect");
           if (select) {
             select.value = "SAVED_" + firstImportedKey;
           }
           applyPreset("SAVED_" + firstImportedKey);
+        }
+
+        // Restaura compensações se presentes no arquivo legado
+        const dadosCompLegado = parsed.compensacao || (parsed.compensacoes ? { turmasCompensacao: parsed.compensacoes } : null);
+        if (dadosCompLegado) {
+          if (typeof compImportarDadosCompletos === "function") {
+            compImportarDadosCompletos(dadosCompLegado);
+          } else {
+            try {
+              const rawAtual = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+              const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
+              const bancoMesclado = { ...bancoAtual, ...(dadosCompLegado.turmasCompensacao || dadosCompLegado) };
+              localStorage.setItem("SENAI_COMP_TURMAS_DATA", JSON.stringify(bancoMesclado));
+              if (typeof window.CompState === "object" && window.CompState) {
+                window.CompState.ultimaTurmaCarregada = null;
+              }
+              if (typeof compSincronizarAbaMae === "function") compSincronizarAbaMae();
+              if (typeof compRenderizarDiario === "function") compRenderizarDiario();
+              if (typeof compRenderizarVariaveis === "function") compRenderizarVariaveis();
+            } catch (_) {}
+          }
+        }
+
+        // Restaura calendário se presente no arquivo legado
+        if (parsed.calendario?.modificacoesUsuario && typeof holidayService !== "undefined" && typeof holidayService.aplicarModificacoesUsuario === "function") {
+          holidayService.aplicarModificacoesUsuario(parsed.calendario.modificacoesUsuario);
+          if (typeof calRenderizar === "function") calRenderizar();
+          updatePreview(true);
         }
 
         alert(`Arquivo legado importado com sucesso!\n\n• ${importedCount} turma(s) carregada(s) para a Aba Cronograma.\n• As configurações das demais abas foram preservadas.`);
