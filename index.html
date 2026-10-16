@@ -8,6 +8,8 @@
 
   <!-- Estilos da Aplicação -->
   <link rel="stylesheet" href="css/style.css">
+  <!-- Estilos do Cronograma 1:1 Stitch -->
+  <link rel="stylesheet" href="css/cronograma-stitch.css">
   <!-- Estilos da Aba de Compensação -->
   <link rel="stylesheet" href="css/compensacao.css">
   <!-- Estilos Exclusivos da Ficha de Compensação (Impressão e PDF) -->
@@ -15,60 +17,84 @@
   <!-- Estilos da Aba de Calendário Anual -->
   <link rel="stylesheet" href="css/calendario.css">
 
+  <!-- FontAwesome Icons & Plus Jakarta Sans (Stitch Design System) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
   <!-- Biblioteca html2pdf para download direto de PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
-  <!-- BARRA SUPERIOR (TOPBAR) -->
-  <header class="app-topbar no-print">
-    <div class="topbar-brand">
-      <img src="logo_senai_oficial.png" alt="SENAI" class="topbar-logo">
-      <div class="brand-title">
-        <h1>Gerador de Cronograma de Aulas</h1>
-        <div class="version-badge-container">
-          <span id="topbar-school-label" class="version-label">V.2.2</span>
-          <div id="version-popup" class="version-popup-balloon" role="tooltip"></div>
+  <!-- BARRA SUPERIOR (TOPBAR 1:1 STITCH) -->
+  <header class="app-topbar no-print" data-purpose="main-header">
+    <div style="max-width: 1920px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; width: 100%;">
+      <!-- Logo, Title & Version Badge -->
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <!-- SENAI Red Logo Badge -->
+        <div class="stitch-topbar-senai-badge">
+          <span>SENAI</span>
+        </div>
+        <div class="stitch-topbar-divider"></div>
+        <div class="stitch-brand-title-wrap">
+          <h1>Hub de Registros</h1>
+          <span class="stitch-version-pill">v3</span>
+          <span id="topbar-school-label" style="display: none;">v3</span>
+          <div id="version-popup" style="display: none;" role="tooltip"></div>
         </div>
       </div>
-    </div>
 
-    <div class="topbar-actions">
-      <!-- Seletor Rápido de Presets / Cursos Exemplo -->
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <label for="presetSelect" style="color: #94a3b8; font-size: 12px; font-weight: 700;">Modelos Salvos:</label>
-        <select id="presetSelect" class="input-control" style="width: 260px; padding: 7px 10px; font-size: 12.5px; font-weight: 700;">
-          <!-- Preenchido dinamicamente no JS -->
-        </select>
-        <button id="btn-deletar-modelo" class="btn btn-secondary" style="background: #dc2626; border-color: #ef4444; padding: 6px 12px;" title="Excluir o modelo selecionado">
-          Excluir
+      <!-- Navegação de Abas Principais (TopBar Center) -->
+      <nav class="app-tab-bar no-print" role="tablist" aria-label="Abas Principais">
+        <button class="app-tab active" data-tab="tab-cronograma" role="tab" aria-selected="true" aria-controls="tab-cronograma" title="Gerador de Cronograma de Aulas" type="button">
+          <i class="fa-solid fa-table-list text-xs"></i>
+          <span>Cronograma</span>
+        </button>
+        <button class="app-tab" data-tab="tab-compensacao" role="tab" aria-selected="false" aria-controls="tab-compensacao" title="Gerador de Compensação de Ausências" type="button">
+          <i class="fa-solid fa-scale-balanced text-xs"></i>
+          <span>Compensação</span>
+        </button>
+        <button class="app-tab" data-tab="tab-calendario" role="tab" aria-selected="false" aria-controls="tab-calendario" title="Calendário Escolar Anual e Feriados" type="button">
+          <i class="fa-regular fa-calendar-days text-xs"></i>
+          <span>Calendário</span>
+        </button>
+      </nav>
+
+      <!-- Top Right Actions & Model Controls -->
+      <div class="topbar-actions">
+        <!-- Status Indicator Pill matching SCREEN_8 -->
+        <div class="stitch-status-indicator">
+          <span class="stitch-status-dot"></span>
+        </div>
+        <div class="stitch-topbar-divider"></div>
+
+        <!-- Seletor Rápido de Presets / Cursos Exemplo -->
+        <div class="stitch-models-select-wrap">
+          <select id="presetSelect" class="stitch-models-select" title="Modelos Salvos">
+            <!-- Preenchido dinamicamente no JS -->
+          </select>
+        </div>
+
+        <!-- Action: Excluir e Salvar (SVGs 1:1 Stitch) -->
+        <div class="stitch-model-btn-group">
+          <button id="btn-deletar-modelo" class="stitch-btn-delete-model" title="Excluir Modelo Atual" type="button">
+            <svg class="w-4.5 h-4.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          </button>
+          <button id="btn-salvar-modelo" class="stitch-btn-save-model" title="Salvar Modelo Atual" type="button">
+            <svg class="w-4.5 h-4.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          </button>
+        </div>
+
+        <!-- Action: Baixar PDF -->
+        <button id="btn-export-pdf" class="stitch-btn-download-pdf" title="Baixar Cronograma em PDF" type="button">
+          <i class="fa-solid fa-file-pdf text-xs"></i>
+          <span>Baixar PDF</span>
         </button>
       </div>
-
-
-      <!-- Botão de Download Direto do PDF -->
-      <button id="btn-export-pdf" class="btn btn-success" title="Gerar e baixar o arquivo PDF">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-        Baixar PDF
-      </button>
     </div>
   </header>
-
-  <!-- BARRA DE ABAS -->
-  <nav class="app-tab-bar no-print" role="tablist" aria-label="Módulos da aplicação">
-    <button class="app-tab active" data-tab="tab-cronograma" role="tab" aria-selected="true" aria-controls="tab-cronograma" title="Gerador de Cronograma de Aulas">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Cronograma
-    </button>
-    <button class="app-tab" data-tab="tab-compensacao" role="tab" aria-selected="false" aria-controls="tab-compensacao" title="Gerador de Compensação de Ausências">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Compensação
-    </button>
-    <button class="app-tab" data-tab="tab-calendario" role="tab" aria-selected="false" aria-controls="tab-calendario" title="Calendário Escolar Anual e Feriados">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Calendário
-    </button>
-  </nav>
 
   <!-- WRAPPER DE PÁGINAS (ANIMAÇÃO ENTRE ABAS) -->
   <div class="app-pages">
@@ -76,259 +102,296 @@
   <!-- ================================================================
        PÁGINA 1 — CRONOGRAMA (ABA MÃE — NÃO ALTERADA)
        ================================================================ -->
+  <!-- ================================================================
+       PÁGINA 1 — CRONOGRAMA (1:1 STITCH — DESIGN NOVO_CRONOGRAMA)
+       ================================================================ -->
   <div class="app-page page-active" id="tab-cronograma" role="tabpanel" aria-labelledby="tab-cronograma">
 
   <!-- CONTAINER PRINCIPAL: SPLIT-SCREEN -->
-  <div class="app-container">
+  <div class="app-container" data-purpose="cronograma-builder-layout">
     
-    <!-- PAINEL LATERAL DE CONTROLES (SIDEBAR) -->
-    <aside class="app-sidebar no-print">
-      <div class="sidebar-header">
-        <div style="display: flex; gap: 6px; align-items: center; width: 100%; justify-content: space-between;">
-          <select id="theme-selector" class="input-control" style="width: auto; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer;" title="Selecione o Tema da Interface">
-            <option value="solarized">Solarized</option>
-            <option value="claro">Claro</option>
-            <option value="conforto visual">Conforto Visual</option>
-          </select>
-          <div style="display: flex; gap: 6px;">
-            <button id="btn-salvar-modelo" class="btn btn-success btn-sm" title="Salvar dados do formulário como modelo">Salvar Modelo</button>
-            <button id="btn-reset-form" class="btn btn-secondary btn-sm" title="Limpar formulário">Limpar</button>
+    <!-- PAINEL LATERAL DE PARÂMETROS (SIDEBAR) -->
+    <aside class="app-sidebar stitch-sidebar no-print" data-purpose="parameters-sidebar">
+      <!-- Panel 1: IDENTIFICAÇÃO -->
+      <section class="stitch-card-panel" data-purpose="form-panel-identificacao">
+        <header class="stitch-panel-header">
+          <div class="stitch-icon-box">
+            <i class="fa-solid fa-id-card"></i>
           </div>
-        </div>
-      </div>
-
-      <div class="sidebar-content">
-        
-        <!-- 1. IDENTIFICAÇÃO DO CURSO E TURMA -->
-        <section class="form-section">
-          <div class="section-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-            Identificação
+          <h2 class="stitch-panel-title">Identificação</h2>
+        </header>
+        <div class="stitch-form-group-stack">
+          <div>
+            <label class="stitch-field-label" for="nomeCurso">Nome do Curso / Ocupação</label>
+            <input type="text" id="nomeCurso" class="stitch-input" placeholder="...">
           </div>
-
-          <div class="form-group">
-            <label for="nomeCurso">Nome do Curso / Ocupação</label>
-            <input type="text" id="nomeCurso" class="input-control" placeholder="...">
+          <div>
+            <label class="stitch-field-label" for="codigoTurma">Código da Turma</label>
+            <input type="text" id="codigoTurma" class="stitch-input font-mono" placeholder="...">
           </div>
-
-          <div class="form-group">
-            <label for="codigoTurma">Código da Turma</label>
-            <input type="text" id="codigoTurma" class="input-control" placeholder="...">
+          <div>
+            <label class="stitch-field-label" for="unidadeCurricular">Unidade Curricular (UC)</label>
+            <input type="text" id="unidadeCurricular" class="stitch-input" placeholder="Ex: Lógica de Programação e Algoritmos...">
           </div>
-
-          <div class="form-group">
-            <label for="unidadeCurricular">Unidade Curricular (UC)</label>
-            <input type="text" id="unidadeCurricular" class="input-control" placeholder="...">
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="docente">Professor / Responsável</label>
-              <input type="text" id="docente" class="input-control" placeholder="...">
-            </div>
-            <div class="form-group">
-              <label for="coordenador">Coordenador</label>
-              <input type="text" id="coordenador" class="input-control" placeholder="...">
-            </div>
-          </div>
-        </section>
-
-        <!-- 2. CARGA HORÁRIA E HORÁRIOS -->
-        <section class="form-section">
-          <div class="section-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            Horários e Carga Horária
-          </div>
-
-
-
-          <!-- Menu de Horários Pré-definidos -->
-          <div class="form-group">
-            <label for="horarioPresetSelect">Preenchimento Rápido de Horários:</label>
-            <div style="display: flex; gap: 6px; align-items: center;">
-              <select id="horarioPresetSelect" class="input-control" style="flex: 1;">
-                <option value="">-- Selecione um Horário Sugerido --</option>
-              </select>
-              <button type="button" id="btn-remover-horario-rapido" class="btn-remove-outline" title="Remover horário selecionado do preenchimento rápido">
-                ✕
-              </button>
-            </div>
-            <button type="button" id="btn-adicionar-horario-rapido" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center; margin-top: 5px; background: rgba(38, 139, 210, 0.12); border: 1px solid var(--accent-active); color: var(--accent-active);" title="Adicionar a combinação de horário configurada abaixo ao preenchimento rápido">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Adicionar horário ao preenchimento rápido
-            </button>
-          </div>
-
-          <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
-            <div class="form-group">
-              <label for="horaInicio">Hora Início</label>
-              <input type="text" id="horaInicio" class="input-control" value="13:00">
-            </div>
-            <div class="form-group">
-              <label for="horaFim">Hora Fim</label>
-              <input type="text" id="horaFim" class="input-control" value="17:00">
-            </div>
-            <div class="form-group">
-              <label for="horasPorAula">Horas / Aula</label>
-              <input type="text" id="horasPorAula" class="input-control" value="01:00" placeholder="01:00" pattern="^[0-9]{2}:[0-9]{2}$" title="Duração real de cada aula individual (padrão 01:00 ou 00:55)">
-            </div>
-          </div>
-
-          <div style="display: flex; align-items: flex-end; gap: 8px; margin-top: 6px;">
-            <div class="form-group" style="width: 85px;">
-              <label for="cargaHorariaTotal">C.H. Total</label>
-              <input type="text" id="cargaHorariaTotal" class="input-control" value="120" placeholder="Ex: 120 ou 33:50">
-            </div>
-            <div class="form-group" style="width: 44px;">
-              <label for="aulasPorDia">Aulas/Dia</label>
-              <input type="text" id="aulasPorDia" class="input-control" value="4" maxlength="2" inputmode="numeric" placeholder="4" title="Quantidade de aulas ministradas por dia" style="text-align: center; padding: 5px 2px;">
-            </div>
-            <div class="form-group" style="display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 5px; min-width: 70px;">
-              <label for="horasPorDia" style="margin-bottom: 2px;">Total/dia</label>
-              <input type="text" id="horasPorDia" readonly value="04:00" tabindex="-1" title="Carga horária total diária (Horas/Aula × Aulas/Dia)" style="border: none !important; background: transparent !important; padding: 0 !important; margin: 0 !important; font-size: 12px; font-weight: 700; color: var(--text-primary); outline: none !important; box-shadow: none !important; width: 60px; cursor: default;">
-            </div>
-          </div>
-        </section>
-
-        <!-- 3. CALENDÁRIO E DIAS DA SEMANA -->
-        <section class="form-section">
-          <div class="section-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Calendário e Dias com Aula
-          </div>
-
-          <div class="form-group">
-            <label for="dataInicioStr">Data de Início</label>
-            <input type="date" id="dataInicioStr" class="input-control" value="2026-04-14">
-          </div>
-
-          <div class="form-group">
-            <label>Dias da Semana Ativos</label>
-            <div class="weekday-selector">
-              <button type="button" class="day-btn" data-day="1">Seg</button>
-              <button type="button" class="day-btn" data-day="2">Ter</button>
-              <button type="button" class="day-btn" data-day="3">Qua</button>
-              <button type="button" class="day-btn" data-day="4">Qui</button>
-              <button type="button" class="day-btn" data-day="5">Sex</button>
-              <button type="button" class="day-btn" data-day="6">Sáb</button>
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-top: 14px;">
-            <label for="escola">Escola</label>
-            <input type="text" id="escola" class="input-control" value="" placeholder="Nome da Escola SENAI...">
-          </div>
-        </section>
-
-        <!-- 4. PERFIL / BACKUP DE MODELOS (TROCA DE PCS) -->
-        <section class="form-section profile-section">
-          <div class="section-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Perfil de Modelos
-          </div>
-
-          <div class="profile-btn-group">
-            <div class="has-custom-tooltip" data-tooltip="Baixe este arquivo para transferir seu perfil para outro computador">
-              <button type="button" id="btn-export-profile" class="btn btn-primary btn-sm" title="Baixe este arquivo para transferir seu perfil para outro computador">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Exportar perfil
-              </button>
-            </div>
-
-            <div class="has-custom-tooltip" data-tooltip="Insira aqui seu perfil baixado de outro computador">
-              <button type="button" id="btn-import-profile" class="btn btn-secondary btn-sm" title="Insira aqui seu perfil baixado de outro computador">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Importar perfil
-              </button>
-            </div>
-
-
-
-            <input type="file" id="input-import-profile" accept=".json" style="display: none;">
-          </div>
-
-          <div class="profile-help-hint">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            <span>Seu perfil é pessoal e as informações são salvas localmente para sua segurança e privacidade: Nenhum dado é coletado</span>
-          </div>
-        </section>
-
-        <!-- 5. AJUSTE MANUAL DE DATAS (FORÇAR ADIÇÃO / REMOÇÃO) -->
-        <section class="form-section manual-dates-section">
-          <div class="section-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
-            Ajuste Manual de Datas
-          </div>
-
-          <div class="form-group">
-            <label for="input-manual-date">Data (dd/mm/aaaa ou aaaa-mm-dd):</label>
-            <div style="display: flex; gap: 6px; align-items: center;">
-              <input type="text" id="input-manual-date" class="input-control" placeholder="..." style="flex: 1;">
-              <button type="button" id="btn-manual-date-add" class="btn-outline-action btn-outline-add" title="Forçar Adição desta data ao calendário (+)">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </button>
-              <button type="button" id="btn-manual-date-remove" class="btn-outline-action btn-outline-remove" title="Forçar Remoção desta data do calendário (-)">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Lista de datas forçadas / exceções manuais ativas -->
-          <div id="manual-dates-list" class="manual-dates-list">
-            <!-- Gerado dinamicamente via JS -->
-          </div>
-        </section>
-        
-      </div>
-    </aside>
-
-    <!-- DIVISOR REDIMENSIONÁVEL (SPLITTER ENTRE SIDEBAR E PREVIEW) -->
-    <div class="panel-resizer no-print" id="resizer-cronograma" role="separator" aria-orientation="vertical" title="Arraste para redimensionar o painel lateral • Clique duplo para redefinir largura padrão"></div>
-
-    <!-- PAINEL DIREITO: PRÉ-VISUALIZAÇÃO A4 E GERENCIADOR INTERATIVO -->
-    <main id="preview-container">
-      <div id="cronograma-render-target">
-        <!-- Renderizado dinamicamente via JS: .page-a4 -->
-      </div>
-
-      <!-- PAINEL DE EDIÇÃO INTERATIVA DE AULAS (Abaixo da Folha A4) -->
-      <section id="interactive-editor-section" class="interactive-editor-card no-print">
-        <div class="editor-card-header">
-          <div class="editor-title-group">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            <h3>Gerenciador Interativo de Aulas (Teoria / Prática / Ambientes) <span id="ch-progress-badge" class="ch-badge">0 / 0h</span></h3>
-          </div>
-          <span class="editor-subtitle">Clique com o botão esquerdo para alternar Teoria/Prática • Clique com o botão direito para desativar/reativar o dia</span>
-        </div>
-
-        <!-- Barra de Configuração de Ambientes e Ações Rápidas -->
-        <div class="editor-env-bar">
-          <div class="env-input-group env-teoria-group">
-            <span class="env-dot env-dot-teoria"></span>
-            <label for="editorAmbienteTeoria">Ambiente de Teoria:</label>
-            <input type="text" id="editorAmbienteTeoria" class="input-control env-control" value="S01" placeholder="...">
-          </div>
-
-          <div class="env-input-group env-pratica-group">
-            <span class="env-dot env-dot-pratica"></span>
-            <label for="editorAmbientePratica">Ambiente de Prática:</label>
-            <input type="text" id="editorAmbientePratica" class="input-control env-control" value="L01" placeholder="...">
-          </div>
-
-          <div class="editor-quick-actions">
-            <button type="button" id="btn-set-all-teoria" class="btn btn-sm btn-outline-teoria" title="Definir todas as aulas como Teoria">Todos Teoria</button>
-            <button type="button" id="btn-set-all-pratica" class="btn btn-sm btn-outline-pratica" title="Definir todas as aulas como Prática">Todos Prática</button>
-          </div>
-        </div>
-
-        <!-- Grade de Chips dos Dias de Aula -->
-        <div id="interactive-days-grid" class="interactive-days-grid">
-          <!-- Chips gerados dinamicamente via JS -->
         </div>
       </section>
+
+      <!-- Panel 2: HORÁRIOS E CARGA HORÁRIA -->
+      <section class="stitch-card-panel" data-purpose="form-panel-horarios">
+        <header class="stitch-panel-header">
+          <div class="stitch-icon-box">
+            <i class="fa-regular fa-clock"></i>
+          </div>
+          <h2 class="stitch-panel-title">Horários e Carga Horária</h2>
+        </header>
+        <div class="stitch-form-group-stack">
+          <!-- Quick Preset Horários -->
+          <div>
+            <label class="stitch-field-label" for="horarioPresetSelect">Preenchimento Rápido de Horários:</label>
+            <div class="stitch-preset-row">
+              <select id="horarioPresetSelect" class="stitch-select">
+                <option value="">-- Selecione um Horário Sugerido --</option>
+              </select>
+              <button id="btn-remover-horario-rapido" class="stitch-btn-icon-clear" title="Limpar Seleção" type="button">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            </div>
+          </div>
+          <!-- Add Schedule Action -->
+          <button id="btn-adicionar-horario-rapido" class="stitch-btn-dashed" type="button">
+            <i class="fa-solid fa-circle-plus" style="color: #2A9D8F;"></i>
+            <span>Adicionar horário ao preenchimento rápido</span>
+          </button>
+          <!-- Time Inputs Row -->
+          <div class="stitch-time-row">
+            <div>
+              <label class="stitch-field-label-sm" for="horaInicio">Hora Início</label>
+              <input type="text" id="horaInicio" class="stitch-input" style="text-align: center;" value="13:00">
+            </div>
+            <div>
+              <label class="stitch-field-label-sm" for="horaFim">Hora Fim</label>
+              <input type="text" id="horaFim" class="stitch-input" style="text-align: center;" value="17:00">
+            </div>
+            <div>
+              <label class="stitch-field-label-sm" for="horasPorAula">Horas / Aula</label>
+              <input type="text" id="horasPorAula" class="stitch-input" style="text-align: center;" value="01:00">
+            </div>
+          </div>
+          <!-- Totals Row -->
+          <div class="stitch-totals-row">
+            <div>
+              <label class="stitch-field-label-sm" for="cargaHorariaTotal">C.H. Total</label>
+              <input type="text" id="cargaHorariaTotal" class="stitch-input" style="text-align: center; font-weight: 700;" value="120">
+            </div>
+            <div>
+              <label class="stitch-field-label-sm" for="aulasPorDia">Aulas/Dia</label>
+              <input type="text" id="aulasPorDia" class="stitch-input" style="text-align: center; font-weight: 700;" value="4">
+            </div>
+            <div>
+              <label class="stitch-field-label-sm" for="horasPorDia">Total/dia</label>
+              <input type="text" id="horasPorDia" readonly class="stitch-total-pill" style="cursor: default;" value="04:00">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 3: CALENDÁRIO E DIAS COM AULA -->
+      <section class="stitch-card-panel" data-purpose="form-panel-calendario">
+        <header class="stitch-panel-header">
+          <div class="stitch-icon-box">
+            <i class="fa-regular fa-calendar-check"></i>
+          </div>
+          <h2 class="stitch-panel-title">Calendário e Dias com Aula</h2>
+        </header>
+        <div class="stitch-form-group-stack">
+          <div>
+            <label class="stitch-field-label" for="dataInicioStr">Data de Início</label>
+            <div class="stitch-input-relative">
+              <input type="date" id="dataInicioStr" class="stitch-input" style="padding-right: 36px;" value="2026-04-14">
+              <i class="fa-regular fa-calendar stitch-input-icon"></i>
+            </div>
+          </div>
+          <!-- Active Weekdays Toggle Pills -->
+          <div>
+            <label class="stitch-field-label">Dias da Semana Ativos</label>
+            <div class="stitch-weekday-grid weekday-selector">
+              <button type="button" class="day-btn stitch-day-btn" data-day="1">Seg</button>
+              <button type="button" class="day-btn stitch-day-btn" data-day="2">Ter</button>
+              <button type="button" class="day-btn stitch-day-btn" data-day="3">Qua</button>
+              <button type="button" class="day-btn stitch-day-btn" data-day="4">Qui</button>
+              <button type="button" class="day-btn stitch-day-btn" data-day="5">Sex</button>
+              <button type="button" class="day-btn stitch-day-btn" data-day="6">Sáb</button>
+            </div>
+          </div>
+          <div>
+            <label class="stitch-field-label" for="escola">Escola</label>
+            <input type="text" id="escola" class="stitch-input" placeholder="Nome da Escola SENAI...">
+          </div>
+          <div class="stitch-teacher-coord-row">
+            <div>
+              <label class="stitch-field-label" for="docente">Professor / Resp.</label>
+              <input type="text" id="docente" class="stitch-input" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" placeholder="...">
+            </div>
+            <div>
+              <label class="stitch-field-label" for="coordenador">Coordenador</label>
+              <input type="text" id="coordenador" class="stitch-input" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" placeholder="...">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 4: AJUSTE MANUAL DE DATAS -->
+      <section class="stitch-card-panel" data-purpose="form-panel-ajuste-manual">
+        <header class="stitch-panel-header">
+          <div class="stitch-icon-box">
+            <i class="fa-solid fa-sliders"></i>
+          </div>
+          <h2 class="stitch-panel-title">Ajuste Manual de Datas</h2>
+        </header>
+        <div>
+          <label class="stitch-field-label" for="input-manual-date">Data (dd/mm/aaaa ou aaaa-mm-dd):</label>
+          <div class="stitch-manual-date-row">
+            <input type="text" id="input-manual-date" class="stitch-input" placeholder="...">
+            <button id="btn-manual-date-add" class="stitch-btn-icon-calc" title="Adicionar Data" type="button">+</button>
+            <button id="btn-manual-date-remove" class="stitch-btn-icon-calc" title="Remover Data" type="button">-</button>
+          </div>
+          <div id="manual-dates-list" class="manual-dates-list" style="margin-top: 8px;"></div>
+        </div>
+      </section>
+
+      <!-- Panel 5: PERFIL DE MODELOS -->
+      <section class="stitch-card-panel" data-purpose="form-panel-perfil">
+        <header class="stitch-panel-header">
+          <div class="stitch-icon-box">
+            <i class="fa-regular fa-folder-open"></i>
+          </div>
+          <h2 class="stitch-panel-title">Perfil de Modelos</h2>
+        </header>
+        <div class="stitch-form-group-stack">
+          <div class="stitch-profile-btn-row">
+            <button id="btn-export-profile" class="stitch-btn-export" type="button">
+              <i class="fa-solid fa-download text-xs"></i>
+              <span>Exportar perfil</span>
+            </button>
+            <button id="btn-import-profile" class="stitch-btn-import" type="button">
+              <i class="fa-solid fa-upload text-xs"></i>
+              <span>Importar perfil</span>
+            </button>
+            <input type="file" id="input-import-profile" accept=".json" style="display: none;">
+          </div>
+          <!-- Privacy statement note -->
+          <div class="stitch-privacy-note">
+            <i class="fa-solid fa-shield-halved" style="color: #2A9D8F; font-size: 13px; margin-top: 2px;"></i>
+            <span>Seu perfil é pessoal e as informações são salvas localmente para sua segurança e privacidade: <strong>Nenhum dado é coletado</strong>.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Elementos ocultos para manter compatibilidade JS -->
+      <select id="theme-selector" style="display:none;"><option value="solarized">Solarized</option></select>
+      <button id="btn-reset-form" style="display:none;"></button>
+    </aside>
+
+    <!-- PAINEL DIREITO: WORKSPACE, METRICS, PREVIEW A4 E GERENCIADOR INTERATIVO -->
+    <main id="preview-container" data-purpose="interactive-workspace">
+      <!-- Top Quick Status Cards -->
+      <div class="stitch-summary-grid" data-purpose="summary-metric-cards">
+        <!-- Total Aulas -->
+        <div class="stitch-metric-card">
+          <div>
+            <span class="stitch-metric-label">Aulas Previstas</span>
+            <div id="cron-metric-aulas-count" class="stitch-metric-value">0 Encontros</div>
+            <span id="cron-metric-aulas-status" class="stitch-metric-status" style="color: #047857;">
+              <i class="fa-regular fa-circle-check" style="font-size: 10px;"></i> Totalmente alocado
+            </span>
+          </div>
+          <div class="stitch-icon-box-lg" style="background-color: #FEF3C7; color: #3A1E11;">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+        </div>
+
+        <!-- Carga Horária -->
+        <div class="stitch-metric-card">
+          <div>
+            <span class="stitch-metric-label">Carga Horária</span>
+            <div id="cron-metric-ch-value" class="stitch-metric-value">0h / 0h</div>
+            <span id="cron-metric-ch-status" class="stitch-metric-status" style="color: #B45309;">
+              <i class="fa-solid fa-triangle-exclamation" style="font-size: 10px;"></i> Carga pendente
+            </span>
+          </div>
+          <div class="stitch-icon-box-lg" style="background-color: #ECFDF5; color: #047857;">
+            <i class="fa-solid fa-hourglass-half"></i>
+          </div>
+        </div>
+
+        <!-- Ambientes Definidos -->
+        <div class="stitch-env-card">
+          <div class="stitch-env-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 28px; height: 28px; border-radius: 8px; background-color: #EFF6FF; color: #2D81DB; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                <i class="fa-solid fa-door-open"></i>
+              </div>
+              <span class="stitch-metric-label">Ambientes</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" id="btn-set-all-teoria" class="stitch-btn-env-preset btn-env-teoria">
+                Todos Teoria
+              </button>
+              <button type="button" id="btn-set-all-pratica" class="stitch-btn-env-preset btn-env-pratica">
+                Todos Prática
+              </button>
+            </div>
+          </div>
+          <div class="stitch-env-inputs-row">
+            <div class="stitch-env-input-box">
+              <div style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <span class="stitch-dot-teoria"></span>
+                <span style="font-size: 12px; font-weight: 600; color: #4E2A18;">Teoria:</span>
+              </div>
+              <input type="text" id="editorAmbienteTeoria" value="S01" class="stitch-env-input">
+            </div>
+            <div class="stitch-env-input-box">
+              <div style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <span class="stitch-dot-pratica"></span>
+                <span style="font-size: 12px; font-weight: 600; color: #4E2A18;">Prática:</span>
+              </div>
+              <input type="text" id="editorAmbientePratica" value="L01" class="stitch-env-input">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Grid Workspace Canvas -->
+      <div class="stitch-canvas-card">
+        <div class="stitch-canvas-content canvas-dot-grid">
+          <!-- Preview A4 Target -->
+          <div style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 24px;">
+            <div id="cronograma-render-target">
+              <!-- Renderizado dinamicamente via JS: .page-a4 -->
+            </div>
+          </div>
+
+          <!-- Encontros Header -->
+          <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; margin-top: 16px; margin-bottom: 12px; padding: 0 4px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background-color: #2A9D8F; display: inline-block;"></span>
+              <h3 style="font-size: 12px; font-weight: 700; color: #3A1E11; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Encontros Individuais • Gestão Interativa</h3>
+              <span id="ch-progress-badge" class="stitch-tag-badge">0 Aulas</span>
+            </div>
+          </div>
+
+          <!-- Grade de Aulas Interativas -->
+          <div id="interactive-days-grid" class="stitch-days-grid">
+            <!-- Chips gerados dinamicamente via JS -->
+          </div>
+        </div>
+      </div>
     </main>
 
   </div><!-- /app-container -->
+
+  <!-- Elemento de compatibilidade para o resizer (oculto e fora do grid) -->
+  <div class="panel-resizer no-print" id="resizer-cronograma" style="display: none !important;"></div>
 
   </div><!-- /tab-cronograma (app-page) -->
 
@@ -347,65 +410,99 @@
 
     <!-- PAINEL PRINCIPAL: DIÁRIO DINÂMICO OCUPANDO 100% DA LARGURA -->
     <main class="comp-main">
-      <div class="comp-diary-card">
-        <div class="comp-diary-header">
-          <div class="comp-diary-title-nav" role="tablist" aria-label="Navegação do Diário">
-            <button type="button"
-                    id="comp-nav-tab-compensacao"
-                    class="comp-diary-nav-tab is-active"
-                    role="tab"
-                    aria-selected="true"
-                    onclick="compAlternarSubViewDiario('compensacao')"
-                    title="Diário de Compensação de Ausências (Ordem alfabética, evadidos no final)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              <span>Diário de Compensação de Ausências</span>
+      <!-- BEGIN: Stitch ContextClassBanner -->
+      <section class="stitch-context-banner" data-purpose="class-metadata-banner">
+        <div class="stitch-context-left">
+          <span class="stitch-badge-turma">
+            <i class="fa-solid fa-chalkboard-user"></i> <span id="comp-banner-turma">Turma</span>
+          </span>
+          <span class="stitch-banner-dot" id="comp-banner-ano-dot" style="display: none;">•</span>
+          <span class="stitch-badge-ano" id="comp-banner-ano-wrapper" style="display: none;">
+            <i class="fa-regular fa-calendar"></i> Ano: <strong id="comp-banner-ano"></strong>
+          </span>
+          <span class="stitch-banner-dot">•</span>
+          <span class="stitch-banner-meta">
+            <i class="fa-solid fa-book-open"></i> <span id="comp-banner-curso">Curso</span>
+          </span>
+          <span class="stitch-banner-dot">•</span>
+          <span class="stitch-banner-meta">
+            <i class="fa-regular fa-hourglass-half"></i> Total Faltas: <strong id="comp-banner-total-faltas" class="stitch-text-coral">0h00</strong>
+          </span>
+          <span class="stitch-banner-dot">•</span>
+          <span class="stitch-badge-hoje">
+            <i class="fa-regular fa-calendar"></i> Hoje: <strong id="comp-banner-hoje-data">15/10/2026</strong>
+          </span>
+        </div>
+        <div class="stitch-context-right">
+          <span class="stitch-teacher-label">Professor(a): <strong id="comp-banner-docente">Docente</strong></span>
+          <button type="button" id="comp-btn-lock-coord" class="stitch-icon-circle-btn" title="Área Restrita da Coordenação (Protegida por Senha)">
+            <i class="fa-solid fa-lock"></i>
+          </button>
+        </div>
+      </section>
+      <!-- END: Stitch ContextClassBanner -->
+
+      <!-- BEGIN: Stitch MainAttendanceToolbar -->
+      <section class="stitch-attendance-toolbar" data-purpose="attendance-action-toolbar">
+        <div class="stitch-toolbar-inner">
+          <!-- Left Group: Modos Diário e Compensações / Diário Físico / Imprimir Pendentes -->
+          <div class="stitch-toolbar-modes">
+            <button class="stitch-pill-btn is-active" id="comp-nav-tab-compensacao" type="button" onclick="compAlternarSubViewDiario('compensacao')" title="Diário e Compensações (Ordem alfabética)">
+              <span class="stitch-pill-icon-circle">
+                <i class="fa-solid fa-user-group"></i>
+              </span>
+              <span>Diário e Compensações</span>
             </button>
-            <button type="button"
-                    id="comp-nav-tab-fisico"
-                    class="comp-diary-nav-tab"
-                    role="tab"
-                    aria-selected="false"
-                    onclick="compAlternarSubViewDiario('fisico')"
-                    title="Diário Físico (Ordem personalizada do professor, reordenação por arrasto)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <button class="stitch-pill-btn" id="comp-nav-tab-fisico" type="button" onclick="compAlternarSubViewDiario('fisico')" title="Diário Físico (Ordem personalizada)">
+              <span class="stitch-pill-icon-circle">
+                <i class="fa-regular fa-file-lines"></i>
+              </span>
               <span>Diário Físico</span>
+            </button>
+            <button class="stitch-pill-btn stitch-btn-pending" id="comp-btn-imprimir-pendentes-header" type="button" onclick="compImprimirPendentes()" title="Imprimir relatórios e pendências escolares">
+              <span class="stitch-icon-warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </span>
+              <span>Imprimir Pendentes</span>
             </button>
           </div>
 
-          <!-- CONTROLES NA MESMA LINHA DO TÍTULO DO DIÁRIO (LINHA 1) -->
-          <div class="comp-diary-header-controls">
-            <!-- 1. Checkbox e Módulo de Minutos Editável -->
-            <div class="comp-header-control-item" style="display:flex;align-items:center;gap:5px;" title="Ativar cálculo por minutos de aula (padrão: 55min)">
-              <input type="checkbox" id="comp-sidebar-toggle-55min" style="cursor:pointer;" title="Ativar cálculo proporcional por minutos de aula">
-              <input type="number" id="comp-input-minutos-modulo" value="55" min="1" max="240" class="input-control" style="width:48px;padding:3px 4px;font-size:11.5px;font-weight:700;text-align:center;height:26px;" title="Minutos por aula/falta">
-              <span style="font-size:11.5px;font-weight:700;color:var(--text-primary);">min</span>
+          <!-- Right Group: Duração de Aula, Adicionar Aluno & Conteúdo Programático -->
+          <div class="stitch-toolbar-actions">
+            <!-- Duração de Aula: Checkbox + Input Minutos -->
+            <div class="stitch-duration-wrapper" title="Ativar cálculo proporcional por minutos de aula">
+              <input type="checkbox" id="comp-sidebar-toggle-55min" class="stitch-checkbox" checked aria-label="Ativar duração padrão">
+              <div class="stitch-duration-field">
+                <input type="number" id="comp-input-minutos-modulo" value="55" min="5" max="360" class="stitch-duration-input" aria-label="Tempo de aula em minutos">
+                <span class="stitch-duration-unit">min</span>
+              </div>
             </div>
 
-            <!-- 2. Campo de Adição de Alunos -->
-            <div class="comp-header-add-aluno" style="display:flex;align-items:center;gap:6px;">
-              <input type="text" id="comp-aluno-input" class="input-control" placeholder="Inserir aluno(s)..." style="width: 200px; font-size: 11.5px; padding: 5px 8px;" title="Digite um ou mais alunos (separados por vírgula ou JSON de faltas)">
-              <button type="button" id="comp-btn-add-alunos" class="btn btn-secondary btn-sm" style="padding: 5px 10px; font-weight: 700;" title="Adicionar aluno(s) à turma">+ Aluno</button>
+            <!-- Inserir Aluno(s) -->
+            <div class="stitch-search-wrapper">
+              <div class="stitch-search-icon">
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </div>
+              <input type="text" id="comp-aluno-input" class="stitch-search-input" placeholder="Inserir aluno(s)...">
             </div>
 
-            <!-- 3. Botão da Coordenação: SOMENTE O ÍCONE DO CADEADO -->
-            <button type="button" id="comp-btn-lock-coord" class="btn btn-secondary btn-sm" style="padding: 5px 9px; font-size: 14px; line-height: 1;" title="Área Restrita da Coordenação (Protegida por Senha)">
-              🔒
+            <!-- Botão + Aluno -->
+            <button type="button" id="comp-btn-add-alunos" class="stitch-btn-add-student">
+              <i class="fa-solid fa-plus"></i>
+              <span>Aluno</span>
             </button>
 
-            <!-- 4. Botão de Conteúdo Programático das Aulas -->
-            <button type="button" id="comp-btn-abrir-conteudo-programatico" class="btn btn-secondary btn-sm" style="padding: 5px 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;" title="Configurar plano de conteúdos programáticos das aulas">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-              Conteúdo Programático
+            <!-- Botão Conteúdo Programático -->
+            <button type="button" id="comp-btn-abrir-conteudo-programatico" class="stitch-icon-circle-btn stitch-btn-program" title="Configurar plano de conteúdos programáticos das aulas">
+              <i class="fa-solid fa-book-bookmark"></i>
             </button>
-
-            <!-- 5. Botão de Imprimir Pendentes (reposicionado na Linha 1) -->
-            <button type="button" id="comp-btn-imprimir-pendentes-header" class="btn btn-warning btn-sm" onclick="compImprimirPendentes()" style="padding: 5px 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;" title="Imprimir todos os discentes com pendência de compensação">
-              ⚠️ Imprimir Pendentes
-            </button>
-
-          </div><!-- /comp-diary-header-controls -->
+          </div>
         </div>
+      </section>
+      <!-- END: Stitch MainAttendanceToolbar -->
 
+      <!-- CONTÊINER DA TABELA DO DIÁRIO -->
+      <div class="stitch-diary-card">
         <!-- Corpo do diário (tabela gerada dinamicamente) -->
         <div id="comp-diary-body">
           <!-- Renderizado pelo compensacao.js -->
@@ -536,50 +633,61 @@
 
 
 
-  <!-- MODAL DE PERSONALIZAÇÃO DE FALTA POR DIA (LONG-PRESS OU CLIQUE DIREITO) -->
-  <div id="comp-lesson-modal" class="day-modal-backdrop" style="display: none;">
-    <div class="day-modal-card" style="max-width: 420px;" role="dialog" aria-modal="true" aria-labelledby="lesson-modal-title">
-      <div class="day-modal-header">
-        <div class="day-modal-title-group">
-          <div class="day-modal-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <!-- MODAL DE PERSONALIZAÇÃO DE FALTA POR DIA (REDESIGN STITCH: BOTÃO DIREITO / LONG PRESS) -->
+  <div id="comp-lesson-modal" class="day-modal-backdrop comp-stitch-modal-backdrop" style="display: none;">
+    <div class="day-modal-card comp-stitch-modal-card" style="max-width: 540px;" role="dialog" aria-modal="true" aria-labelledby="lesson-modal-title">
+      <div class="day-modal-header comp-stitch-modal-header">
+        <div class="day-modal-title-group comp-stitch-title-group">
+          <div class="comp-stitch-icon-box">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="20" height="20">
+              <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
           </div>
           <div>
-            <h3 id="lesson-modal-title" class="day-modal-title">Personalizar Falta da Aula</h3>
-            <span id="lesson-modal-subtitle" class="day-modal-subtitle">DD/MM/AAAA • Aluno</span>
+            <h3 id="lesson-modal-title" class="comp-stitch-modal-title">Aula 2 • 15/04/2026</h3>
+            <span id="lesson-modal-subtitle" class="comp-stitch-modal-subtitle">Discente: <strong>Aluno</strong> • Carga do Dia: <strong>4h00</strong></span>
           </div>
         </div>
-        <button type="button" id="comp-lesson-modal-close" class="day-modal-close" title="Fechar">&times;</button>
+        <button type="button" id="comp-lesson-modal-close" class="comp-stitch-modal-close" title="Fechar janela" aria-label="Fechar janela">&times;</button>
       </div>
-      <div class="day-modal-body" style="padding: 16px 20px;">
-        <div class="modal-field-group" style="margin-bottom: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label style="font-size: 11px; font-weight: 700;">Registrar Quantidade de Faltas (1 a 8):</label>
-            <span id="comp-lesson-ch-max" style="font-size: 11px; font-weight: 700; color: var(--accent-active);">Carga: 4h</span>
+
+      <div class="day-modal-body comp-stitch-modal-body">
+        <!-- Grade de Pílulas Rápidas (0 a 8 + Integral) -->
+        <div class="comp-stitch-section">
+          <div class="comp-stitch-section-header">
+            <label class="comp-stitch-section-title">Registrar Quantidade de Faltas (1 a 8):</label>
+            <span id="comp-lesson-ch-max" class="comp-stitch-ch-badge">Carga: 4h</span>
           </div>
-          <div id="comp-modal-grid-1a8" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px;">
+          <div id="comp-modal-grid-1a8" class="comp-stitch-pill-grid">
             <!-- Preenchido dinamicamente com botões de 0 a 8 faltas e carga correspondente -->
           </div>
         </div>
 
-        <div class="modal-field-group" style="margin-bottom: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <label for="comp-lesson-horas-input">Ou informe Horas-Falta decimais:</label>
-            <span id="comp-modal-base-hint" style="font-size: 10px; color: var(--text-secondary);">Base: 1h/aula</span>
+        <!-- Campo de Horas Decimais com Stepper -->
+        <div class="comp-stitch-section">
+          <div class="comp-stitch-section-header">
+            <label for="comp-lesson-horas-input" class="comp-stitch-section-title">Ou informe Horas-Falta decimais:</label>
+            <span id="comp-modal-base-hint" class="comp-stitch-hint">Base: 1h/falta (1:00h)</span>
           </div>
-          <input type="number" id="comp-lesson-horas-input" class="input-control" min="0" max="24" step="0.1" placeholder="0">
+          <div class="comp-stitch-stepper-wrap">
+            <input type="number" id="comp-lesson-horas-input" class="input-control comp-stitch-stepper-input" min="0" max="24" step="0.5" placeholder="0">
+            <div class="comp-stitch-stepper-controls">
+              <button type="button" id="comp-stitch-btn-decrement" class="comp-stitch-stepper-btn" title="Diminuir horas" aria-label="Diminuir horas">&minus;</button>
+              <button type="button" id="comp-stitch-btn-increment" class="comp-stitch-stepper-btn" title="Aumentar horas" aria-label="Aumentar horas">&plus;</button>
+            </div>
+          </div>
         </div>
 
-        <div class="modal-field-group">
-          <label for="comp-lesson-obs-input">Observação da Falta (opcional):</label>
-          <input type="text" id="comp-lesson-obs-input" class="input-control" placeholder="Ex: Atestado médico, saída antecipada...">
+        <!-- Observação da Falta -->
+        <div class="comp-stitch-section">
+          <label for="comp-lesson-obs-input" class="comp-stitch-section-title" style="display: block; margin-bottom: 6px;">Observação da Falta (opcional):</label>
+          <input type="text" id="comp-lesson-obs-input" class="input-control comp-stitch-text-input" placeholder="Ex: Atestado médico, saída antecipada...">
         </div>
       </div>
-      <div class="day-modal-footer">
-        <div style="display: flex; gap: 8px; margin-left: auto;">
-          <button type="button" id="comp-lesson-modal-cancel" class="btn btn-secondary btn-sm">Cancelar</button>
-          <button type="button" id="comp-lesson-modal-save" class="btn btn-success btn-sm">Salvar Registro</button>
-        </div>
+
+      <div class="day-modal-footer comp-stitch-modal-footer">
+        <button type="button" id="comp-lesson-modal-cancel" class="btn btn-secondary btn-sm comp-stitch-btn-cancel">Cancelar</button>
+        <button type="button" id="comp-lesson-modal-save" class="btn btn-success btn-sm comp-stitch-btn-save">Salvar Registro</button>
       </div>
     </div>
   </div>

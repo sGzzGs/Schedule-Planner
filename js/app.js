@@ -10,18 +10,10 @@ const PRESETS = {};
 
 // Variável com o histórico de alterações da versão atual
 const mudancasDeVersao = `
-<div class="version-popup-header">Alterações da versão V.2.2</div>
+<div class="version-popup-header">Alterações da versão v3</div>
 <ul class="version-popup-list">
-  <li>Adição dos calendários de 2027 e 2028 à geração de cronogramas.</li>
-  <li>Adição das abas de compensação de ausências, com preenchimento automático integrado entre as turmas (<em>Alpha</em>) e o calendário.</li>
-  <li>Aprimoramento da aba de compensação de ausências, com avisos, preenchimento automático dos dados dos discentes e geração de documentos prontos para impressão.</li>
-  <li>Separação dos campos "Horas / Aula" e "Aulas / Dia", eliminando ambiguidades e aperfeiçoando o cálculo de faltas na compensação.</li>
-  <li>Suporte à exportação e restauração completa de perfis (incluindo discentes, faltas, diários e ordens físicas).</li>
-</ul>
-<div class="version-popup-header" style="margin-top: 10px; font-size: 12px; color: var(--text-primary);">Observações:</div>
-<ul class="version-popup-list">
-  <li>Calendários a partir de 2028 pendentes de revisão.</li>
-  <li>Identidade visual pendente de validação de uso por outros docentes.</li>
+  <li>BugFixes encontrado pelos professores Antônio e Renan.</li>
+  <li>Overhaul visual completo, testes ainda precisarão ser efetuados.</li>
 </ul>
 `.trim();
 
@@ -986,9 +978,10 @@ function calculateEndFromStartAndDuration() {
     hf.value = minutesToHHMM(endMin);
   }
 
-  // Sincroniza aulasPorDia mantendo a coerência com horasPorAula
+  // Sincroniza aulasPorDia mantendo a coerência com horasPorAula (apenas se não estiver sendo editado)
   const minAula = ha && isValidTimeFormat(ha.value) ? timeToMinutes(ha.value) : 60;
-  if (ad && minAula > 0 && durMin > 0) {
+  const isEditingAd = ad && document.activeElement === ad;
+  if (!isEditingAd && ad && minAula > 0 && durMin > 0) {
     const qtdCalc = Math.round(durMin / minAula);
     if (qtdCalc > 0) ad.value = String(qtdCalc);
   }
@@ -996,16 +989,30 @@ function calculateEndFromStartAndDuration() {
 
 function calculateHorasPorDiaFromAulaAndQtd() {
   const ha = document.getElementById("horasPorAula")?.value;
-  const ad = document.getElementById("aulasPorDia")?.value;
+  const adEl = document.getElementById("aulasPorDia");
+  const adVal = adEl?.value;
   const hd = document.getElementById("horasPorDia");
   if (!hd || !ha || !isValidTimeFormat(ha)) return;
 
+  if (!adVal || adVal.trim() === "") {
+    // Permite que o campo fique vazio temporariamente enquanto o usuário digita
+    return;
+  }
+
   const minAula = timeToMinutes(ha);
-  const qtd = parseInt(ad, 10) || 4;
+  const qtd = parseInt(adVal, 10);
+  if (isNaN(qtd) || qtd <= 0) return;
+
   const totalMin = Math.round(minAula * qtd);
   if (totalMin > 0) {
     hd.value = minutesToHHMM(totalMin);
-    calculateEndFromStartAndDuration();
+    const hi = document.getElementById("horaInicio")?.value;
+    const hf = document.getElementById("horaFim");
+    if (isValidTimeFormat(hi) && hf) {
+      const startMin = timeToMinutes(hi);
+      const endMin = (startMin + totalMin) % 1440;
+      hf.value = minutesToHHMM(endMin);
+    }
   }
 }
 
@@ -1525,15 +1532,51 @@ function renderScheduleHTML(formData, calcResult) {
 function renderInteractiveDaysGrid() {
   const container = document.getElementById("interactive-days-grid");
   const badge = document.getElementById("ch-progress-badge");
+  const metricAulasCount = document.getElementById("cron-metric-aulas-count");
+  const metricAulasStatus = document.getElementById("cron-metric-aulas-status");
+  const metricChValue = document.getElementById("cron-metric-ch-value");
+  const metricChStatus = document.getElementById("cron-metric-ch-status");
 
-  if (currentScheduleResult && badge) {
+  const totalAulasAtivas = (activeLessons || []).filter(l => !l.isInactive).length;
+
+  if (currentScheduleResult) {
     const { horasPreenchidasFormatadas, totalCargaFormatada, minutosPreenchidos, totalCargaMinutos } = currentScheduleResult;
-    badge.textContent = `${horasPreenchidasFormatadas} / ${totalCargaFormatada}`;
-    badge.classList.remove("ch-full", "ch-overflow");
-    if (minutosPreenchidos > 0 && minutosPreenchidos >= totalCargaMinutos) {
-      badge.classList.add("ch-full"); // VERDE: sucesso na distribuição (mesmo se houver horas excedentes)
-    } else {
-      badge.classList.add("ch-overflow"); // VERMELHO: horas insuficientes ou pendentes
+    
+    if (badge) {
+      badge.textContent = `${totalAulasAtivas} Aulas`;
+    }
+
+    if (metricAulasCount) {
+      metricAulasCount.textContent = `${totalAulasAtivas} Encontros`;
+    }
+
+    if (metricAulasStatus) {
+      if (minutosPreenchidos > 0 && minutosPreenchidos >= totalCargaMinutos) {
+        metricAulasStatus.style.color = "#047857";
+        metricAulasStatus.innerHTML = `<i class="fa-regular fa-circle-check" style="font-size: 10px;"></i> Totalmente alocado`;
+      } else {
+        metricAulasStatus.style.color = "#B45309";
+        metricAulasStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="font-size: 10px;"></i> Distribuição pendente`;
+      }
+    }
+
+    if (metricChValue) {
+      metricChValue.textContent = `${horasPreenchidasFormatadas} / ${totalCargaFormatada}`;
+    }
+
+    if (metricChStatus) {
+      if (minutosPreenchidos > totalCargaMinutos) {
+        const diffStr = minutesToHHMM(minutosPreenchidos - totalCargaMinutos);
+        metricChStatus.style.color = "#B45309";
+        metricChStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="font-size: 10px;"></i> +${diffStr} excedente`;
+      } else if (minutosPreenchidos === totalCargaMinutos && totalCargaMinutos > 0) {
+        metricChStatus.style.color = "#047857";
+        metricChStatus.innerHTML = `<i class="fa-regular fa-circle-check" style="font-size: 10px;"></i> Carga exata atendida`;
+      } else {
+        const diffStr = minutesToHHMM(Math.max(0, totalCargaMinutos - minutosPreenchidos));
+        metricChStatus.style.color = "#B45309";
+        metricChStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="font-size: 10px;"></i> ${diffStr} pendente`;
+      }
     }
   }
 
@@ -1541,13 +1584,15 @@ function renderInteractiveDaysGrid() {
 
   if (!activeLessons || activeLessons.length === 0) {
     if (currentScheduleResult && currentScheduleResult.emptyReason === "no_days_selected") {
-      container.innerHTML = `<div style="color: #94a3b8; font-size: 12px; grid-column: 1/-1; text-align: center; padding: 18px;">Selecione os dias da semana com aula no painel lateral para distribuir as aulas.</div>`;
+      container.innerHTML = `<div style="color: #8C7769; font-size: 12px; grid-column: 1/-1; text-align: center; padding: 24px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px dashed #DFD7BF;">Selecione os dias da semana com aula no painel lateral para distribuir as aulas.</div>`;
     } else {
-      container.innerHTML = `<div style="color: #94a3b8; font-size: 12px; grid-column: 1/-1; text-align: center; padding: 12px;">Nenhuma aula calculada para os parâmetros atuais.</div>`;
+      container.innerHTML = `<div style="color: #8C7769; font-size: 12px; grid-column: 1/-1; text-align: center; padding: 24px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px dashed #DFD7BF;">Nenhuma aula calculada para os parâmetros atuais.</div>`;
     }
     return;
   }
 
+  const horaInicioVal = document.getElementById("horaInicio")?.value || "13:00";
+  const horaFimVal = document.getElementById("horaFim")?.value || "17:00";
   const horasPorDiaStr = document.getElementById("horasPorDia")?.value || "04:00";
   const minutosDiaPadrao = timeToMinutes(horasPorDiaStr) || 240;
 
@@ -1565,36 +1610,27 @@ function renderInteractiveDaysGrid() {
     const isTeoria = aula.tipo === "teoria";
     const isPratica = aula.tipo === "pratica";
 
-    let chipBaseClass = "chip-pratica";
-    if (isSplit) {
-      chipBaseClass = "chip-misto";
-    } else if (isTeoria) {
-      chipBaseClass = "chip-teoria";
-    }
+    let borderClass = "is-pratica";
+    let badgeClass = "stitch-badge-pratica";
+    let badgeText = "Prática";
 
-    const chipClass = isInactive ? `${chipBaseClass} chip-inactive` : chipBaseClass;
-
-    let badgeClass = "badge-pratica";
-    let badgeText = "PRÁTICA";
     if (isInactive) {
-      badgeClass = "badge-inactive";
-      badgeText = "INATIVO";
+      borderClass = "is-inactive";
+      badgeClass = "stitch-badge-inactive";
+      badgeText = "Inativo";
     } else if (isSplit) {
-      const isPratFirst = aula.ordem === "pratica-teoria";
-      badgeClass = isPratFirst ? "badge-misto-invert" : "badge-misto";
-      badgeText = isPratFirst ? "PRÁTICA / TEORIA" : "TEORIA / PRÁTICA";
+      borderClass = "is-misto";
+      badgeClass = "stitch-badge-misto";
+      badgeText = aula.ordem === "pratica-teoria" ? "Prática / Teoria" : "Teoria / Prática";
     } else if (isTeoria) {
-      badgeClass = "badge-teoria";
-      badgeText = "TEORIA";
+      borderClass = "is-teoria";
+      badgeClass = "stitch-badge-teoria";
+      badgeText = "Teoria";
     }
 
     // Horas deste dia
     const horasDiaStr = minutesToHHMM(aula.minutos);
     const isDifferentHours = !isInactive && (aula.minutos !== minutosDiaPadrao);
-    const diffHoursClass = isDifferentHours ? "hours-different" : "";
-    const hoursTooltip = isDifferentHours 
-      ? `Carga deste dia: ${horasDiaStr} (diferente do padrão de ${minutesToHHMM(minutosDiaPadrao)})`
-      : `Carga deste dia: ${horasDiaStr}`;
 
     // Exibição de ambiente no rodapé do card
     let ambDisplay = aula.ambiente;
@@ -1604,27 +1640,38 @@ function renderInteractiveDaysGrid() {
       ambDisplay = aula.ordem === "pratica-teoria" ? `${pStr} • ${tStr}` : `${tStr} • ${pStr}`;
     }
 
+    const ambColor = isInactive ? '#4B5563' : (isTeoria ? '#047857' : (isPratica ? '#1D4ED8' : '#6D28D9'));
+    const horarioDisplay = (aula.horaInicio && aula.horaFim) ? `${aula.horaInicio} - ${aula.horaFim}` : `${horaInicioVal} - ${horaFimVal}`;
+
     const tooltipText = isInactive
       ? "Dia desativado manualmente. Clique c/ botão direito para reativar."
-      : "Clique: Alternar Teoria/Prática • Segure ou clique em ⋮: Editar ambiente/horas/divisão • Botão direito: Desativar dia";
+      : "Clique: Alternar Teoria/Prática • Clique em ⋮: Configurações do dia • Botão direito: Desativar dia";
 
     html += `
-      <div class="lesson-chip ${chipClass}" data-index="${idx}" data-datekey="${aula.dataKey}" title="${tooltipText}">
-        <div class="chip-header">
-          <div style="display: flex; align-items: center; gap: 5px;">
-            <span class="chip-idx" title="${numLabel}">${isInactive ? "✕" : aulaCounter}</span>
-            <span class="chip-hours-pill ${diffHoursClass}" title="${hoursTooltip}">${horasDiaStr}</span>
+      <div class="lesson-chip stitch-lesson-card ${borderClass}" data-index="${idx}" data-datekey="${aula.dataKey}" title="${tooltipText}">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 11px; font-weight: 800; color: #8C7769; background: #F5EFE6; padding: 1px 6px; border-radius: 6px;">${isInactive ? '✕' : aulaCounter}</span>
+            <span style="font-size: 12px; font-weight: 700; color: #3A1E11;">${aula.diaStr}/${String(aula.mesIdx + 1).padStart(2, "0")} (${aula.diaSemanaNome})</span>
           </div>
           <div style="display: flex; align-items: center; gap: 4px;">
-            <span class="chip-date">${aula.diaStr}/${String(aula.mesIdx + 1).padStart(2, "0")} (${aula.diaSemanaNome})</span>
-            <button type="button" class="chip-menu-btn" title="Configurar este dia (ambiente, horas, divisão)" data-index="${idx}" data-datekey="${aula.dataKey}">⋮</button>
+            <span class="stitch-badge-pill ${badgeClass}">${badgeText}</span>
+            <button type="button" class="chip-menu-btn" title="Configurar este dia (ambiente, horas, divisão)" data-index="${idx}" data-datekey="${aula.dataKey}" style="border: none; background: transparent; color: #8C7769; cursor: pointer; padding: 2px 4px; font-size: 13px; font-weight: bold;">⋮</button>
           </div>
         </div>
-        <div class="chip-badge-wrapper">
-          <span class="chip-badge ${badgeClass}">${badgeText}</span>
-        </div>
-        <div class="chip-footer">
-          <span class="chip-amb-val" style="width: 100%; text-align: center; ${isSplit ? 'font-size: 8.5px; padding: 2px 4px;' : ''}">${ambDisplay}</span>
+        <div style="font-size: 12px; color: #8C7769; display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Horário:</span>
+            <strong style="color: #4E2A18; font-weight: 600;">${horarioDisplay}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Ambiente:</span>
+            <strong style="color: ${ambColor}; font-weight: 700;">${ambDisplay}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>C.H.:</span>
+            <strong style="color: #4E2A18; font-weight: 600;">${horasDiaStr} ${isDifferentHours ? '⚠️' : ''}</strong>
+          </div>
         </div>
       </div>
     `;
@@ -2046,7 +2093,7 @@ function updatePreview(preserveCustom = false) {
   // Atualiza também o subtítulo da barra superior com a versão
   const schoolLabel = document.getElementById("topbar-school-label");
   if (schoolLabel) {
-    schoolLabel.textContent = "V.2.2";
+    schoolLabel.textContent = "v3";
   }
 
   renderInteractiveDaysGrid();
@@ -2360,15 +2407,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const ad = document.getElementById("aulasPorDia");
   if (ad) {
-    const handleAdChange = (e) => {
+    ad.addEventListener("input", (e) => {
       let val = e.target.value.replace(/\D/g, "");
       if (val.length > 2) val = val.slice(0, 2);
       if (e.target.value !== val) e.target.value = val;
+      if (val !== "") {
+        calculateHorasPorDiaFromAulaAndQtd();
+        updatePreview(true);
+      }
+    });
+
+    const resetIfEmpty = (e) => {
+      let val = e.target.value.trim();
+      if (!val || parseInt(val, 10) <= 0) {
+        e.target.value = "4";
+      }
       calculateHorasPorDiaFromAulaAndQtd();
       updatePreview(true);
     };
-    ad.addEventListener("input", handleAdChange);
-    ad.addEventListener("change", handleAdChange);
+
+    ad.addEventListener("blur", resetIfEmpty);
+    ad.addEventListener("change", resetIfEmpty);
   }
 
   // 3. Vincular Botões de Dias da Semana

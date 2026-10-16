@@ -1,0 +1,961 @@
+/* Created at: 2026-10-15 22:05 */
+/**
+ * cronograma-stitch.css
+ * Estilos e tokens de design extraídos 1:1 do Stitch (Novo_cronograma)
+ * Cores, sombras, canvas dot grid e componentes de UI
+ */
+
+/* ==========================================================================
+   TOKENS E PALETA DE CORES 1:1 STITCH
+   ========================================================================== */
+:root {
+  --stitch-cream: #FAF6F0;
+  --stitch-cream-soft: #FDFBF7;
+  --stitch-cream-card: #FFFFFF;
+  --stitch-border: #EAE3D2;
+  --stitch-border-dark: #DFD7BF;
+  --stitch-text-primary: #4E2A18;
+  --stitch-text-secondary: #8C7769;
+  --stitch-primary-dark: #3A1E11;
+  --stitch-accent-red: #D93829;
+  --stitch-accent-red-dark: #C12719;
+  --stitch-accent-teal: #2A9D8F;
+  --stitch-accent-green: #34A853;
+  --stitch-accent-green-bg: #E8F5E9;
+  --stitch-accent-blue: #2D81DB;
+  --stitch-accent-blue-bg: #EAF3FC;
+  --stitch-tag-pill: #F5EFE6;
+  --stitch-active-pill: #3A1E11;
+
+  --stitch-shadow-card: 0 2px 8px -2px rgba(78, 42, 24, 0.05), 0 1px 3px -1px rgba(78, 42, 24, 0.04);
+  --stitch-shadow-card-hover: 0 8px 20px -4px rgba(78, 42, 24, 0.08), 0 3px 6px -2px rgba(78, 42, 24, 0.05);
+  --stitch-shadow-subtle: 0 1px 2px 0 rgba(78, 42, 24, 0.04);
+}
+
+/* ==========================================================================
+   TOPBAR 1:1 STITCH
+   ========================================================================== */
+.app-topbar {
+  background-color: #FFFFFF !important;
+  border-bottom: 1px solid #EAE3D2 !important;
+  box-shadow: 0 1px 2px 0 rgba(78, 42, 24, 0.04) !important;
+  padding: 10px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 40 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.stitch-topbar-senai-badge {
+  background-color: #D93829;
+  color: #FFFFFF;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s ease;
+}
+
+.stitch-topbar-senai-badge:hover {
+  background-color: #C12719;
+}
+
+.stitch-topbar-divider {
+  width: 1px;
+  height: 24px;
+  background-color: #EAE3D2;
+  margin: 0 12px;
+}
+
+.stitch-brand-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stitch-brand-title-wrap h1 {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #4E2A18 !important;
+  letter-spacing: -0.02em !important;
+  margin: 0 !important;
+}
+
+.stitch-version-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: #F5EFE6;
+  color: #8C7769;
+  border: 1px solid #EAE3D2;
+}
+
+/* Abas de Navegação Integradas */
+.app-tab-bar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background-color: #FDFBF7 !important;
+  padding: 4px !important;
+  border-radius: 12px !important;
+  border: 1px solid #EAE3D2 !important;
+  height: auto !important;
+}
+
+.app-tab {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 14px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #8C7769 !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  font-family: inherit !important;
+  position: static !important;
+}
+
+.app-tab:hover {
+  color: #4E2A18 !important;
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.app-tab.active {
+  background-color: #3A1E11 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px 0 rgba(78, 42, 24, 0.04) !important;
+}
+
+.app-tab.active::after {
+  display: none !important;
+}
+
+/* Controles do TopBar */
+.topbar-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.stitch-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background-color: #FDFBF7;
+  border-radius: 9999px;
+  border: 1px solid #EAE3D2;
+}
+
+.stitch-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10B981;
+}
+
+.stitch-models-select-wrap {
+  position: relative;
+}
+
+.stitch-models-select {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  background-color: #FDFBF7 !important;
+  color: #4E2A18 !important;
+  border: 1px solid #EAE3D2 !important;
+  border-radius: 12px !important;
+  padding: 8px 30px 8px 12px !important;
+  outline: none !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  min-width: 220px;
+}
+
+.stitch-models-select:focus {
+  border-color: #3A1E11 !important;
+  box-shadow: 0 0 0 2px rgba(58, 30, 17, 0.1) !important;
+}
+
+.stitch-model-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stitch-btn-delete-model {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 14px !important;
+  background-color: #FCECEB !important;
+  border: 2px solid #F6BEB9 !important;
+  color: #E1352A !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px 0 rgba(78, 42, 24, 0.04) !important;
+  padding: 0 !important;
+}
+
+.stitch-btn-delete-model:hover {
+  background-color: #F9DDDA !important;
+  box-shadow: 0 2px 6px rgba(225, 53, 42, 0.15) !important;
+}
+
+.stitch-btn-save-model {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 14px !important;
+  background-color: #EAF7EE !important;
+  border: 2px solid #A7E1C0 !important;
+  color: #009A4D !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px 0 rgba(78, 42, 24, 0.04) !important;
+  padding: 0 !important;
+}
+
+.stitch-btn-save-model:hover {
+  background-color: #DCF3E3 !important;
+  box-shadow: 0 2px 6px rgba(0, 154, 77, 0.15) !important;
+}
+
+.stitch-btn-download-pdf {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 16px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  background-color: #3A1E11 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.15s ease !important;
+  font-family: inherit !important;
+}
+
+.stitch-btn-download-pdf:hover {
+  background-color: #2A150B !important;
+  box-shadow: 0 3px 8px rgba(58, 30, 17, 0.2) !important;
+}
+
+/* ==========================================================================
+   ENGINEERING CANVAS DOT PATTERN
+   ========================================================================== */
+.canvas-dot-grid {
+  background-color: #FAF6F0 !important;
+  background-image: radial-gradient(#D6CABA 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+}
+
+/* ==========================================================================
+   CONTAINER DO CRONOGRAMA & FLUID SCROLL
+   ========================================================================== */
+#tab-cronograma:not(.page-active) {
+  display: none !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transform: translateX(24px) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#tab-cronograma.page-active {
+  background-color: #FAF6F0 !important;
+  color: #4E2A18 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  display: block !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  position: relative !important;
+  pointer-events: all !important;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbar para o Cronograma */
+#tab-cronograma::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+#tab-cronograma::-webkit-scrollbar-track {
+  background: #FAF6F0;
+}
+#tab-cronograma::-webkit-scrollbar-thumb {
+  background: #D8CEBC;
+  border-radius: 9999px;
+}
+#tab-cronograma::-webkit-scrollbar-thumb:hover {
+  background: #BAAC96;
+}
+
+#tab-cronograma .app-container {
+  display: grid !important;
+  grid-template-columns: 380px minmax(0, 1fr) !important;
+  gap: 24px !important;
+  max-width: 1920px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  padding: 16px 24px 80px 24px !important;
+  align-items: start !important;
+  height: auto !important;
+  min-height: 100% !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 900px) {
+  #tab-cronograma .app-container {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Sidebar */
+#tab-cronograma .app-sidebar,
+#tab-cronograma .stitch-sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+#tab-cronograma #resizer-cronograma {
+  display: none !important;
+}
+
+/* Seções e Cartões da Sidebar */
+#tab-cronograma .stitch-card-panel {
+  background-color: #FFFFFF;
+  border: 1px solid #EAE3D2;
+  border-radius: 1rem; /* rounded-2xl */
+  padding: 1rem;
+  box-shadow: var(--stitch-shadow-card);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+#tab-cronograma .stitch-card-panel:hover {
+  box-shadow: var(--stitch-shadow-card-hover);
+}
+
+#tab-cronograma .stitch-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(234, 227, 210, 0.6);
+}
+
+#tab-cronograma .stitch-icon-box {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  background-color: #FEF3C7; /* amber-50 */
+  color: #3A1E11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+#tab-cronograma .stitch-panel-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #3A1E11;
+  margin: 0;
+}
+
+#tab-cronograma .stitch-form-group-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Campos de Formulário Stitch */
+#tab-cronograma .stitch-field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #8C7769;
+  margin-bottom: 0.25rem;
+}
+
+#tab-cronograma .stitch-field-label-sm {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #8C7769;
+  margin-bottom: 0.25rem;
+}
+
+#tab-cronograma .stitch-input,
+#tab-cronograma .stitch-select {
+  width: 100%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4E2A18;
+  background-color: #FDFBF7;
+  border: 1px solid #DFD7BF;
+  border-radius: 0.75rem; /* rounded-xl */
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+#tab-cronograma .stitch-input:focus,
+#tab-cronograma .stitch-select:focus {
+  background-color: #FFFFFF;
+  border-color: #3A1E11;
+  box-shadow: 0 0 0 2px rgba(58, 30, 17, 0.1);
+}
+
+#tab-cronograma .stitch-preset-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+#tab-cronograma .stitch-btn-icon-clear {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.75rem;
+  background-color: #FDFBF7;
+  border: 1px solid #DFD7BF;
+  color: #8C7769;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+#tab-cronograma .stitch-btn-icon-clear:hover {
+  background-color: #F5EFE6;
+  color: #4E2A18;
+}
+
+#tab-cronograma .stitch-time-row,
+#tab-cronograma .stitch-totals-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+#tab-cronograma .stitch-totals-row {
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(234, 227, 210, 0.4);
+}
+
+#tab-cronograma .stitch-total-pill {
+  width: 100%;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #3A1E11;
+  background-color: #F5EFE6;
+  border: 1px solid #DFD7BF;
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Relative Input com ícone de calendário */
+#tab-cronograma .stitch-input-relative {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#tab-cronograma .stitch-input-icon {
+  position: absolute;
+  right: 0.75rem;
+  color: #8C7769;
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+/* Chips de Dias da Semana (6 botões: Seg..Sáb) */
+#tab-cronograma .stitch-weekday-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.375rem;
+}
+
+#tab-cronograma .stitch-day-btn {
+  padding: 0.375rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  background-color: #FDFBF7;
+  border: 1px solid #DFD7BF;
+  color: #8C7769;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  font-family: inherit;
+}
+
+#tab-cronograma .stitch-day-btn:hover {
+  background-color: #F5EFE6;
+  color: #4E2A18;
+}
+
+#tab-cronograma .stitch-day-btn.active {
+  background-color: #3A1E11 !important;
+  color: #FFFFFF !important;
+  border-color: #3A1E11 !important;
+  font-weight: 700 !important;
+  box-shadow: var(--stitch-shadow-subtle) !important;
+}
+
+#tab-cronograma .stitch-teacher-coord-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+/* Botão pontilhado para adicionar horário */
+#tab-cronograma .stitch-btn-dashed {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px dashed #DFD7BF;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4E2A18;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+#tab-cronograma .stitch-btn-dashed:hover {
+  background-color: #FDFBF7;
+  border-color: #3A1E11;
+}
+
+/* Ajuste Manual de Datas */
+#tab-cronograma .stitch-manual-date-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+#tab-cronograma .stitch-btn-icon-calc {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  background-color: #FDFBF7;
+  border: 1px solid #DFD7BF;
+  color: #4E2A18;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+#tab-cronograma .stitch-btn-icon-calc:hover {
+  background-color: #F5EFE6;
+}
+
+/* Botões do Perfil */
+#tab-cronograma .stitch-profile-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+#tab-cronograma .stitch-btn-export {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background-color: #B45309; /* amber-700 */
+  color: #FFFFFF;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  box-shadow: var(--stitch-shadow-subtle);
+  font-family: inherit;
+}
+
+#tab-cronograma .stitch-btn-export:hover {
+  background-color: #92400E;
+}
+
+#tab-cronograma .stitch-btn-import {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background-color: #8C7769;
+  color: #FFFFFF;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  box-shadow: var(--stitch-shadow-subtle);
+  font-family: inherit;
+}
+
+#tab-cronograma .stitch-btn-import:hover {
+  background-color: #4E2A18;
+}
+
+#tab-cronograma .stitch-privacy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  border-radius: 0.75rem;
+  background-color: #FDFBF7;
+  border: 1px solid #EAE3D2;
+  font-size: 0.6875rem;
+  color: #8C7769;
+  line-height: 1.5;
+}
+
+/* Workspace Central */
+#tab-cronograma #preview-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  background: transparent !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+/* Cards de Métricas do Topo do Workspace */
+#tab-cronograma .stitch-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.875rem;
+}
+
+@media (max-width: 1200px) {
+  #tab-cronograma .stitch-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+#tab-cronograma .stitch-metric-card {
+  background-color: #FFFFFF;
+  border: 1px solid #EAE3D2;
+  border-radius: 1rem;
+  padding: 0.875rem;
+  box-shadow: var(--stitch-shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#tab-cronograma .stitch-icon-box-lg {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+#tab-cronograma .stitch-metric-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #8C7769;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+}
+
+#tab-cronograma .stitch-metric-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #3A1E11;
+  margin-top: 0.125rem;
+}
+
+#tab-cronograma .stitch-metric-status {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.125rem;
+}
+
+/* Card de Ambientes */
+#tab-cronograma .stitch-env-card {
+  background-color: #FFFFFF;
+  border: 1px solid #EAE3D2;
+  border-radius: 1rem;
+  padding: 0.75rem;
+  box-shadow: var(--stitch-shadow-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.625rem;
+  grid-column: span 2;
+}
+
+#tab-cronograma .stitch-env-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#tab-cronograma .stitch-btn-env-preset {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+#tab-cronograma .btn-env-teoria {
+  background-color: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+#tab-cronograma .btn-env-teoria:hover {
+  background-color: #D1FAE5;
+}
+
+#tab-cronograma .btn-env-pratica {
+  background-color: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+#tab-cronograma .btn-env-pratica:hover {
+  background-color: #DBEAFE;
+}
+
+#tab-cronograma .stitch-env-inputs-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+#tab-cronograma .stitch-env-input-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.375rem;
+  background-color: #FDFBF7;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.75rem;
+  border: 1px solid #EAE3D2;
+}
+
+#tab-cronograma .stitch-dot-teoria {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background-color: #10B981;
+  flex-shrink: 0;
+}
+
+#tab-cronograma .stitch-dot-pratica {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background-color: #3B82F6;
+  flex-shrink: 0;
+}
+
+#tab-cronograma .stitch-env-input {
+  width: 3rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4E2A18;
+  background-color: #FFFFFF;
+  border: 1px solid #DFD7BF;
+  border-radius: 0.5rem;
+  padding: 0.125rem 0.375rem;
+  outline: none;
+}
+
+/* Canvas da Folha e Encontros */
+#tab-cronograma .stitch-canvas-card {
+  background-color: #FFFFFF;
+  border: 1px solid #EAE3D2;
+  border-radius: 1rem;
+  flex: 1;
+  box-shadow: var(--stitch-shadow-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 460px;
+}
+
+#tab-cronograma .stitch-canvas-content {
+  flex: 1;
+  padding: 1.5rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+#tab-cronograma .stitch-tag-badge {
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background-color: #F5EFE6;
+  color: #8C7769;
+  border: 1px solid #EAE3D2;
+}
+
+/* Grade de Aulas Interativas */
+#tab-cronograma .stitch-days-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+/* Chips / Cards de Aulas Interativas 1:1 Stitch */
+#tab-cronograma .stitch-lesson-card {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  border: 1px solid #EAE3D2;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: var(--stitch-shadow-subtle);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border-top-width: 4px;
+}
+
+#tab-cronograma .stitch-lesson-card:hover {
+  box-shadow: var(--stitch-shadow-card);
+  transform: translateY(-1px);
+}
+
+#tab-cronograma .stitch-lesson-card.is-teoria {
+  border-top-color: #10B981 !important; /* emerald-500 */
+}
+
+#tab-cronograma .stitch-lesson-card.is-pratica {
+  border-top-color: #3B82F6 !important; /* blue-500 */
+}
+
+#tab-cronograma .stitch-lesson-card.is-misto {
+  border-top-color: #8B5CF6 !important; /* purple-500 */
+}
+
+#tab-cronograma .stitch-lesson-card.is-inactive {
+  opacity: 0.55;
+  border-top-color: #9CA3AF !important;
+  background-color: #F5EFE6;
+}
+
+#tab-cronograma .stitch-badge-pill {
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+}
+
+#tab-cronograma .stitch-badge-teoria {
+  background-color: #D1FAE5;
+  color: #065F46;
+}
+
+#tab-cronograma .stitch-badge-pratica {
+  background-color: #DBEAFE;
+  color: #1E40AF;
+}
+
+#tab-cronograma .stitch-badge-misto {
+  background-color: #EDE9FE;
+  color: #5B21B6;
+}
+
+#tab-cronograma .stitch-badge-inactive {
+  background-color: #E5E7EB;
+  color: #4B5563;
+}
+
+/* Folha A4 no Canvas Dot Grid */
+.canvas-dot-grid .page-a4 {
+  border-radius: 8px !important;
+  box-shadow: 0 8px 20px -4px rgba(78, 42, 24, 0.12), 0 3px 6px -2px rgba(78, 42, 24, 0.08) !important;
+  border: 1px solid #EAE3D2 !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media print {
+  .canvas-dot-grid .page-a4 {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

@@ -86,7 +86,7 @@ function calRenderizar() {
   if (!container) return;
 
   if (typeof holidayService === "undefined") {
-    container.innerHTML = `<div style="padding: 30px; text-align: center; color: var(--text-secondary);">Motor de feriados não carregado.</div>`;
+    container.innerHTML = `<div style="padding: 30px; text-align: center; color: #8D7B6F;">Motor de feriados não carregado.</div>`;
     return;
   }
 
@@ -96,198 +96,222 @@ function calRenderizar() {
 
   const diasSemanaSiglas = ["D", "S", "T", "Q", "Q", "S", "S"];
 
-  // 1. Barra de Controles Superior
+  // 1. BEGIN: TopHeader (1:1 Stitch)
   const htmlTopBar = `
-    <div class="cal-topbar-card">
-      <div class="cal-header-title-group">
-        <div class="cal-header-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
+    <header class="bg-white border border-[#E8E2D5] rounded-2xl px-6 py-4 shadow-warm-sm flex flex-wrap items-center justify-between gap-4" data-purpose="top-navigation">
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-xl bg-[#FAF6EE] border border-[#E8E2D5] flex items-center justify-center text-[#4A2A1A] shadow-inner">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
         </div>
         <div>
-          <h2 class="cal-header-title">Calendário Escolar</h2>
-          <span class="cal-header-subtitle">Visão panorâmica de 12 meses • Motor Universal SENAI (Páscoa e Feriados Móveis)</span>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight text-[#4A2A1A]">Calendário Escolar</h1>
+          </div>
         </div>
       </div>
-
-      <div class="cal-controls-group">
-        <!-- Seletor de Ano -->
-        <div class="cal-year-picker">
-          <button type="button" class="cal-year-nav-btn" onclick="calMudarAno(${_calAnoExibido - 1})" title="Ano anterior">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      <!-- Controls & Actions -->
+      <div class="flex items-center flex-wrap gap-2.5">
+        <!-- Year Navigator -->
+        <div class="flex items-center bg-[#FAF8F3] border border-[#E8E2D5] rounded-full px-2 py-1 shadow-inner">
+          <button type="button" class="w-7 h-7 rounded-full flex items-center justify-center text-[#4A2A1A] hover:bg-white transition" title="Ano Anterior" onclick="calMudarAno(${_calAnoExibido - 1})">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </button>
-          <input type="number" class="cal-year-input" value="${_calAnoExibido}" min="1900" max="2100" onchange="calMudarAno(this.value)" title="Digite um ano">
-          <button type="button" class="cal-year-nav-btn" onclick="calMudarAno(${_calAnoExibido + 1})" title="Próximo ano">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <span class="px-3 text-sm font-bold tracking-wider text-[#4A2A1A]">${_calAnoExibido}</span>
+          <button type="button" class="w-7 h-7 rounded-full flex items-center justify-center text-[#4A2A1A] hover:bg-white transition" title="Próximo Ano" onclick="calMudarAno(${_calAnoExibido + 1})">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </button>
         </div>
-
-        <button type="button" class="btn btn-secondary btn-sm" onclick="calMudarAno(${anoTurma})" title="Saltar para o ano configurado na turma">
+        <button type="button" class="px-4 py-2 bg-[#4A2A1A] text-white rounded-full text-xs font-bold hover:bg-[#361E12] transition shadow-sm" onclick="calMudarAno(${anoTurma})">
           Ano da Turma (${anoTurma})
         </button>
-
-        <button type="button" class="btn btn-secondary btn-sm" onclick="calMudarAno(${new Date().getFullYear()})" title="Ir para o ano civil corrente">
-          Ano Atual
+        <button type="button" class="px-4 py-2 bg-[#7B32D9] text-white rounded-full text-xs font-bold hover:bg-[#6824bd] transition shadow-sm flex items-center gap-1.5" onclick="calAbrirModalCustomizacao()">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          Adicionar / Remover Dia
         </button>
-
-        <button type="button" class="btn btn-primary btn-sm" onclick="calAbrirModalCustomizacao()" style="font-weight: 700; background: #7c3aed; border-color: #6d28d9;" title="Adicionar ou remover dias e recessos do calendário">
-          + Adicionar / Remover Dia
-        </button>
-
-        <button type="button" class="btn btn-secondary btn-sm cal-btn-print" onclick="calImprimirCalendario()" style="font-weight: 700; display: inline-flex; align-items: center; gap: 5px;" title="Imprimir calendário escolar anual dos 12 meses em folha A4 Paisagem (Landscape)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 6 2 18 2 18 9"></polyline>
-            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-            <rect x="6" y="14" width="12" height="8"></rect>
-          </svg>
-          <span>Imprimir (A4)</span>
+        <button type="button" class="px-4 py-2 bg-[#FAF8F3] text-[#4A2A1A] border border-[#E8E2D5] rounded-full text-xs font-bold hover:bg-white transition shadow-sm flex items-center gap-1.5" onclick="calImprimirCalendario()">
+          <svg class="w-3.5 h-3.5 text-[#8D7B6F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          Imprimir (A4)
         </button>
       </div>
-    </div>
+    </header>
   `;
 
-  // 2. Barra de Legendas Oficiais
+  // 2. BEGIN: LegendBar (1:1 Stitch)
   const htmlLegendas = `
-    <div class="cal-legend-card">
-      <div class="cal-legend-items">
-        <span class="cal-legend-item" title="Feriados Oficiais">
-          <span class="cal-legend-badge badge-cor-1"></span>
-          Feriados (cor 1)
-        </span>
-        <span class="cal-legend-item" title="Emendas de Feriados">
-          <span class="cal-legend-badge badge-cor-2"></span>
-          Emenda de Feriado (cor 2)
-        </span>
-        <span class="cal-legend-item" title="Pontos Facultativos e Carnaval">
-          <span class="cal-legend-badge badge-cor-3"></span>
-          Ponto Facultativo (cor 3)
-        </span>
-        <span class="cal-legend-item" title="Formaturas Institucionais SENAI">
-          <span class="cal-legend-badge badge-cor-4"></span>
-          Formatura CAI/CT (cor 4)
-        </span>
-        <span class="cal-legend-item" title="Férias e Recessos Docentes">
-          <span class="cal-legend-badge badge-cor-5"></span>
-          Férias FIC (cor 5)
-        </span>
-        <span class="cal-legend-item" title="Eventos a Decidir">
-          <span class="cal-legend-badge badge-cor-6"></span>
-          A Decidir (cor 6)
-        </span>
-        <span class="cal-legend-item" title="Dias adicionados manualmente pelo usuário (em roxo com borda reforçada)" style="color: #7c3aed;">
-          <span class="cal-legend-badge badge-cor-user"></span>
-          Adicionado pelo Usuário
-        </span>
-        <span class="cal-legend-item" title="Dias com aulas letivas ativas calculadas para a turma da Aba 1">
-          <span class="cal-legend-badge badge-cor-aula"></span>
-          Aula Ativa da Turma
-        </span>
-      </div>
-
-      <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">
-        Páscoa em ${_calAnoExibido}: ${HolidayService.formatDateKey(calData.pascoa).split("-").reverse().join("/")}
+    <div class="bg-white border border-[#E8E2D5] rounded-2xl px-5 py-3 shadow-warm-sm flex flex-wrap items-center justify-between gap-3 text-xs" data-purpose="calendar-legend">
+      <div class="w-full flex flex-col md:flex-row items-stretch md:items-center gap-4">
+        <!-- Left Column: Encontros isolated -->
+        <div class="flex items-center flex-shrink-0 md:pr-4 md:border-r border-[#E8E2D5]">
+          <div class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3] shadow-xs">
+            <span class="w-3.5 h-1 rounded-full bg-[#1A73E8] flex-shrink-0"></span>
+            <span class="font-bold text-[#4A2A1A] text-xs tracking-tight">Encontros</span>
+          </div>
+        </div>
+        <!-- Right Columns: 2 items per column (2 rows flowing horizontally) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 w-full font-medium text-[#4A2A1A]">
+          <!-- Column 1 -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
+              <span class="w-3 h-3 rounded-full bg-[#EA4335] shadow-xs flex-shrink-0"></span>
+              <span class="truncate">Feriados (cor 1)</span>
+            </div>
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
+              <span class="w-3 h-3 rounded-full bg-[#7B32D9] shadow-xs flex-shrink-0"></span>
+              <span class="truncate">Formatura CAI/CT (cor 4)</span>
+            </div>
+          </div>
+          <!-- Column 2 -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
+              <span class="w-3 h-3 rounded-full bg-[#F27B22] shadow-xs flex-shrink-0"></span>
+              <span class="truncate">Emenda de Feriado (cor 2)</span>
+            </div>
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
+              <span class="w-3 h-3 rounded-full bg-[#00966B] shadow-xs flex-shrink-0"></span>
+              <span class="truncate">Férias FIC (cor 5)</span>
+            </div>
+          </div>
+          <!-- Column 3 -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
+              <span class="w-3 h-3 rounded-full bg-[#1A73E8] shadow-xs flex-shrink-0"></span>
+              <span class="truncate">Ponto Facultativo (cor 3)</span>
+            </div>
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
+              <span class="w-3 h-3 rounded-full bg-[#5F6368] shadow-xs flex-shrink-0"></span>
+              <span class="truncate">A Decidir (cor 6)</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `;
 
-  // 3. Grid dos 12 Meses
-  let htmlMeses = `<div class="cal-months-grid">`;
+  // 3. BEGIN: TwelveMonthsGrid (1:1 Stitch)
+  let htmlMeses = "";
+  let totalFeriados = 0;
+  let totalRecessos = 0;
 
   for (const mes of calData.meses) {
     const totalEventosMes = mes.eventosMes.length;
     const badgeTexto = totalEventosMes > 0 ? `${totalEventosMes} evento${totalEventosMes > 1 ? "s" : ""}` : "0 eventos";
 
-    htmlMeses += `
-      <div class="cal-month-card">
-        <div class="cal-month-header">
-          <span class="cal-month-title">${mes.nomeMes}</span>
-          <span class="cal-month-badge">${badgeTexto}</span>
-        </div>
+    for (const ev of mes.eventosMes) {
+      const cor = (ev.corTema || "").toLowerCase();
+      if (cor.includes("1")) {
+        totalFeriados++;
+      } else if (cor.includes("2") || cor.includes("5")) {
+        totalRecessos++;
+      }
+    }
 
-        <table class="cal-days-table">
-          <thead>
-            <tr class="cal-week-header">
-              ${diasSemanaSiglas.map(s => `<th>${s}</th>`).join("")}
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
+    let diasHtml = "";
     let diaAtual = 1;
     const totalDias = mes.totalDias;
     const offsetInicio = mes.diaSemanaInicio;
-    let linhasHtml = "";
 
-    while (diaAtual <= totalDias) {
-      linhasHtml += "<tr>";
-      for (let col = 0; col < 7; col++) {
-        if ((diaAtual === 1 && col < offsetInicio) || diaAtual > totalDias) {
-          linhasHtml += `<td class="cal-day-cell"></td>`;
-        } else {
-          const diaItem = mes.dias[diaAtual - 1];
-          const hasEvent = diaItem.temEvento;
-          const ev = diaItem.eventInfo;
-          const aulaTurma = aulasMap.get(diaItem.data);
-
-          let classesBox = ["cal-day-box"];
-          if (col === 0) classesBox.push("cal-day-sun");
-
-          let dataAttrs = `data-date="${diaItem.data}" data-day="${diaAtual}" data-weekday="${col}" data-month="${mes.nomeMes}"`;
-
-          if (hasEvent && ev) {
-            classesBox.push("cal-event-day");
-
-            // Se foi adicionado pelo usuário: estilo ROXO FORTE
-            if (ev.isCustom) {
-              classesBox.push("cal-user-added");
-              classesBox.push("cal-cor-user");
-              dataAttrs += ` data-has-event="true" data-is-custom="true" data-desc="${encodeURIComponent(ev.descricao || '')}" data-cat="${encodeURIComponent(ev.nomeCategoria || 'Personalizado')}" data-cor="cor-user"`;
-            } else {
-              const corClass = (ev.corTema || "cor 1").replace(" ", "-");
-              classesBox.push(`cal-${corClass}`);
-              dataAttrs += ` data-has-event="true" data-is-custom="false" data-desc="${encodeURIComponent(ev.descricao || '')}" data-cat="${encodeURIComponent(ev.nomeCategoria || '')}" data-cor="${encodeURIComponent(ev.corTema || '')}"`;
-            }
-          }
-
-          if (aulaTurma) {
-            classesBox.push("cal-class-day");
-            if (!hasEvent) classesBox.push("cal-class-only");
-            dataAttrs += ` data-has-lesson="true" data-lesson-num="${aulaTurma.numAula || ''}" data-lesson-tipo="${aulaTurma.tipo || ''}" data-lesson-amb="${aulaTurma.ambiente || ''}" data-lesson-hours="${aulaTurma.horas || ''}"`;
-          }
-
-          linhasHtml += `
-            <td class="cal-day-cell">
-              <div class="${classesBox.join(" ")}" ${dataAttrs} onmouseenter="calOnMouseEnterDay(this, event)" onmouseleave="calOnMouseLeaveDay()" onclick="calOnClickDay(this)">
-                ${diaAtual}
-              </div>
-            </td>
-          `;
-
-          diaAtual++;
-        }
-      }
-      linhasHtml += "</tr>";
+    // Dias vazios que antecedem o 1º dia do mês
+    for (let c = 0; c < offsetInicio; c++) {
+      diasHtml += `<div class="day-cell day-empty"></div>`;
     }
 
-    htmlMeses += linhasHtml;
+    while (diaAtual <= totalDias) {
+      const col = (offsetInicio + diaAtual - 1) % 7;
+      const diaItem = mes.dias[diaAtual - 1];
+      const hasEvent = diaItem.temEvento;
+      const ev = diaItem.eventInfo;
+      const aulaTurma = aulasMap.get(diaItem.data);
+
+      let cellClasses = ["day-cell"];
+      let dataAttrs = `data-date="${diaItem.data}" data-day="${diaAtual}" data-weekday="${col}" data-month="${mes.nomeMes}"`;
+
+      if (hasEvent && ev) {
+        if (ev.isCustom) {
+          cellClasses.push("highlight-purple", "font-bold");
+          dataAttrs += ` data-has-event="true" data-is-custom="true" data-desc="${encodeURIComponent(ev.descricao || '')}" data-cat="${encodeURIComponent(ev.nomeCategoria || 'Personalizado')}" data-cor="cor-user"`;
+        } else {
+          const corNum = (ev.corTema || "cor 1").toLowerCase();
+          if (corNum.includes("1")) cellClasses.push("highlight-red", "font-bold");
+          else if (corNum.includes("2")) cellClasses.push("highlight-orange", "font-bold");
+          else if (corNum.includes("3")) cellClasses.push("highlight-blue", "font-bold");
+          else if (corNum.includes("4")) cellClasses.push("highlight-purple", "font-bold");
+          else if (corNum.includes("5")) cellClasses.push("highlight-green", "font-bold");
+          else if (corNum.includes("6")) cellClasses.push("highlight-gray", "font-bold");
+          else cellClasses.push("highlight-red", "font-bold");
+
+          dataAttrs += ` data-has-event="true" data-is-custom="false" data-desc="${encodeURIComponent(ev.descricao || '')}" data-cat="${encodeURIComponent(ev.nomeCategoria || '')}" data-cor="${encodeURIComponent(ev.corTema || '')}"`;
+        }
+      }
+
+      if (aulaTurma) {
+        cellClasses.push("has-active-lesson");
+        if (!hasEvent) {
+          cellClasses.push("font-bold", "text-[#1A73E8]");
+        }
+        dataAttrs += ` data-has-lesson="true" data-lesson-num="${aulaTurma.numAula || ''}" data-lesson-tipo="${aulaTurma.tipo || ''}" data-lesson-amb="${aulaTurma.ambiente || ''}" data-lesson-hours="${aulaTurma.horas || ''}"`;
+      }
+
+      diasHtml += `
+        <div class="${cellClasses.join(" ")}" ${dataAttrs} onmouseenter="calOnMouseEnterDay(this, event)" onmouseleave="calOnMouseLeaveDay()" onclick="calOnClickDay(this)">
+          ${diaAtual}
+        </div>
+      `;
+
+      diaAtual++;
+    }
+
     htmlMeses += `
-          </tbody>
-        </table>
+      <div class="bg-white border border-[#E8E2D5] rounded-2xl p-4 shadow-warm-sm hover:shadow-warm-card transition" data-purpose="month-card">
+        <div class="flex items-center justify-between pb-3 mb-2 border-b border-[#F0ECE3]">
+          <h2 class="font-bold text-base text-[#4A2A1A]">${mes.nomeMes}</h2>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${totalEventosMes > 0 ? 'bg-[#E2EEFA] text-[#266DA8]' : 'bg-[#FAF6EE] text-[#8D7B6F] border border-[#E8E2D5]'}">${badgeTexto}</span>
+        </div>
+        <div class="grid grid-cols-7 gap-y-1 text-center text-xs font-semibold text-[#8D7B6F] mb-1.5">
+          <div class="">D</div><div class="">S</div><div class="">T</div><div class="">Q</div><div class="">Q</div><div class="">S</div><div class="">S</div>
+        </div>
+        <div class="grid grid-cols-7 gap-y-1 text-center text-xs">
+          ${diasHtml}
+        </div>
       </div>
     `;
   }
 
-  htmlMeses += `</div>`;
+  const totalDiasLetivos = aulasMap.size > 0 ? aulasMap.size : 200;
+  const dataPascoaFormatada = HolidayService.formatDateKey(calData.pascoa).split("-").reverse().join("/");
+
+  // 4. BEGIN: QuickStatsBar (1:1 Stitch)
+  const htmlFooter = `
+    <div class="bg-white border border-[#E8E2D5] rounded-2xl p-4 shadow-warm-sm flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-[#4A2A1A]" data-purpose="calendar-summary-footer">
+      <div class="flex items-center gap-6 flex-wrap">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <span class="">Dias Letivos Previstos: <strong class="text-[#4A2A1A]">${totalDiasLetivos} dias</strong></span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#EA4335]"></span>
+          <span class="">Feriados Nacionais/Estaduais: <strong class="text-[#4A2A1A]">${totalFeriados} dias</strong></span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#00966B]"></span>
+          <span class="">Recesso &amp; Férias: <strong class="text-[#4A2A1A]">${totalRecessos} dias</strong></span>
+        </div>
+      </div>
+      <div class="text-[#8D7B6F]">
+        Páscoa em ${_calAnoExibido}: <span class="font-semibold text-[#4A2A1A]">${dataPascoaFormatada}</span>
+      </div>
+    </div>
+  `;
 
   container.innerHTML = `
-    <div class="cal-main-container">
+    <div class="cal-stitch-container">
       ${htmlTopBar}
       ${htmlLegendas}
-      ${htmlMeses}
+      <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-purpose="twelve-month-calendar-grid">
+        ${htmlMeses}
+      </main>
+      ${htmlFooter}
     </div>
   `;
 }

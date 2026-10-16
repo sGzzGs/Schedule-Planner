@@ -2882,4 +2882,1420 @@ textarea.is-overflow {
   background-color: rgba(220, 50, 47, 0.05) !important;
 }
 
+/* ==========================================================================
+   STITCH THEME 1:1 REPLICATION (DESIGN FINAL, DESIGN CALENDARIO & MODAL)
+   Palette:
+     #4E2A18 (Brand Brown)
+     #6F3E24 (Brand Brown Light)
+     #8C5E45 (Brand Brown Subtle)
+     #FAF6F0 / #FAF7F2 (Brand Cream Background)
+     #F4EDE2 / #F5EFE6 (Brand Cream Surface)
+     #E8DCB8 / #E0D2C0 / #E3DCCE (Brand Cream/Sand Border)
+     #EFE7DA (Brand Sand)
+     #406368 / #2A5C5D (Brand Teal / Accent)
+     #C94A29 / #EF4444 (Coral / Red)
+     #00A86B / #16A34A / #10B981 (Teal Green / Emerald)
+   ========================================================================== */
+
+/* Escopo da aba de compensação com fonte e fundo do Stitch */
+#tab-compensacao {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  color: #4E2A18 !important;
+  background-color: #FAF6F0 !important;
+}
+
+#tab-compensacao .comp-main {
+  background: #FAF6F0 !important;
+  background-image: none !important;
+  padding: 16px 24px 60px 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  color: #4E2A18 !important;
+}
+
+/* 1. STITCH CONTEXT CLASS BANNER */
+.stitch-context-banner {
+  background: linear-gradient(to right, #F4EDE2, #FAF6F0) !important;
+  border: 1px solid #E8DCB8 !important;
+  border-radius: 16px !important;
+  padding: 12px 20px !important;
+  box-shadow: 0 2px 8px rgba(78, 42, 24, 0.05) !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-context-left {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-badge-turma {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 4px 10px !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(232, 220, 184, 0.8) !important;
+  border-radius: 12px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: #4E2A18 !important;
+  box-shadow: 0 1px 2px rgba(78, 42, 24, 0.04) !important;
+}
+
+.stitch-badge-ano {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 3px 8px !important;
+  background: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(232, 220, 184, 0.5) !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-banner-dot {
+  color: rgba(78, 42, 24, 0.35) !important;
+  font-weight: 700 !important;
+}
+
+.stitch-banner-meta {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 12.5px !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-banner-meta i {
+  color: rgba(78, 42, 24, 0.7) !important;
+  font-size: 12px !important;
+}
+
+.stitch-badge-hoje {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 3px 10px !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(232, 220, 184, 0.6) !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-text-coral {
+  color: #C94A29 !important;
+}
+
+.stitch-context-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.stitch-teacher-label {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: rgba(78, 42, 24, 0.85) !important;
+}
+
+.stitch-teacher-label strong {
+  font-weight: 700 !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-avatar {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  background: #E8DCB8 !important;
+  color: #4E2A18 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 800 !important;
+  font-size: 11px !important;
+}
+
+/* 2. STITCH MAIN ATTENDANCE TOOLBAR */
+.stitch-attendance-toolbar {
+  background: #F5EFE6 !important;
+  border: 1px solid #E0D2C0 !important;
+  border-radius: 16px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 4px 16px rgba(78, 42, 24, 0.06) !important;
+}
+
+.stitch-toolbar-inner {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+}
+
+.stitch-toolbar-modes {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.stitch-pill-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 14px !important;
+  border-radius: 9999px !important;
+  background: #FAF6F0 !important;
+  border: 1px solid #DACBB5 !important;
+  color: #4E2A18 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(78, 42, 24, 0.04) !important;
+}
+
+.stitch-pill-btn:hover {
+  background: #FFFFFF !important;
+  box-shadow: 0 2px 6px rgba(78, 42, 24, 0.08) !important;
+}
+
+.stitch-pill-btn.is-active {
+  background: #FFFFFF !important;
+  border-color: #DACBB5 !important;
+  color: #4E2A18 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(78, 42, 24, 0.1) !important;
+}
+
+.stitch-pill-icon-circle {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  background: #EFE7DA !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #4E2A18 !important;
+  font-size: 11px !important;
+  transition: all 0.2s ease !important;
+}
+
+.stitch-pill-btn:hover .stitch-pill-icon-circle,
+.stitch-pill-btn.is-active .stitch-pill-icon-circle {
+  background: #406368 !important;
+  color: #FFFFFF !important;
+}
+
+.stitch-btn-pending {
+  color: #4E2A18 !important;
+}
+
+.stitch-btn-pending:hover {
+  background: #FFFBEB !important;
+  color: #B45309 !important;
+}
+
+.stitch-icon-warning {
+  color: #D97706 !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 13px !important;
+}
+
+.stitch-toolbar-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-left: auto !important;
+}
+
+.stitch-duration-wrapper {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid #DACBB5 !important;
+  border-radius: 9999px !important;
+  padding: 4px 10px !important;
+  box-shadow: 0 1px 2px rgba(78, 42, 24, 0.04) !important;
+}
+
+.stitch-checkbox {
+  width: 15px !important;
+  height: 15px !important;
+  border-radius: 4px !important;
+  border: 1px solid #DACBB5 !important;
+  accent-color: #4E2A18 !important;
+  cursor: pointer !important;
+}
+
+.stitch-duration-field {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.stitch-duration-input {
+  width: 44px !important;
+  height: 26px !important;
+  padding: 0 !important;
+  text-align: center !important;
+  font-family: inherit !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  background: #FAF6F0 !important;
+  border: 1px solid #DACBB5 !important;
+  border-radius: 6px !important;
+  color: #4E2A18 !important;
+  outline: none !important;
+}
+
+.stitch-duration-input:focus {
+  border-color: #4E2A18 !important;
+}
+
+.stitch-duration-unit {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: rgba(78, 42, 24, 0.9) !important;
+  user-select: none !important;
+}
+
+.stitch-search-wrapper {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.stitch-search-icon {
+  position: absolute !important;
+  left: 10px !important;
+  color: rgba(78, 42, 24, 0.5) !important;
+  font-size: 11px !important;
+  pointer-events: none !important;
+}
+
+.stitch-search-input {
+  height: 34px !important;
+  padding: 0 12px 0 30px !important;
+  width: 190px !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #DACBB5 !important;
+  border-radius: 9999px !important;
+  color: #4E2A18 !important;
+  outline: none !important;
+  box-shadow: 0 1px 2px rgba(78, 42, 24, 0.04) !important;
+  transition: all 0.2s ease !important;
+}
+
+.stitch-search-input:focus {
+  background: #FFFFFF !important;
+  border-color: #4E2A18 !important;
+  width: 230px !important;
+}
+
+.stitch-btn-add-student {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 7px 16px !important;
+  background: #4D777D !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  border-radius: 9999px !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(77, 119, 125, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+
+.stitch-btn-add-student:hover {
+  background: #3E6166 !important;
+  box-shadow: 0 4px 10px rgba(77, 119, 125, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+
+.stitch-btn-add-student:active {
+  transform: scale(0.97) !important;
+}
+
+.stitch-icon-circle-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  background: #FAF6F0 !important;
+  border: 1px solid #DACBB5 !important;
+  color: #4E2A18 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  box-shadow: 0 1px 2px rgba(78, 42, 24, 0.04) !important;
+  transition: all 0.2s ease !important;
+}
+
+.stitch-icon-circle-btn:hover {
+  background: #FFFFFF !important;
+  color: #B45309 !important;
+}
+
+.stitch-btn-program {
+  background: #4E2A18 !important;
+  border: 1px solid #4E2A18 !important;
+  color: #FFFFFF !important;
+}
+
+.stitch-btn-program:hover {
+  background: #6F3E24 !important;
+  color: #FFFFFF !important;
+}
+
+/* 3. STITCH FILTER & DATE NAVIGATION SECTION */
+.stitch-date-filter-section {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid #E8DCB8 !important;
+  border-radius: 16px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 2px 8px rgba(78, 42, 24, 0.04) !important;
+}
+
+.stitch-filter-inner {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.stitch-filter-left {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.stitch-pill-control {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #FAF6F0 !important;
+  border: 1px solid #DACBB5 !important;
+  border-radius: 12px !important;
+  padding: 2px 4px !important;
+  box-shadow: 0 1px 2px rgba(78, 42, 24, 0.03) !important;
+}
+
+.stitch-pill-arrow-btn {
+  width: 26px !important;
+  height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 8px !important;
+  color: #4E2A18 !important;
+  cursor: pointer !important;
+  font-size: 11px !important;
+  transition: all 0.15s ease !important;
+}
+
+.stitch-pill-arrow-btn:hover {
+  background: #FFFFFF !important;
+}
+
+.stitch-pill-date-display {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 0 8px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  color: #4E2A18 !important;
+  user-select: none !important;
+}
+
+.stitch-pill-date-display i {
+  color: rgba(78, 42, 24, 0.7) !important;
+  font-size: 12px !important;
+}
+
+.stitch-pill-month-text {
+  padding: 0 8px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #4E2A18 !important;
+  user-select: none !important;
+}
+
+.stitch-badge-real-day {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 10px !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  background: #E8F6EE !important;
+  color: #1E7444 !important;
+  border: 1px solid #CDE9D9 !important;
+}
+
+.stitch-btn-restore-today {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 10px !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  background: #FEF3C7 !important;
+  color: #B45309 !important;
+  border: 1px solid #FCD34D !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.stitch-btn-restore-today:hover {
+  background: #FDE68A !important;
+}
+
+.stitch-select-wrapper {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.stitch-select-range {
+  appearance: none !important;
+  background: #FAF6F0 !important;
+  border: 1px solid #DACBB5 !important;
+  border-radius: 12px !important;
+  padding: 5px 28px 5px 12px !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #4E2A18 !important;
+  cursor: pointer !important;
+  outline: none !important;
+}
+
+.stitch-select-arrow {
+  position: absolute !important;
+  right: 10px !important;
+  pointer-events: none !important;
+  color: rgba(78, 42, 24, 0.6) !important;
+  font-size: 10px !important;
+}
+
+.stitch-filter-right {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.stitch-icon-selector-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.stitch-icon-label {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: rgba(78, 42, 24, 0.7) !important;
+}
+
+.stitch-icon-select {
+  background: #FAF6F0 !important;
+  border: 1px solid #DACBB5 !important;
+  border-radius: 12px !important;
+  padding: 4px 10px !important;
+  font-family: inherit !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #4E2A18 !important;
+  cursor: pointer !important;
+  outline: none !important;
+}
+
+.stitch-divider-vertical {
+  width: 1px !important;
+  height: 20px !important;
+  background: #E8DCB8 !important;
+}
+
+.stitch-view-toggle-group {
+  display: inline-flex !important;
+  background: #FAF6F0 !important;
+  border: 1px solid #DACBB5 !important;
+  border-radius: 12px !important;
+  padding: 3px !important;
+  gap: 3px !important;
+}
+
+.stitch-view-toggle-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 4px 12px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  border: none !important;
+  font-family: inherit !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #4E2A18 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.stitch-view-toggle-btn:hover {
+  background: #FFFFFF !important;
+}
+
+.stitch-view-toggle-btn.is-active {
+  background: #4E2A18 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 3px rgba(78, 42, 24, 0.15) !important;
+}
+
+.stitch-view-toggle-btn.is-active i {
+  color: #FFFFFF !important;
+}
+
+/* 4. STITCH ATTENDANCE DATAGRID (TABELA GERAL) */
+.stitch-attendance-datagrid {
+  background: #FFFFFF !important;
+  border: 1px solid #E8DCB8 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 16px rgba(78, 42, 24, 0.06) !important;
+  overflow: hidden !important;
+}
+
+.stitch-attendance-datagrid .stitch-table-scroll {
+  overflow-x: auto !important;
+}
+
+.stitch-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  text-align: left !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 13px !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-table thead tr {
+  background: #F5EFE6 !important;
+  border-bottom: 1px solid #E8DCB8 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-table th {
+  padding: 10px 12px !important;
+  color: #4E2A18 !important;
+  white-space: nowrap !important;
+}
+
+.stitch-table th.col-aluno {
+  min-width: 220px !important;
+  padding-left: 16px !important;
+}
+
+.stitch-table th.col-date {
+  text-align: center !important;
+  width: 52px !important;
+  min-width: 48px !important;
+  padding: 8px 4px !important;
+  cursor: pointer !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.stitch-table th.col-date:hover {
+  background: #EFE7DA !important;
+}
+
+.stitch-table th.col-date.is-col-destacada {
+  background: #E8DCB8 !important;
+  box-shadow: inset 0 2px 0 #4E2A18, inset 0 -2px 0 #4E2A18 !important;
+}
+
+.stitch-date-sub {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  color: rgba(78, 42, 24, 0.7) !important;
+  margin-top: 1px !important;
+}
+
+.stitch-table th.col-summary {
+  text-align: center !important;
+  padding: 10px 14px !important;
+}
+
+.stitch-table tbody tr {
+  border-bottom: 1px solid #F1E8DC !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.stitch-table tbody tr:hover {
+  background: rgba(250, 246, 240, 0.8) !important;
+}
+
+.stitch-table td {
+  padding: 8px 6px !important;
+  vertical-align: middle !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-table td.col-aluno-cell {
+  padding-left: 16px !important;
+  font-weight: 700 !important;
+}
+
+.stitch-student-cell-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.stitch-warning-dot {
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: #FEF3C7 !important;
+  color: #B45309 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  flex-shrink: 0 !important;
+}
+
+.stitch-student-cell-content .stitch-icon-warning {
+  width: 20px !important;
+  height: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  flex-shrink: 0 !important;
+  color: #D97706 !important;
+}
+
+.stitch-drag-handle {
+  cursor: grab !important;
+  color: #8C5E45 !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 2px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.stitch-student-name {
+  color: #4E2A18 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.stitch-badge-evadido {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  background: rgba(148, 163, 184, 0.2) !important;
+  color: #475569 !important;
+  margin-left: 6px !important;
+}
+
+/* Células de Presença / Falta 1:1 Stitch */
+.stitch-cell-btn {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(78, 42, 24, 0.04) !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+}
+
+/* Presença Plena: Emerald */
+.stitch-cell-btn.is-present {
+  background: #ECFDF5 !important;
+  border: 1px solid #A7F3D0 !important;
+  color: #047857 !important;
+  font-weight: 900 !important;
+  font-size: 15px !important;
+}
+
+.stitch-cell-btn.is-present:hover {
+  background: #D1FAE5 !important;
+  border-color: #6EE7B7 !important;
+}
+
+/* Falta Integral: Rose/Red */
+.stitch-cell-btn.is-absent {
+  background: #FFF1F2 !important;
+  border: 1px solid #FECDD3 !important;
+  color: #BE123C !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+}
+
+.stitch-cell-btn.is-absent:hover {
+  background: #FFE4E6 !important;
+  border-color: #FDA4AF !important;
+}
+
+/* Falta Parcial: Amber */
+.stitch-cell-btn.is-partial {
+  background: #FFFBEB !important;
+  border: 1px solid #FDE68A !important;
+  color: #78350F !important;
+}
+
+.stitch-cell-btn.is-partial:hover {
+  background: #FEF3C7 !important;
+  border-color: #FCD34D !important;
+}
+
+.stitch-cell-partial-symbol {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+
+.stitch-cell-partial-hours {
+  font-size: 8px !important;
+  font-weight: 800 !important;
+  color: #92400E !important;
+  margin-top: -1px !important;
+  line-height: 1 !important;
+}
+
+/* Aula Evadida */
+.stitch-cell-btn.is-evadido {
+  background: #F1F5F9 !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #64748B !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+}
+
+/* Célula em coluna destacada */
+.stitch-table td.is-col-destacada {
+  background: rgba(232, 220, 184, 0.35) !important;
+}
+
+/* Ações por Aluno */
+.stitch-action-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.stitch-action-btn {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 6px !important;
+  background: #FAF6F0 !important;
+  border: 1px solid #DACBB5 !important;
+  color: #4E2A18 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(78, 42, 24, 0.04) !important;
+}
+
+.stitch-action-btn:hover {
+  background: #FFFFFF !important;
+  color: #406368 !important;
+}
+
+.stitch-action-btn-danger:hover {
+  background: #FFF1F2 !important;
+  border-color: #FDA4AF !important;
+  color: #E11D48 !important;
+}
+
+/* 5. STITCH DESIGN CALENDARIO (CARDS DE AULA & STUDENT PROFILE BAR) */
+.stitch-student-profile-bar {
+  background: #FDFCFA !important;
+  border: 1px solid #E3DCCE !important;
+  border-radius: 16px !important;
+  padding: 10px 18px !important;
+  box-shadow: 0 2px 8px rgba(78, 42, 24, 0.04) !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.stitch-student-profile-left {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.stitch-student-dropdown-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  color: #4E2A18 !important;
+  font-family: inherit !important;
+  padding: 2px 0 !important;
+}
+
+.stitch-student-profile-name {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #4E2A18 !important;
+  transition: color 0.15s ease !important;
+}
+
+.stitch-student-dropdown-btn:hover .stitch-student-profile-name {
+  color: #6F3E24 !important;
+}
+
+.stitch-student-arrow {
+  font-size: 10px !important;
+  color: #8C5E45 !important;
+}
+
+.stitch-tag-faltas {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #FAF7F2 !important;
+  border: 1px solid #E3DCCE !important;
+  border-radius: 9999px !important;
+  padding: 4px 12px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-tag-freq {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #E8F6EE !important;
+  border: 1px solid #CDE9D9 !important;
+  border-radius: 9999px !important;
+  padding: 4px 12px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #1E7444 !important;
+}
+
+.stitch-tag-status {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #FEF6EC !important;
+  border: 1px solid #F6E1C4 !important;
+  border-radius: 9999px !important;
+  padding: 4px 12px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #B96A19 !important;
+}
+
+.stitch-btn-print-profile {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #FAF7F2 !important;
+  border: 1px solid #DCD3C3 !important;
+  color: #4E2A18 !important;
+  padding: 6px 14px !important;
+  border-radius: 9999px !important;
+  font-family: inherit !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 2px rgba(78, 42, 24, 0.04) !important;
+  transition: all 0.15s ease !important;
+}
+
+.stitch-btn-print-profile:hover {
+  background: #F3EDE2 !important;
+}
+
+/* Scroll Grid de Cards do Calendário */
+.stitch-calendar-scroll-wrap {
+  overflow-x: auto !important;
+  padding-bottom: 12px !important;
+}
+
+.stitch-calendar-cards-flex {
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+  min-width: max-content !important;
+  padding: 4px 2px !important;
+}
+
+/* Card de Aula 1:1 Stitch */
+.stitch-class-card {
+  width: 142px !important;
+  min-width: 142px !important;
+  background: #FDFCFA !important;
+  border: 1px solid #E3DCCE !important;
+  border-radius: 16px !important;
+  padding: 12px !important;
+  box-shadow: 0 2px 6px rgba(78, 42, 24, 0.04) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+.stitch-class-card:hover {
+  border-color: #D5CABB !important;
+  box-shadow: 0 4px 12px rgba(78, 42, 24, 0.08) !important;
+  transform: translateY(-2px) !important;
+}
+
+.stitch-class-card-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-bottom: 6px !important;
+  border-bottom: 1px solid #F0EAE1 !important;
+  margin-bottom: 8px !important;
+}
+
+.stitch-class-aula-num {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: #7A5B49 !important;
+}
+
+.stitch-class-badge-type {
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  padding: 2px 6px !important;
+  border-radius: 6px !important;
+  background: #FAF4EB !important;
+  color: #86593D !important;
+  border: 1px solid #E9DFCFC !important;
+  text-transform: uppercase !important;
+}
+
+.stitch-class-date-box {
+  margin-bottom: 8px !important;
+}
+
+.stitch-class-date {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #4E2A18 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.5px !important;
+}
+
+.stitch-class-weekday {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #866653 !important;
+}
+
+.stitch-class-carga-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-size: 11px !important;
+  margin-bottom: 10px !important;
+}
+
+.stitch-class-carga-label {
+  color: #8E7869 !important;
+}
+
+.stitch-class-carga-val {
+  font-weight: 800 !important;
+  color: #4E2A18 !important;
+}
+
+.stitch-class-btn-presence {
+  width: 100% !important;
+  font-family: inherit !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  padding: 6px 4px !important;
+  border-radius: 9999px !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(78, 42, 24, 0.04) !important;
+}
+
+.stitch-class-btn-presence.is-present {
+  background: #E5F3F1 !important;
+  border: 1px solid #BCDED9 !important;
+  color: #1D5E5B !important;
+}
+
+.stitch-class-btn-presence.is-present:hover {
+  background: #D5ECE9 !important;
+}
+
+.stitch-class-btn-presence.is-absent {
+  background: #FFF1F2 !important;
+  border: 1px solid #FECDD3 !important;
+  color: #BE123C !important;
+}
+
+.stitch-class-btn-presence.is-absent:hover {
+  background: #FFE4E6 !important;
+}
+
+.stitch-class-btn-presence.is-partial {
+  background: #FFFBEB !important;
+  border: 1px solid #FDE68A !important;
+  color: #B45309 !important;
+}
+
+.stitch-class-note-hint {
+  font-size: 9px !important;
+  color: #A69485 !important;
+  text-align: center !important;
+  margin-top: 6px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* 6. STITCH MODAL REDESIGN: REGISTRO DE FALTAS */
+.comp-stitch-modal-card {
+  border-radius: 24px !important;
+  border: 1px solid #E8E2D9 !important;
+  background: #FAF8F5 !important;
+  box-shadow: 0 25px 50px -12px rgba(78, 42, 24, 0.18), 0 0 0 1px rgba(78, 42, 24, 0.05) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  color: #4E2A18 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.comp-stitch-modal-header {
+  padding: 18px 24px 16px 24px !important;
+  border-bottom: 1px solid rgba(232, 226, 217, 0.8) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.comp-stitch-icon-box {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+  background: #FDF2EE !important;
+  border: 1px solid #F4D2C8 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #C94A29 !important;
+  flex-shrink: 0 !important;
+}
+
+.comp-stitch-modal-title {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #4E2A18 !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+.comp-stitch-modal-subtitle {
+  font-size: 12px !important;
+  color: rgba(78, 42, 24, 0.8) !important;
+  display: block !important;
+  margin-top: 3px !important;
+}
+
+.comp-stitch-modal-close {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  border: none !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  color: rgba(78, 42, 24, 0.6) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+}
+
+.comp-stitch-modal-close:hover {
+  background: rgba(232, 226, 217, 0.6) !important;
+  color: #4E2A18 !important;
+}
+
+.comp-stitch-modal-body {
+  padding: 22px 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+.comp-stitch-section-title {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: #4E2A18 !important;
+}
+
+.comp-stitch-ch-badge {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 2px 10px !important;
+  border-radius: 9999px !important;
+  background: #EFE8DF !important;
+  border: 1px solid #DFD6CA !important;
+  color: #4E2A18 !important;
+}
+
+.comp-stitch-pill-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 8px !important;
+}
+
+.comp-stitch-pill {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 4px !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #E2DAD0 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+  box-shadow: 0 1px 3px rgba(78, 42, 24, 0.04) !important;
+}
+
+.comp-stitch-pill:hover {
+  background: #FFFFFF !important;
+  border-color: rgba(78, 42, 24, 0.4) !important;
+}
+
+.comp-stitch-pill.is-selected {
+  border-color: #00A86B !important;
+  box-shadow: 0 0 0 2px #00A86B !important;
+  background: #FFFFFF !important;
+}
+
+.comp-stitch-pill-presenca.is-selected {
+  border-color: #00A86B !important;
+  box-shadow: 0 0 0 2px #00A86B !important;
+}
+
+.comp-stitch-pill-integral {
+  background: #FDF2EE !important;
+  border-color: #F4D2C8 !important;
+}
+
+.comp-stitch-pill-integral:hover {
+  border-color: #C94A29 !important;
+}
+
+.comp-stitch-pill-integral.is-selected {
+  border-color: #C94A29 !important;
+  box-shadow: 0 0 0 2px #C94A29 !important;
+}
+
+.comp-stitch-pill-title {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #4E2A18 !important;
+}
+
+.comp-stitch-pill-hours {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  margin-top: 3px !important;
+  color: #C94A29 !important;
+}
+
+.comp-stitch-dot-green {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #00A86B !important;
+  display: inline-block !important;
+  margin-right: 3px !important;
+}
+
+.comp-stitch-stepper-wrap {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.comp-stitch-stepper-input {
+  width: 100% !important;
+  height: 42px !important;
+  padding: 0 70px 0 14px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  border: 1px solid #DDD5CA !important;
+  background: #FFFFFF !important;
+  color: #4E2A18 !important;
+  outline: none !important;
+}
+
+.comp-stitch-stepper-input:focus {
+  border-color: #00A86B !important;
+  box-shadow: 0 0 0 2px rgba(0, 168, 107, 0.2) !important;
+}
+
+.comp-stitch-stepper-controls {
+  position: absolute !important;
+  right: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.comp-stitch-stepper-btn {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+  border: 1px solid #E8E2D9 !important;
+  background: #FAF8F5 !important;
+  color: #4E2A18 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+
+.comp-stitch-stepper-btn:hover {
+  background: #EFE8DF !important;
+}
+
+.comp-stitch-text-input {
+  width: 100% !important;
+  height: 42px !important;
+  padding: 0 14px !important;
+  font-size: 13px !important;
+  border-radius: 12px !important;
+  border: 1px solid #DDD5CA !important;
+  background: #FFFFFF !important;
+  color: #4E2A18 !important;
+  outline: none !important;
+}
+
+.comp-stitch-text-input:focus {
+  border-color: #00A86B !important;
+  box-shadow: 0 0 0 2px rgba(0, 168, 107, 0.2) !important;
+}
+
+.comp-stitch-modal-footer {
+  padding: 16px 24px !important;
+  border-top: 1px solid rgba(232, 226, 217, 0.8) !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  background: #FAF8F5 !important;
+}
+
+.comp-stitch-btn-cancel {
+  padding: 8px 18px !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  border: 1px solid #DDD5CA !important;
+  color: #4E2A18 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.comp-stitch-btn-cancel:hover {
+  background: #EFE8DF !important;
+}
+
+.comp-stitch-btn-save {
+  padding: 8px 22px !important;
+  border-radius: 12px !important;
+  background: #00A86B !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 168, 107, 0.25) !important;
+  transition: all 0.15s ease !important;
+}
+
+.comp-stitch-btn-save:hover {
+  background: #00955E !important;
+}
+
+
+
 

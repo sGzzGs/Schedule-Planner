@@ -680,6 +680,68 @@ function compSincronizarAbaMae() {
   }
 
   compAtualizarInfoDiasLetivos();
+  compAtualizarBannerContextual();
+}
+
+/**
+ * Atualiza o banner superior de identificação contextual ("Design Final")
+ * Exibe Curso, Turma, Ano (apenas 2 dígitos após '_', caso contrário estritamente vazio sem hint),
+ * Docente e Total Consolidado de Faltas da turma.
+ */
+function compAtualizarBannerContextual() {
+  const elCurso = document.getElementById('comp-banner-curso');
+  const elTurma = document.getElementById('comp-banner-turma');
+  const elAno = document.getElementById('comp-banner-ano');
+  const elAnoWrapper = document.getElementById('comp-banner-ano-wrapper');
+  const elAnoDot = document.getElementById('comp-banner-ano-dot');
+  const elDocente = document.getElementById('comp-banner-docente');
+  const elTotalFaltas = document.getElementById('comp-banner-total-faltas');
+
+  const curso = CompState.turmaInfo.curso || '-';
+  const turma = CompState.turmaInfo.turma || '-';
+  const docente = CompState.turmaInfo.docente || '-';
+
+  if (elCurso) elCurso.textContent = curso;
+  if (elTurma) elTurma.textContent = turma;
+  if (elDocente) elDocente.textContent = docente;
+
+  // Extração do Ano: primeiros 2 dígitos após o '_' (ex: MPOWERBI_2503TG -> 25)
+  // Caso não seja possível identificar, estritamente vazio (sem texto, sem placeholder, sem hint)
+  let anoIdentificado = '';
+  if (turma && turma.includes('_')) {
+    const match = turma.match(/_(\d{2})/);
+    if (match && match[1]) {
+      anoIdentificado = match[1];
+    }
+  }
+
+  if (anoIdentificado) {
+    if (elAno) elAno.textContent = anoIdentificado;
+    if (elAnoWrapper) elAnoWrapper.style.display = 'inline-flex';
+    if (elAnoDot) elAnoDot.style.display = 'inline';
+  } else {
+    if (elAno) elAno.textContent = '';
+    if (elAnoWrapper) elAnoWrapper.style.display = 'none';
+    if (elAnoDot) elAnoDot.style.display = 'none';
+  }
+
+  // Total de Faltas consolidado da turma
+  let totalGeralFaltas = 0;
+  const dataHojeIso = compObterDataHojeIso();
+  const diasValidos = CompState.diasLetivos || [];
+  for (const aluno of (CompState.alunos || [])) {
+    const faltasAluno = CompState.faltasPorAluno[aluno] || {};
+    for (const d of diasValidos) {
+      if (d <= dataHojeIso) {
+        totalGeralFaltas += Number(faltasAluno[d]) || 0;
+      }
+    }
+  }
+
+  if (elTotalFaltas) {
+    elTotalFaltas.textContent = totalGeralFaltas > 0 ? compFormatarHorasDecimais(totalGeralFaltas) : '0h00';
+    elTotalFaltas.style.color = totalGeralFaltas > 0 ? '#ef4444' : '#10b981';
+  }
 }
 
 /**
@@ -951,7 +1013,7 @@ function compGerarHtmlFlagIcon(aluno, chTotal) {
   }
   if (flagInfo.tipo === 'danger') {
     return `<span class="comp-flag-icon comp-flag-danger" onclick="compToggleFlagManual('${compEscapeAttr(aluno)}', event)" title="${compEscapeAttr(flagInfo.motivo)} • Clique para alternar flag">
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="display:block;"><circle cx="10" cy="10" r="9.5" fill="#ef4444"/><polygon points="10,4.6 15.5,14.5 4.5,14.5" fill="#ffffff"/></svg>
+      <span class="stitch-icon-warning"><i class="fa-solid fa-triangle-exclamation"></i></span>
     </span>`;
   }
   return `<span class="comp-flag-icon comp-flag-warning" onclick="compToggleFlagManual('${compEscapeAttr(aluno)}', event)" title="${compEscapeAttr(flagInfo.motivo)} • Clique para alternar flag">
@@ -3235,6 +3297,8 @@ function compInicializarModalAula() {
   const btnSave = document.getElementById('comp-lesson-modal-save');
   const inputHoras = document.getElementById('comp-lesson-horas-input');
   const inputObs = document.getElementById('comp-lesson-obs-input');
+  const btnDec = document.getElementById('comp-stitch-btn-decrement');
+  const btnInc = document.getElementById('comp-stitch-btn-increment');
 
   if (!modal) return;
 
@@ -3245,6 +3309,33 @@ function compInicializarModalAula() {
 
   if (btnClose) btnClose.addEventListener('click', fechar);
   if (btnCancel) btnCancel.addEventListener('click', fechar);
+
+  if (btnDec) {
+    btnDec.addEventListener('click', () => {
+      if (!inputHoras) return;
+      let val = (parseFloat(inputHoras.value) || 0) - 0.5;
+      if (val < 0) val = 0;
+      inputHoras.value = String(Math.round(val * 100) / 100);
+      compAtualizarPillAtivaModalFalta(val);
+    });
+  }
+
+  if (btnInc) {
+    btnInc.addEventListener('click', () => {
+      if (!inputHoras || !_modalAulaAtiva) return;
+      let val = (parseFloat(inputHoras.value) || 0) + 0.5;
+      if (val > _modalAulaAtiva.horasAula) val = _modalAulaAtiva.horasAula;
+      inputHoras.value = String(Math.round(val * 100) / 100);
+      compAtualizarPillAtivaModalFalta(val);
+    });
+  }
+
+  if (inputHoras) {
+    inputHoras.addEventListener('input', () => {
+      const val = parseFloat(inputHoras.value) || 0;
+      compAtualizarPillAtivaModalFalta(val);
+    });
+  }
 
   if (btnSave) {
     btnSave.addEventListener('click', () => {
@@ -3279,8 +3370,24 @@ function compInicializarModalAula() {
       compSalvarTurmaAtualStorage();
       compRenderizarDiario();
       compRenderizarVariaveis();
+      compAtualizarBannerContextual();
     });
   }
+}
+
+/**
+ * Atualiza o destaque visual (borda / foco) da pílula de falta correspondente ao valor digitado
+ */
+function compAtualizarPillAtivaModalFalta(valorAtual) {
+  const pills = document.querySelectorAll('.comp-stitch-pill');
+  pills.forEach(p => {
+    const pVal = parseFloat(p.dataset.val);
+    if (!isNaN(pVal) && Math.abs(pVal - valorAtual) < 0.05) {
+      p.classList.add('is-selected');
+    } else {
+      p.classList.remove('is-selected');
+    }
+  });
 }
 
 let _modalNotaAtiva = null; // { aluno, isoDate }
@@ -3403,11 +3510,14 @@ function compAbrirModalPersonalizarFalta(aluno, isoDate) {
   const grid1a8 = document.getElementById('comp-modal-grid-1a8');
 
   const idxAula = CompState.diasLetivos.indexOf(isoDate) + 1;
-  if (titleEl) titleEl.textContent = `Aula ${idxAula} • ${compIsoToDDMMAAAA(isoDate)}`;
-  if (subEl) subEl.textContent = `Discente: ${aluno} • Carga do Dia: ${compFormatarHorasDecimais(horasAula)}`;
+  if (titleEl) titleEl.innerHTML = `Aula ${idxAula} <span class="comp-stitch-sep">•</span> ${compIsoToDDMMAAAA(isoDate)}`;
+  if (subEl) subEl.innerHTML = `Discente: <strong>${compEscapeHTML(aluno)}</strong> <span class="comp-stitch-sep">•</span> Carga do Dia: <strong>${compFormatarHorasDecimais(horasAula)}</strong>`;
   const duracao1Aula = compObterDuracaoAulaIndividual(isoDate);
   const min1Aula = Math.round(duracao1Aula * 60);
 
+  if (chMaxEl) {
+    chMaxEl.textContent = `Carga: ${compFormatarHorasDecimais(horasAula)}`;
+  }
   if (baseHintEl) {
     baseHintEl.textContent = `Base: ${min1Aula} min/falta (${compFormatarHorasDecimais(duracao1Aula)})`;
   }
@@ -3427,12 +3537,21 @@ function compAbrirModalPersonalizarFalta(aluno, isoDate) {
     const totalSlots = Math.min(Math.max(maxAulasDia, 2), 8);
 
     // Botão 0 Faltas (Presença Plena)
+    const isZeroActive = faltasAluno === 0;
     const btnZero = document.createElement('button');
     btnZero.type = 'button';
-    btnZero.className = 'btn btn-secondary btn-sm comp-btn-falta-slot';
-    btnZero.style.cssText = 'font-weight:700;padding:6px 4px;font-size:11px;';
-    btnZero.innerHTML = `<span>0 (Presença)</span><br><small style="font-size:8.5px;opacity:0.75;">0h00</small>`;
-    btnZero.onclick = () => { if (inputHoras) inputHoras.value = '0'; };
+    btnZero.dataset.val = '0';
+    btnZero.className = `comp-stitch-pill comp-stitch-pill-presenca${isZeroActive ? ' is-selected' : ''}`;
+    btnZero.innerHTML = `
+      <span class="comp-stitch-pill-title">
+        <span class="comp-stitch-dot-green"></span> 0 (Presença)
+      </span>
+      <span class="comp-stitch-pill-hours">0h00</span>
+    `;
+    btnZero.onclick = () => {
+      if (inputHoras) inputHoras.value = '0';
+      compAtualizarPillAtivaModalFalta(0);
+    };
     grid1a8.appendChild(btnZero);
 
     // Botões de 1 a totalSlots faltas
@@ -3441,25 +3560,37 @@ function compAbrirModalPersonalizarFalta(aluno, isoDate) {
       if (hVal > horasAula) hVal = horasAula;
       hVal = Math.round(hVal * 100) / 100;
 
+      const isFActive = Math.abs(faltasAluno - hVal) < 0.05;
       const btnF = document.createElement('button');
       btnF.type = 'button';
-      btnF.className = 'btn btn-secondary btn-sm comp-btn-falta-slot';
-      btnF.style.cssText = 'font-weight:700;padding:6px 4px;font-size:11px;';
+      btnF.dataset.val = String(hVal);
+      btnF.className = `comp-stitch-pill${isFActive ? ' is-selected' : ''}`;
       const labelHora = compFormatarHorasDecimais(hVal);
-      btnF.innerHTML = `<span>${f} falta${f > 1 ? 's' : ''}</span><br><small style="font-size:8.5px;color:#ef4444;font-weight:800;">${labelHora}</small>`;
+      btnF.innerHTML = `
+        <span class="comp-stitch-pill-title">${f} falta${f > 1 ? 's' : ''}</span>
+        <span class="comp-stitch-pill-hours comp-stitch-text-coral">${labelHora}</span>
+      `;
       btnF.onclick = () => {
         if (inputHoras) inputHoras.value = String(hVal);
+        compAtualizarPillAtivaModalFalta(hVal);
       };
       grid1a8.appendChild(btnF);
     }
 
     // Botão Falta Integral
+    const isFullActive = Math.abs(faltasAluno - horasAula) < 0.05 && faltasAluno > 0;
     const btnFull = document.createElement('button');
     btnFull.type = 'button';
-    btnFull.className = 'btn btn-secondary btn-sm comp-btn-falta-slot';
-    btnFull.style.cssText = 'font-weight:700;padding:6px 4px;font-size:11px;color:#ef4444;border-color:rgba(239,68,68,0.4);';
-    btnFull.innerHTML = `<span>Integral</span><br><small style="font-size:8.5px;font-weight:800;">${compFormatarHorasDecimais(horasAula)}</small>`;
-    btnFull.onclick = () => { if (inputHoras) inputHoras.value = String(horasAula); };
+    btnFull.dataset.val = String(horasAula);
+    btnFull.className = `comp-stitch-pill comp-stitch-pill-integral${isFullActive ? ' is-selected' : ''}`;
+    btnFull.innerHTML = `
+      <span class="comp-stitch-pill-title comp-stitch-text-coral">Integral</span>
+      <span class="comp-stitch-pill-hours comp-stitch-text-coral">${compFormatarHorasDecimais(horasAula)}</span>
+    `;
+    btnFull.onclick = () => {
+      if (inputHoras) inputHoras.value = String(horasAula);
+      compAtualizarPillAtivaModalFalta(horasAula);
+    };
     grid1a8.appendChild(btnFull);
   }
 
@@ -3491,6 +3622,7 @@ function compToggleFlipFalta(aluno, isoDate) {
   compSalvarTurmaAtualStorage();
   compRenderizarDiario();
   compRenderizarVariaveis();
+  compAtualizarBannerContextual();
 }
 
 /**
@@ -3575,83 +3707,89 @@ function compRenderizarDiario() {
     return freq < 90 || al === alunoAtivo;
   });
 
-  // Data simulada formatada
+  // Garante que o dia atual seja sempre hoje
+  CompState.dataSimuladaHoje = null;
   const dataHojeIso = compObterDataHojeIso();
   const dataHojeBR = compIsoToDDMMAAAA(dataHojeIso);
-  const isDataSimulada = Boolean(CompState.dataSimuladaHoje);
 
   // Navegação de meses e seletor de quantidade (n)
   const textoMesDisplay = compObterTextoDisplayMesNavegacao();
   const qtdMeses = CompState.qtdMesesExibicao;
 
-  // Barra Unificada da Linha 2: Data simulada, Navegação de Meses, Ícones e Alternador de Visão
+  // Barra de Filtro e Navegação de Data do Stitch (FilterAndDateNavigationSection)
   let toolbarHtml = `
-    <div class="comp-test-date-bar">
-      <div class="comp-test-date-group">
-        <!-- Ícone do Calendário (sem texto) -->
-        <span class="comp-test-date-label" title="Data de Referência / &quot;Hoje&quot; Simulado">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        </span>
-        <div class="comp-test-date-controls">
-          <button type="button" class="comp-date-nav-btn" onclick="compNavegarDataSimulada(-1)" title="Voltar 1 dia / aula anterior">&lsaquo;</button>
-          <input type="date" class="comp-test-date-input" value="${dataHojeIso}" onchange="compDefinirDataSimulada(this.value)" title="Clique para escolher a data de teste">
-          <button type="button" class="comp-date-nav-btn" onclick="compNavegarDataSimulada(1)" title="Avançar 1 dia / próxima aula">&rsaquo;</button>
-        </div>
-        ${isDataSimulada ? `
-          <button type="button" class="btn btn-secondary btn-sm" style="font-size:10px;padding:2px 7px;" onclick="compResetarDataSimuladaHoje()" title="Voltar para a data real de hoje">
-            Restaurar Hoje Real
-          </button>
-        ` : `
-          <span style="font-size:10px;color:#10b981;font-weight:700;">(Hoje Real: ${dataHojeBR})</span>
-        `}
+    <section class="stitch-date-filter-section" data-purpose="date-filter-section">
+      <div class="stitch-filter-inner">
+        <!-- Left Nav: Date & Month controls -->
+        <div class="stitch-filter-left">
+          <!-- Specific Date Navigator Pill -->
+          <div class="stitch-pill-control">
+            <button aria-label="Dia anterior" class="stitch-pill-arrow-btn" onclick="compNavegarDataSimulada(-1)" type="button">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="stitch-pill-date-display">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>${dataHojeBR}</span>
+            </div>
+            <button aria-label="Próximo dia" class="stitch-pill-arrow-btn" onclick="compNavegarDataSimulada(1)" type="button">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
 
-        <!-- Navegação de Meses e Seletor de Quantidade (n) -->
-        <div class="comp-month-nav-group">
-          <button type="button" class="comp-date-nav-btn" onclick="compNavegarMes(-1)" title="Mês anterior">&lsaquo;</button>
-          <span class="comp-month-display-text" title="Recorte de mês(es) em exibição">${textoMesDisplay}</span>
-          <button type="button" class="comp-date-nav-btn" onclick="compNavegarMes(1)" title="Próximo mês">&rsaquo;</button>
-          <select class="input-control comp-month-qty-select" onchange="compMudarQtdMeses(this.value)" title="Quantidade de meses visíveis simultaneamente">
-            <option value="1"${qtdMeses === 1 ? ' selected' : ''}>1 Mês</option>
-            <option value="2"${qtdMeses === 2 ? ' selected' : ''}>2 Meses</option>
-            <option value="3"${qtdMeses === 3 ? ' selected' : ''}>3 Meses</option>
-            <option value="6"${qtdMeses === 6 ? ' selected' : ''}>6 Meses</option>
-            <option value="todos"${qtdMeses === 'todos' ? ' selected' : ''}>Todos os Meses</option>
-          </select>
+          <!-- Month Selector Pill -->
+          <div class="stitch-pill-control">
+            <button aria-label="Mês anterior" class="stitch-pill-arrow-btn" onclick="compNavegarMes(-1)" type="button">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <span class="stitch-pill-month-text">${textoMesDisplay}</span>
+            <button aria-label="Próximo mês" class="stitch-pill-arrow-btn" onclick="compNavegarMes(1)" type="button">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <!-- Range Interval Select -->
+          <div class="stitch-select-wrapper">
+            <select class="stitch-select-range" onchange="compMudarQtdMeses(this.value)" title="Quantidade de meses visíveis simultaneamente">
+              <option value="1"${qtdMeses === 1 ? ' selected' : ''}>1 Mês</option>
+              <option value="2"${qtdMeses === 2 ? ' selected' : ''}>2 Meses</option>
+              <option value="3"${qtdMeses === 3 ? ' selected' : ''}>3 Meses</option>
+              <option value="6"${qtdMeses === 6 ? ' selected' : ''}>6 Meses</option>
+              <option value="todos"${qtdMeses === 'todos' ? ' selected' : ''}>Todos os Meses</option>
+            </select>
+            <div class="stitch-select-arrow">
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Controls: View Switcher and Legend Format -->
+        <div class="stitch-filter-right">
+          <!-- Legend format selector -->
+          <div class="stitch-icon-selector-group">
+            <span class="stitch-icon-label">Ícones:</span>
+            <select class="stitch-icon-select" onchange="compMudarDesignIcones(this.value)" title="Escolha o estilo de ícones de presença/falta na tabela">
+              <option value="1"${CompState.iconDesign === '1' ? ' selected' : ''}>1: . e | (Padrão)</option>
+              <option value="2"${CompState.iconDesign === '2' ? ' selected' : ''}>2: P e F (Letras)</option>
+              <option value="3"${CompState.iconDesign === '3' ? ' selected' : ''}>3: Símbolos Gráficos</option>
+              <option value="4"${CompState.iconDesign === '4' ? ' selected' : ''}>4: ● e ■</option>
+            </select>
+          </div>
+          <div class="stitch-divider-vertical"></div>
+
+          <!-- View toggles: Tabela Geral / Calendário -->
+          <div class="stitch-view-toggle-group" role="group">
+            <button class="stitch-view-toggle-btn${CompState.viewMode === 'table' ? ' is-active' : ''}" onclick="compMudarModoVisualizacao('table')" type="button">
+              <i class="fa-solid fa-table-list"></i>
+              <span>Tabela Geral</span>
+            </button>
+            <button class="stitch-view-toggle-btn${CompState.viewMode === 'calendar' ? ' is-active' : ''}" onclick="compMudarModoVisualizacao('calendar')" type="button">
+              <i class="fa-regular fa-calendar-days"></i>
+              <span>Calendário</span>
+            </button>
+          </div>
         </div>
       </div>
-
-      <!-- Lado Direito da Linha 2: Ícones & Alternador Tabela / Calendário -->
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <!-- Seletor de Design de Ícones -->
-        <div class="comp-icon-design-picker" style="display:flex;align-items:center;gap:6px;">
-          <label for="comp-select-icon-design" style="font-size:10px;font-weight:800;color:var(--text-secondary);text-transform:uppercase;">Ícones:</label>
-          <select id="comp-select-icon-design" class="input-control" style="width:auto;padding:3px 6px;font-size:11px;font-weight:700;height:26px;cursor:pointer;" onchange="compMudarDesignIcones(this.value)" title="Escolha o estilo de ícones de presença/falta na tabela">
-            <option value="1"${CompState.iconDesign === '1' ? ' selected' : ''}>1: . e | (Padrão)</option>
-            <option value="2"${CompState.iconDesign === '2' ? ' selected' : ''}>2: P e F</option>
-            <option value="3"${CompState.iconDesign === '3' ? ' selected' : ''}>3: ✓ e ✗</option>
-            <option value="4"${CompState.iconDesign === '4' ? ' selected' : ''}>4: ● e ■</option>
-          </select>
-        </div>
-
-        <!-- Alternador de Modos de Visualização (Tabela Geral à esquerda, Calendário à direita) -->
-        <div class="comp-view-toggle">
-          <button type="button"
-                  class="comp-view-btn${CompState.viewMode === 'table' ? ' is-active' : ''}"
-                  onclick="compMudarModoVisualizacao('table')"
-                  title="Modo Grade Completa da Turma (Padrão)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Tabela Geral
-          </button>
-          <button type="button"
-                  class="comp-view-btn${CompState.viewMode === 'calendar' ? ' is-active' : ''}"
-                  onclick="compMudarModoVisualizacao('calendar')"
-                  title="Modo Calendário de Chamadas (Cards com Flip)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Calendário
-          </button>
-        </div>
-      </div>
-    </div>
+    </section>
   `;
 
   // Obtém os dias letivos filtrados pelo recorte de mês(es) selecionado(s)
@@ -3685,18 +3823,16 @@ function compRenderizarModoCalendario(aluno, dias, chTotal) {
   const freq = Math.max(0, Math.floor(((chTotal - totalFaltas) / chTotal) * 100));
 
   let sitText = 'Tender a Não Certificado';
-  let sitColor = '#10b981';
+  let sitClass = 'stitch-tag-freq';
   if (freq < 40) {
     sitText = 'Não Certificado (Excesso de Faltas)';
-    sitColor = '#ef4444';
+    sitClass = 'stitch-tag-faltas';
   } else if (freq < 75) {
     sitText = 'Não Certificado';
-    sitColor = '#f59e0b';
+    sitClass = 'stitch-tag-status';
   }
 
-  const precisaCompAluno = compAlunoPrecisaCompensacao(aluno, chTotal);
-
-  // Ordena a lista de alunos (evadidos no final) para o dropdown de seleção rápida
+  // Ordena a lista de alunos para o dropdown
   const alunosOrdenados = [...(CompState.alunos || [])].sort((a, b) => {
     const evA = Boolean(CompState.evadidosPorAluno && CompState.evadidosPorAluno[a]);
     const evB = Boolean(CompState.evadidosPorAluno && CompState.evadidosPorAluno[b]);
@@ -3713,7 +3849,6 @@ function compRenderizarModoCalendario(aluno, dias, chTotal) {
               onclick="compSelecionarAlunoCalendario('${compEscapeAttr(al)}')"
               title="Carregar calendário de ${compEscapeAttr(al)}">
         <span style="display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-          ${compGerarHtmlFlagIcon(al, chTotal)}
           <span>${compEscapeHTML(al)}</span>
         </span>
         ${isEv ? '<small style="font-size:9px;opacity:0.65;">(Evadido)</small>' : ''}
@@ -3722,59 +3857,66 @@ function compRenderizarModoCalendario(aluno, dias, chTotal) {
   }).join('');
 
   let html = `
-    <div class="comp-calendar-wrapper">
-      <div class="comp-student-banner">
-        <div class="comp-student-banner-info">
-          <!-- Seletor Dropdown de Alunos -->
-          <div class="comp-student-banner-picker">
-            <button type="button"
-                    id="comp-student-banner-btn"
-                    class="comp-student-banner-trigger"
-                    onclick="compToggleDropdownAlunosCalendario(event)"
-                    title="Clique para selecionar outro discente da turma">
-              ${compGerarHtmlFlagIcon(aluno, chTotal)}
-              <span class="comp-banner-text-truncate">${compEscapeHTML(aluno)}</span>
-              <span class="comp-banner-arrow">▼</span>
-            </button>
-            <div id="comp-student-banner-menu" class="comp-student-dropdown-menu" style="display: none;">
-              ${dropdownItemsHtml}
-            </div>
-          </div>
-
-          <div class="comp-student-banner-metrics">
-            <span class="comp-metric-tag" title="Total de horas-falta computadas neste calendário">
-              Faltas: <strong style="color:${totalFaltas > 0 ? '#ef4444' : '#10b981'};">${totalFaltas > 0 ? compFormatarHorasDecimais(totalFaltas) : '0h00'}</strong>
-            </span>
-            <span class="comp-metric-tag" title="Frequência escolar calculada">
-              Frequência: <strong style="color:${sitColor};">${freq}%</strong>
-            </span>
-            <span class="comp-metric-tag" style="color:${sitColor};">
-              ${sitText}
-            </span>
-            ${isEvadidoAtivo ? `
-              <button type="button"
-                      class="comp-metric-tag"
-                      style="color:#64748b;background:rgba(148,163,184,0.15);border-color:#94a3b8;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"
-                      onclick="compAbrirModalEvasaoAluno('${compEscapeAttr(aluno)}')"
-                      title="Clique para editar a data de evasão deste discente">
-                Evadido em: <strong>${compIsoToDDMMAAAA(dataEvasaoAtivoIso)}</strong> ✏️
-              </button>
-            ` : ''}
-          </div>
-        </div>
-
-        <!-- Ações do Banner com paleta monocromática e sóbria (Solarized) -->
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+    <section class="stitch-student-profile-bar" data-purpose="student-details-header">
+      <div class="stitch-student-profile-left">
+        <!-- Student dropdown button -->
+        <div class="comp-student-banner-picker" style="position: relative;">
           <button type="button"
-                  class="comp-btn-banner-action btn-banner-primary"
-                  onclick="compImprimirDiscente('${compEscapeAttr(aluno)}')"
-                  title="Configurar reposição e imprimir ficha de ${compEscapeAttr(aluno)}">
-            Imprimir Ficha
+                  id="comp-student-banner-btn"
+                  class="stitch-student-dropdown-btn"
+                  onclick="compToggleDropdownAlunosCalendario(event)"
+                  title="Clique para selecionar outro discente">
+            <span class="stitch-student-profile-name">${compEscapeHTML(aluno)}</span>
+            <span class="stitch-student-arrow">▼</span>
           </button>
+          <div id="comp-student-banner-menu" class="comp-student-dropdown-menu" style="display: none;">
+            ${dropdownItemsHtml}
+          </div>
         </div>
+
+        <!-- Absence Pill -->
+        <div class="stitch-tag-faltas" title="Total de horas-falta computadas">
+          <span style="color: #7A5B49; margin-right: 4px;">Faltas:</span>
+          <strong style="color: ${totalFaltas > 0 ? '#C94A29' : '#1E7444'};">${totalFaltas > 0 ? compFormatarHorasDecimais(totalFaltas) : '0h00'}</strong>
+        </div>
+
+        <!-- Frequency Pill -->
+        <div class="stitch-tag-freq" title="Frequência escolar calculada">
+          <span style="color: #2B6D45; margin-right: 4px;">Frequência:</span>
+          <strong>${freq}%</strong>
+        </div>
+
+        <!-- Academic Status Pill -->
+        <div class="${sitClass}">
+          ${sitText}
+        </div>
+
+        ${isEvadidoAtivo ? `
+          <button type="button"
+                  class="stitch-tag-faltas"
+                  style="cursor: pointer;"
+                  onclick="compAbrirModalEvasaoAluno('${compEscapeAttr(aluno)}')"
+                  title="Clique para editar a data de evasão">
+            Evadido em: <strong>${compIsoToDDMMAAAA(dataEvasaoAtivoIso)}</strong>
+          </button>
+        ` : ''}
       </div>
 
-      <div class="comp-calendar-grid">
+      <!-- Action Button -->
+      <div>
+        <button type="button"
+                class="stitch-btn-print-profile"
+                onclick="compImprimirDiscente('${compEscapeAttr(aluno)}')"
+                title="Configurar reposição e imprimir ficha de ${compEscapeAttr(aluno)}">
+          <i class="fa-solid fa-print"></i>
+          <span>Imprimir Ficha</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Scroll Grid de Cards -->
+    <main class="stitch-calendar-scroll-wrap" data-purpose="class-attendance-cards">
+      <div class="stitch-calendar-cards-flex">
   `;
 
   const dataEvasaoIso = compObterDataEvasaoAluno(aluno);
@@ -3786,67 +3928,62 @@ function compRenderizarModoCalendario(aluno, dias, chTotal) {
     const faltaVal = Number(faltas[isoDate]) || 0;
     const obs = (CompState.observacoesPorDia[aluno] || {})[isoDate] || '';
 
-    // Verifica se a aula é a partir da data de evasão (inclusive)
     const isAposEvasao = isEvadido && (isoDate >= dataEvasaoIso);
 
-    let statusCls = 'is-present';
-    let pillCls = 'status-present';
-    let pillText = `Presença (${compFormatarHorasDecimais(horasAula)})`;
+    let btnClass = 'is-present';
+    let btnText = `PRESENÇA (${compFormatarHorasDecimais(horasAula)})`;
 
     if (isAposEvasao) {
-      // Aula a partir da data de evasão: estritamente cinza (e não vermelha)
-      statusCls = 'is-evadido-aula';
-      pillCls = 'status-evadido';
-      pillText = 'Evadido';
+      btnClass = 'is-absent';
+      btnText = 'EVADIDO';
     } else if (faltaVal >= horasAula) {
-      statusCls = 'is-absent';
-      pillCls = 'status-absent';
-      pillText = `Falta (${compFormatarHorasDecimais(faltaVal)})`;
+      btnClass = 'is-absent';
+      btnText = `FALTA (${compFormatarHorasDecimais(faltaVal)})`;
     } else if (faltaVal > 0) {
-      statusCls = 'is-partial';
-      pillCls = 'status-partial';
-      pillText = `Falta ${compFormatarHorasDecimais(faltaVal)}/${compFormatarHorasDecimais(horasAula)}`;
+      btnClass = 'is-partial';
+      btnText = `FALTA (${compFormatarHorasDecimais(faltaVal)})`;
     }
 
     const diaMes = compIsoToDDMM(isoDate);
     const diaSem = aula ? aula.diaSemanaNome.slice(0, 3) : '';
-    const tipoLabel = aula ? (aula.tipo === 'teoria' ? 'Teoria' : 'Prática') : 'Aula';
+    const tipoLabel = aula ? (aula.tipo === 'teoria' ? 'TEORIA' : 'PRÁTICA') : 'AULA';
 
     html += `
-      <div class="comp-lesson-card ${statusCls}"
-           data-aluno="${compEscapeAttr(aluno)}"
-           data-dia="${isoDate}"
-           title="${isAposEvasao ? 'Discente evadido a partir de ' + compIsoToDDMMAAAA(dataEvasaoIso) + ' • ' : ''}Clique com botão direito ou segure para adicionar/editar nota deste dia • Presença alterável somente na Tabela Geral">
-        <div class="comp-card-top">
-          <span class="comp-card-aula-num">Aula ${idx + 1}</span>
-          <span class="comp-card-tipo">${tipoLabel}</span>
-        </div>
-
-        <div class="comp-card-date-box">
-          <div class="comp-card-date">${diaMes}</div>
-          <div class="comp-card-weekday">${diaSem}</div>
-        </div>
-
-        <div class="comp-card-body">
-          <div class="comp-card-ch-line">
-            <span class="comp-card-ch-label">Carga:</span>
-            <span class="comp-card-ch-val">${compFormatarHorasDecimais(horasAula)}</span>
+      <article class="stitch-class-card comp-lesson-card"
+               data-aluno="${compEscapeAttr(aluno)}"
+               data-dia="${isoDate}"
+               data-purpose="class-card"
+               title="${isAposEvasao ? 'Discente evadido a partir de ' + compIsoToDDMMAAAA(dataEvasaoIso) + ' • ' : ''}Clique com botão direito para anotação/observação">
+        <div>
+          <div class="stitch-class-card-top">
+            <span class="stitch-class-aula-num">AULA ${idx + 1}</span>
+            <span class="stitch-class-badge-type">${tipoLabel}</span>
           </div>
 
-          <div class="comp-status-pill ${pillCls}">
-            ${pillText}
+          <div class="stitch-class-date-box">
+            <div class="stitch-class-date">${diaMes}</div>
+            <div class="stitch-class-weekday">${diaSem}</div>
           </div>
-          ${obs ? `<div class="comp-card-note-badge" title="${compEscapeAttr(obs)}">📝 ${compEscapeHTML(obs)}</div>` : ''}
+
+          <div class="stitch-class-carga-row">
+            <span class="stitch-class-carga-label">Carga:</span>
+            <span class="stitch-class-carga-val">${compFormatarHorasDecimais(horasAula)}</span>
+          </div>
         </div>
 
-        <div class="comp-card-footer">
-          ${isAposEvasao ? 'Após Evasão' : (faltaVal > 0 ? 'Direito/Segure: Anotar' : 'Anotação: Clique Direito')}
+        <div style="padding-top: 6px;">
+          <button type="button" class="stitch-class-btn-presence ${btnClass}">
+            ${btnText}
+          </button>
+          <div class="stitch-class-note-hint" title="${compEscapeAttr(obs)}">
+            ${obs ? '📝 ' + compEscapeHTML(obs) : 'Anotação: Clique Direito'}
+          </div>
         </div>
-      </div>
+      </article>
     `;
   });
 
-  html += `</div></div>`;
+  html += `</div></main>`;
   return html;
 }
 
@@ -3966,7 +4103,7 @@ function compAtualizarDestaqueColunaDataUI() {
   const destacada = CompState.colunaDataDestacada;
 
   // Atualiza cabeçalhos da tabela
-  const headers = document.querySelectorAll('.comp-chamada-table th.col-date');
+  const headers = document.querySelectorAll('#attendance-grid-table th.col-date, .comp-chamada-table th.col-date');
   headers.forEach(th => {
     if (destacada && th.dataset.dia === destacada) {
       th.classList.add('is-col-destacada');
@@ -3978,7 +4115,7 @@ function compAtualizarDestaqueColunaDataUI() {
   });
 
   // Atualiza células do corpo da tabela
-  const cells = document.querySelectorAll('.comp-chamada-table td.comp-cell-falta');
+  const cells = document.querySelectorAll('#attendance-grid-table td[data-dia], .comp-chamada-table td.comp-cell-falta');
   cells.forEach(td => {
     if (destacada && td.dataset.dia === destacada) {
       td.classList.add('is-col-destacada');
@@ -4001,34 +4138,36 @@ function compRenderizarModoTabela(alunos, dias, chTotal) {
   const colDestacada = CompState.colunaDataDestacada;
 
   let html = `
-    <div class="comp-chamada-table-wrap">
-      <table class="comp-chamada-table">
-        <thead>
-          <tr>
-            <th class="col-aluno comp-part-aluno" id="comp-th-col-aluno">
-              <div class="comp-th-aluno-content">
-                <span>Discente</span>
-              </div>
-              <div class="comp-col-resizer" id="comp-col-resizer-aluno" title="Arraste para redimensionar a largura da coluna (duplo clique para restaurar 200px)"></div>
-            </th>
-            ${dias.map(d => {
-              const hNum = compObterHorasAula(d);
-              const hStr = compFormatarHorasDecimais(hNum);
-              const isDestacada = colDestacada === d;
-              return `<th class="col-date comp-part-datas${isDestacada ? ' is-col-destacada' : ''}"
-                          data-dia="${d}"
-                          onclick="compToggleDestacarColunaData('${d}')"
-                          title="${d} • Carga: ${hStr} • ${isDestacada ? 'Coluna Destacada (Clique para desativar)' : 'Clique para destacar a coluna'}">
-                        <span class="col-date-text">${compIsoToDDMM(d)}</span><br>
-                        <small class="col-date-sub">${hStr}</small>
-                      </th>`;
-            }).join('')}
-            <th class="col-total comp-part-meta comp-part-meta-divider">Total Faltas</th>
-            <th class="col-total comp-part-meta">Freq.</th>
-            <th class="col-actions comp-part-meta" style="min-width: 82px;" title="Ações do Discente (Imprimir, Evasão e Remover)">Ações</th>
-          </tr>
-        </thead>
-        <tbody>`;
+    <section class="stitch-attendance-datagrid" data-purpose="attendance-datagrid">
+      <div class="stitch-table-scroll">
+        <table class="stitch-table" id="attendance-grid-table">
+          <thead>
+            <tr>
+              <th class="col-aluno" id="comp-th-col-aluno" scope="col">
+                <div class="comp-th-aluno-content">
+                  <span>Discente</span>
+                </div>
+                <div class="comp-col-resizer" id="comp-col-resizer-aluno" title="Arraste para redimensionar a largura da coluna (duplo clique para restaurar 200px)"></div>
+              </th>
+              ${dias.map(d => {
+                const hNum = compObterHorasAula(d);
+                const hStr = compFormatarHorasDecimais(hNum);
+                const isDestacada = colDestacada === d;
+                return `<th class="col-date${isDestacada ? ' is-col-destacada' : ''}"
+                            data-dia="${d}"
+                            onclick="compToggleDestacarColunaData('${d}')"
+                            title="${d} • Carga: ${hStr} • ${isDestacada ? 'Coluna Destacada (Clique para desativar)' : 'Clique para destacar a coluna'}"
+                            scope="col">
+                          <div>${compIsoToDDMM(d)}</div>
+                          <div class="stitch-date-sub">${hStr}</div>
+                        </th>`;
+              }).join('')}
+              <th class="col-summary" scope="col">Total Faltas</th>
+              <th class="col-summary" scope="col">Freq.</th>
+              <th class="col-summary" style="min-width: 86px;" title="Ações do Discente (Imprimir, Evasão e Remover)" scope="col">Ações</th>
+            </tr>
+          </thead>
+          <tbody>`;
 
   const isModoFisico = CompState.subViewDiario === 'fisico';
   let alunosOrdenados;
@@ -4060,20 +4199,32 @@ function compRenderizarModoTabela(alunos, dias, chTotal) {
       const isParcial = isFalta && (val < horasAula);
       const isDestacada = colDestacada === isoDate;
 
-      // Ícone e estilo
-      const symbol = isFalta ? design.falta : design.presenca;
-      const stateClass = isFalta ? (isParcial ? 'is-cell-parcial' : 'is-cell-falta') : 'is-cell-presenca';
+      // Ícone e estilo Stitch
+      let cellCls = 'is-present';
+      if (isEvadido && (isoDate >= (compObterDataEvasaoAluno(al) || '9999-99-99'))) {
+        cellCls = 'is-evadido';
+      } else if (isParcial) {
+        cellCls = 'is-partial';
+      } else if (isFalta) {
+        cellCls = 'is-absent';
+      }
 
-      return `<td class="comp-cell-falta comp-part-datas${isDestacada ? ' is-col-destacada' : ''}" data-dia="${isoDate}">
+      const symbol = isFalta ? design.falta : design.presenca;
+
+      return `<td class="${isDestacada ? 'is-col-destacada' : ''}" style="text-align: center; padding: 4px;" data-dia="${isoDate}">
         <button
           type="button"
-          class="comp-cell-presence ${stateClass} ${design.id === '1' ? (isFalta ? 'design-barra' : 'design-ponto') : ''}"
+          class="stitch-cell-btn comp-cell-presence ${cellCls}"
           data-aluno="${compEscapeAttr(al)}"
           data-dia="${isoDate}"
           title="${compEscapeAttr(al)} em ${compIsoToDDMMAAAA(isoDate)}: ${isFalta ? compFormatarHorasDecimais(val) + ' de falta' : 'Presente'} • 1-Click: Flip • Segure/Direito: Ajustar (1 a 8 faltas)"
         >
-          <span class="comp-presence-symbol">${symbol}</span>
-          ${isParcial ? `<span class="comp-presence-hours-sub">${compFormatarHorasDecimais(val)}</span>` : ''}
+          ${isParcial ? `
+            <span class="stitch-cell-partial-symbol">${symbol}</span>
+            <span class="stitch-cell-partial-hours">${Math.round(val)}h</span>
+          ` : `
+            <span>${symbol}</span>
+          `}
         </button>
       </td>`;
     }).join('');
@@ -4087,49 +4238,59 @@ function compRenderizarModoTabela(alunos, dias, chTotal) {
       }
     }
     const freq = Math.max(0, Math.floor(((chTotal - totalFaltasConsolidado) / chTotal) * 100));
+    const pctFaltas = Math.min(100, Math.round((totalFaltasConsolidado / chTotal) * 100));
+    const temFalta = totalFaltasConsolidado > 0;
+    const isCritico25 = pctFaltas >= 25;
 
     html += `
       <tr data-aluno="${compEscapeAttr(al)}" class="${isEvadido ? 'comp-row-evadido' : ''}${isModoFisico ? ' comp-row-fisico' : ''}">
-        <td class="comp-aluno-nome-cell comp-part-aluno" title="${compEscapeAttr(al)}${isEvadido ? ' (Evadido)' : ''}">
-          <div class="comp-aluno-cell-inner">
+        <td class="col-aluno-cell" title="${compEscapeAttr(al)}${isEvadido ? ' (Evadido)' : ''}">
+          <div class="stitch-student-cell-content">
             ${isModoFisico ? `
               <button type="button"
-                      class="comp-drag-handle"
+                      class="stitch-drag-handle comp-drag-handle"
                       draggable="true"
                       data-aluno="${compEscapeAttr(al)}"
                       title="Arraste para reordenar ${compEscapeAttr(al)} no Diário Físico"
                       aria-label="Reordenar ${compEscapeAttr(al)}">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="8" cy="4" r="2.2"/>
-                  <circle cx="16" cy="4" r="2.2"/>
-                  <circle cx="8" cy="12" r="2.2"/>
-                  <circle cx="16" cy="12" r="2.2"/>
-                  <circle cx="8" cy="20" r="2.2"/>
-                  <circle cx="16" cy="20" r="2.2"/>
-                </svg>
+                <i class="fa-solid fa-grip-vertical"></i>
               </button>
             ` : ''}
-            ${compGerarHtmlFlagIcon(al, chTotal)}
-            <strong class="comp-aluno-text-truncate" title="${compEscapeAttr(al)}">${compEscapeHTML(al)}</strong>
-            ${isEvadido ? '<span class="comp-badge-evadido">Evadido</span>' : ''}
+            ${temFalta ? (isCritico25 ? `
+              <span class="stitch-icon-warning" title="Atenção Crítica: ${pctFaltas}% de faltas (≥ 25% da carga horária)">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </span>
+            ` : `
+              <span class="stitch-warning-dot" title="Possui faltas registradas (${pctFaltas}%)">!</span>
+            `) : ''}
+            <span class="stitch-student-name" title="${compEscapeAttr(al)}">${compEscapeHTML(al)}</span>
+            ${isEvadido ? '<span class="stitch-badge-evadido">Evadido</span>' : ''}
           </div>
         </td>
         ${faltasCells}
-        <td class="comp-total-faltas comp-part-meta comp-part-meta-divider${totalFaltasConsolidado > 0 ? ' has-faltas' : ''}" id="comp-total-${compSafeId(al)}">
+        <td style="text-align: center; font-weight: 700; color: ${totalFaltasConsolidado > 0 ? '#C94A29' : '#047857'};" id="comp-total-${compSafeId(al)}">
           ${totalFaltasConsolidado > 0 ? compFormatarHorasDecimais(totalFaltasConsolidado) : '0h00'}
         </td>
-        <td class="comp-part-meta" style="text-align:center;font-weight:700;font-size:11px;color:${freq < 75 ? '#ef4444' : 'var(--text-primary)'};">
+        <td style="text-align: center; font-weight: 700; color: ${freq < 75 ? '#C94A29' : '#4E2A18'};">
           ${freq}%
         </td>
-        <td class="comp-part-meta comp-actions-cell" style="text-align:center;">
-          <button class="comp-btn-print-aluno" onclick="compImprimirDiscente('${compEscapeAttr(al)}')" title="Configurar reposição e imprimir ficha de ${compEscapeAttr(al)}">🖨️</button>
-          <button class="comp-btn-evasao-aluno${isEvadido ? ' is-active' : ''}" onclick="compToggleEvasaoAluno('${compEscapeAttr(al)}', event)" title="${isEvadido ? 'Desmarcar evasão de ' + compEscapeAttr(al) : (isModoFisico ? 'Marcar discente como evadido' : 'Marcar discente como evadido (mover para o final)')}">e</button>
-          <button class="comp-btn-remove-aluno" onclick="compConfirmarRemocaoAluno('${compEscapeAttr(al)}')" title="Remover ${compEscapeAttr(al)} da chamada">✕</button>
+        <td style="text-align: center;">
+          <div class="stitch-action-group">
+            <button class="stitch-action-btn" onclick="compImprimirDiscente('${compEscapeAttr(al)}')" title="Configurar reposição e imprimir ficha de ${compEscapeAttr(al)}">
+              <i class="fa-solid fa-print"></i>
+            </button>
+            <button class="stitch-action-btn${isEvadido ? ' is-active' : ''}" onclick="compToggleEvasaoAluno('${compEscapeAttr(al)}', event)" title="${isEvadido ? 'Desmarcar evasão de ' + compEscapeAttr(al) : 'Marcar discente como evadido'}">
+              e
+            </button>
+            <button class="stitch-action-btn stitch-action-btn-danger" onclick="compConfirmarRemocaoAluno('${compEscapeAttr(al)}')" title="Remover ${compEscapeAttr(al)} da chamada">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
         </td>
       </tr>`;
   }
 
-  html += `</tbody></table></div>`;
+  html += `</tbody></table></div></section>`;
   return html;
 }
 
@@ -4140,7 +4301,7 @@ let _compDraggedAluno = null;
  */
 function compVincularEventosDragDropFisico() {
   const handles = document.querySelectorAll('.comp-drag-handle');
-  const rows = document.querySelectorAll('.comp-chamada-table tbody tr');
+  const rows = document.querySelectorAll('#attendance-grid-table tbody tr');
 
   handles.forEach(handle => {
     handle.addEventListener('dragstart', (e) => {
@@ -5098,7 +5259,7 @@ function compTrocarAba(from, to) {
     const sidebar = document.querySelector('.app-sidebar');
     if (sidebar) sidebar.classList.remove('is-collapsed');
     const resizer = document.getElementById('resizer-cronograma');
-    if (resizer) resizer.style.display = '';
+    if (resizer) resizer.style.display = 'none';
   }
 }
 

@@ -1,522 +1,368 @@
-/* Created at: 2026-10-09 13:25 */
+/* Created at: 2026-10-16 00:05 */
 /**
  * calendario.css
- * Estilos da Aba 3: Calendário Escolar Anual (Motor Universal de Feriados SENAI)
- * Grid 12 Meses com slots de cor temáticos, tooltips flutuantes e alta responsividade.
+ * Estilos 1:1 Stitch da Aba Calendário Escolar (Redesign Panorâmico)
+ * Screen: Calendário Escolar - Redesign Panorâmico (ecbd78e1f2c2435297a01d0dcbdfcd48)
  */
 
-:root,
-[data-theme="solarized"],
-:root[data-theme="solarized"],
-body[data-theme="solarized"] {
-  /* No tema Solarized, cores sólidas e de alto contraste idênticas ao tema Claro */
-  --cal-cor-1: #dc2626; /* Feriados - Vermelho SENAI */
-  --cal-cor-1-bg: #fee2e2;
-  --cal-cor-1-text: #991b1b;
-
-  --cal-cor-2: #ea580c; /* Emenda - Laranja/Âmbar */
-  --cal-cor-2-bg: #ffedd5;
-  --cal-cor-2-text: #9a3412;
-
-  --cal-cor-3: #0284c7; /* Ponto Facultativo - Azul/Ciano */
-  --cal-cor-3-bg: #e0f2fe;
-  --cal-cor-3-text: #075985;
-
-  --cal-cor-4: #7c3aed; /* Formatura - Violeta/Roxo */
-  --cal-cor-4-bg: #f3e8ff;
-  --cal-cor-4-text: #6b21a8;
-
-  --cal-cor-5: #059669; /* Férias FIC - Verde */
-  --cal-cor-5-bg: #d1fae5;
-  --cal-cor-5-text: #065f46;
-
-  --cal-cor-6: #475569; /* A Decidir - Cinza Grafite */
-  --cal-cor-6-bg: #f1f5f9;
-  --cal-cor-6-text: #334155;
-
-  --cal-card-bg: #eee8d5;
-  --cal-border: #d8d0bc;
-  --cal-day-hover: rgba(38, 139, 210, 0.22);
-  --cal-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-[data-theme="claro"] {
-  --cal-cor-1: #dc2626;
-  --cal-cor-1-bg: #fee2e2;
-  --cal-cor-1-text: #991b1b;
-
-  --cal-cor-2: #ea580c;
-  --cal-cor-2-bg: #ffedd5;
-  --cal-cor-2-text: #9a3412;
-
-  --cal-cor-3: #0284c7;
-  --cal-cor-3-bg: #e0f2fe;
-  --cal-cor-3-text: #075985;
-
-  --cal-cor-4: #7c3aed;
-  --cal-cor-4-bg: #f3e8ff;
-  --cal-cor-4-text: #6b21a8;
-
-  --cal-cor-5: #059669;
-  --cal-cor-5-bg: #d1fae5;
-  --cal-cor-5-text: #065f46;
-
-  --cal-cor-6: #475569;
-  --cal-cor-6-bg: #f1f5f9;
-  --cal-cor-6-text: #334155;
-
-  --cal-card-bg: #ffffff;
-  --cal-border: #e2e8f0;
-  --cal-day-hover: #f1f5f9;
-  --cal-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-[data-theme="conforto visual"] {
-  --cal-cor-1: #f87171;
-  --cal-cor-1-bg: rgba(239, 68, 68, 0.28);
-  --cal-cor-1-text: #fca5a5;
-
-  --cal-cor-2: #fb923c;
-  --cal-cor-2-bg: rgba(249, 115, 22, 0.28);
-  --cal-cor-2-text: #fdba74;
-
-  --cal-cor-3: #38bdf8;
-  --cal-cor-3-bg: rgba(56, 189, 248, 0.28);
-  --cal-cor-3-text: #7dd3fc;
-
-  --cal-cor-4: #a78bfa;
-  --cal-cor-4-bg: rgba(167, 139, 250, 0.28);
-  --cal-cor-4-text: #c4b5fd;
-
-  --cal-cor-5: #34d399;
-  --cal-cor-5-bg: rgba(52, 211, 153, 0.28);
-  --cal-cor-5-text: #6ee7b7;
-
-  --cal-cor-6: #94a3b8;
-  --cal-cor-6-bg: rgba(148, 163, 184, 0.28);
-  --cal-cor-6-text: #cbd5e1;
-
-  --cal-card-bg: #1a1d24;
-  --cal-border: #2b303c;
-  --cal-day-hover: rgba(255, 255, 255, 0.08);
-  --cal-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-}
-
 /* ==========================================================================
-   CONTAINER E LAYOUT DA ABA CALENDÁRIO
+   ISOLAMENTO E CONTAINER DA ABA CALENDÁRIO
    ========================================================================== */
 #tab-calendario {
-  padding: 16px 22px;
-  overflow-y: auto;
-  height: 100%;
+  background-color: #F7F4EC !important;
+  color: #4A2A1A !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  padding: 16px 24px !important;
+  overflow-y: auto !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#tab-calendario:not(.page-active) {
+  display: none !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#tab-calendario.page-active {
+  display: block !important;
+  position: relative !important;
+}
+
+.cal-stitch-container {
+  max-width: 1440px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background-color: var(--bg-primary);
   box-sizing: border-box;
 }
 
-.cal-main-container {
-  max-width: 1560px;
-  margin: 0 auto;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 /* ==========================================================================
-   BARRA SUPERIOR DE CONTROLES DO CALENDÁRIO
+   TOKENS E CLASSES UTILITÁRIAS 1:1 STITCH
    ========================================================================== */
-.cal-topbar-card {
-  background: var(--cal-card-bg);
-  border: 1px solid var(--cal-border);
-  border-radius: 10px;
-  padding: 12px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: var(--cal-shadow);
-  flex-wrap: wrap;
-  gap: 12px;
+.shadow-warm-sm {
+  box-shadow: 0 2px 6px -1px rgba(74, 42, 26, 0.04), 0 1px 3px -1px rgba(74, 42, 26, 0.02) !important;
 }
 
-.cal-header-title-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.shadow-warm-card {
+  box-shadow: 0 4px 14px -2px rgba(74, 42, 26, 0.05), 0 1px 3px 0 rgba(74, 42, 26, 0.03) !important;
 }
 
-.cal-header-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: rgba(38, 139, 210, 0.15);
-  color: var(--accent-active);
+.shadow-warm-hover {
+  box-shadow: 0 6px 18px -3px rgba(74, 42, 26, 0.08) !important;
+}
+
+.shadow-xs {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.shadow-inner {
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Day cell styling */
+.day-cell {
+  height: 30px;
+  width: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.cal-header-title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.2;
-}
-
-.cal-header-subtitle {
-  font-size: 11.5px;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.cal-controls-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-/* Seletor de Ano */
-.cal-year-picker {
-  display: flex;
-  align-items: center;
-  background: var(--bg-primary);
-  border: 1px solid var(--cal-border);
-  border-radius: 8px;
-  padding: 2px 4px;
-  gap: 4px;
-}
-
-.cal-year-nav-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-}
-
-.cal-year-nav-btn:hover {
-  background: var(--cal-day-hover);
-  color: var(--accent-active);
-}
-
-.cal-year-input {
-  width: 68px;
-  text-align: center;
-  font-size: 15px;
-  font-weight: 800;
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  outline: none;
-  padding: 2px 0;
-}
-
-/* ==========================================================================
-   BARRA DE LEGENDAS (SLOTS DE CORES 1 A 6 + PERSONALIZADO DO USUÁRIO)
-   ========================================================================== */
-.cal-legend-card {
-  background: var(--cal-card-bg);
-  border: 1px solid var(--cal-border);
-  border-radius: 10px;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  box-shadow: var(--cal-shadow);
-}
-
-.cal-legend-items {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.cal-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--text-primary);
-  cursor: default;
-}
-
-.cal-legend-badge {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-.badge-cor-1 { background-color: var(--cal-cor-1, #dc2626) !important; }
-.badge-cor-2 { background-color: var(--cal-cor-2, #ea580c) !important; }
-.badge-cor-3 { background-color: var(--cal-cor-3, #0284c7) !important; }
-.badge-cor-4 { background-color: var(--cal-cor-4, #7c3aed) !important; }
-.badge-cor-5 { background-color: var(--cal-cor-5, #059669) !important; }
-.badge-cor-6 { background-color: var(--cal-cor-6, #475569) !important; }
-
-/* Badge para eventos adicionados pelo usuário (Roxo forte) */
-.badge-cor-user {
-  background-color: #7c3aed !important;
-  border: 1.5px solid #4c1d95 !important;
-}
-
-.badge-cor-aula {
-  background-color: transparent;
-  border: 2px solid var(--accent-active);
-  position: relative;
-}
-.badge-cor-aula::after {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  bottom: 2px;
-  background: var(--accent-active);
-  border-radius: 2px;
-}
-
-/* ==========================================================================
-   GRID ANUAL COM OS 12 MESES (3x4 ou 4x3)
-   ========================================================================== */
-.cal-months-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
-
-@media (max-width: 1280px) {
-  .cal-months-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 860px) {
-  .cal-months-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 580px) {
-  .cal-months-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* CARD INDIVIDUAL DO MÊS */
-.cal-month-card {
-  background: var(--cal-card-bg);
-  border: 1px solid var(--cal-border);
-  border-radius: 10px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--cal-shadow);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.cal-month-card:hover {
-  border-color: rgba(38, 139, 210, 0.4);
-}
-
-.cal-month-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--cal-border);
-}
-
-.cal-month-title {
-  font-size: 13.5px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.cal-month-badge {
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 12px;
-  background: rgba(38, 139, 210, 0.12);
-  color: var(--accent-active);
-}
-
-/* GRADE DE DIAS */
-.cal-days-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.cal-week-header th {
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--text-secondary);
-  text-align: center;
-  padding: 4px 0;
-  text-transform: uppercase;
-}
-
-.cal-day-cell {
-  height: 28px;
-  text-align: center;
-  vertical-align: middle;
-  padding: 1px;
-}
-
-.cal-day-box {
-  width: 26px;
-  height: 26px;
-  margin: 0 auto;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-primary);
-  background: transparent; /* Dias comuns são vazados */
-  border: 1px solid transparent;
-  cursor: default;
+  border-radius: 8px;
   position: relative;
-  transition: all 0.12s ease;
+  margin: 0 auto;
+  transition: all 0.15s ease;
+  user-select: none;
+  border: 1.5px solid transparent;
+  color: #4A2A1A;
+  background-color: transparent;
+  box-sizing: border-box;
 }
 
-/* Dias normais no hover */
-.cal-day-box:hover {
-  background: var(--cal-day-hover);
-}
-
-/* Domingo (dia não útil) sutilmente atenuado */
-.cal-day-sun {
-  color: var(--text-secondary);
-  opacity: 0.85;
-}
-
-/* DIAS COM FERIADOS / EVENTOS (PREENCHIMENTO TEMÁTICO) */
-.cal-event-day {
+.day-cell:hover:not(.day-empty) {
+  background-color: #F0ECE3;
   cursor: pointer;
-  font-weight: 800;
 }
 
-.cal-event-day.cal-cor-1 {
-  background-color: var(--cal-cor-1-bg);
-  color: var(--cal-cor-1-text);
-  border: 1px solid var(--cal-cor-1);
+.day-cell.day-empty {
+  pointer-events: none;
+  visibility: hidden;
 }
 
-.cal-event-day.cal-cor-2 {
-  background-color: var(--cal-cor-2-bg);
-  color: var(--cal-cor-2-text);
-  border: 1px solid var(--cal-cor-2);
+/* Specific highlight categories based on Stitch specification */
+.highlight-red {
+  border: 1.5px solid #EA4335 !important;
+  color: #EA4335 !important;
+  background-color: #FFF5F5 !important;
 }
 
-.cal-event-day.cal-cor-3 {
-  background-color: var(--cal-cor-3-bg);
-  color: var(--cal-cor-3-text);
-  border: 1px solid var(--cal-cor-3);
+.highlight-orange {
+  border: 1.5px solid #F27B22 !important;
+  color: #F27B22 !important;
+  background-color: #FEF8F2 !important;
 }
 
-.cal-event-day.cal-cor-4 {
-  background-color: var(--cal-cor-4-bg);
-  color: var(--cal-cor-4-text);
-  border: 1px solid var(--cal-cor-4);
+.highlight-blue {
+  border: 1.5px solid #1A73E8 !important;
+  color: #1A73E8 !important;
+  background-color: #F0F6FF !important;
 }
 
-.cal-event-day.cal-cor-5 {
-  background-color: var(--cal-cor-5-bg);
-  color: var(--cal-cor-5-text);
-  border: 1px solid var(--cal-cor-5);
+.highlight-purple {
+  background-color: #7B32D9 !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid #7B32D9 !important;
+  box-shadow: 0 2px 4px rgba(123, 50, 217, 0.25) !important;
 }
 
-.cal-event-day.cal-cor-6 {
-  background-color: var(--cal-cor-6-bg);
-  color: var(--cal-cor-6-text);
-  border: 1px solid var(--cal-cor-6);
+.highlight-green {
+  border: 1.5px solid #00966B !important;
+  color: #00966B !important;
+  background-color: #E8F7F2 !important;
 }
 
-/* DIAS ADICIONADOS PELO USUÁRIO (ROXO FORTE, NEGRITO E BORDA ESPESSA) */
-.cal-event-day.cal-user-added,
-.cal-event-day.cal-cor-user {
-  background-color: #7c3aed !important;
-  color: #ffffff !important;
-  font-weight: 800 !important;
-  border: 2.5px solid #4c1d95 !important;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.45);
+.highlight-gray {
+  border: 1.5px solid #5F6368 !important;
+  color: #5F6368 !important;
+  background-color: #F8F9FA !important;
 }
 
-/* INDICADOR DE DIA DE AULA DA TURMA ATIVA */
-.cal-class-day::after {
-  content: "";
+/* Active class day indicator (blue pill / rounded dot) */
+.highlight-active-class {
+  border: 1.5px solid #1A73E8 !important;
+  color: #1A73E8 !important;
+  position: relative;
+}
+
+.highlight-active-class::after,
+.has-active-lesson::after {
+  content: '';
   position: absolute;
   bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: var(--accent-active);
+  width: 14px;
+  height: 3px;
+  border-radius: 9999px;
+  background-color: #1A73E8;
 }
 
-.cal-class-day.cal-class-only {
-  border: 1.5px solid var(--accent-active);
-  font-weight: 700;
+/* Stitch Color and Utility Helper Classes */
+#tab-calendario .bg-white { background-color: #FFFFFF; }
+#tab-calendario .bg-\[\#FAF6EE\] { background-color: #FAF6EE; }
+#tab-calendario .bg-\[\#FAF8F3\] { background-color: #FAF8F3; }
+#tab-calendario .bg-\[\#4A2A1A\] { background-color: #4A2A1A; }
+#tab-calendario .bg-\[\#361E12\] { background-color: #361E12; }
+#tab-calendario .bg-\[\#7B32D9\] { background-color: #7B32D9; }
+#tab-calendario .bg-\[\#6824bd\] { background-color: #6824bd; }
+#tab-calendario .bg-\[\#E2EEFA\] { background-color: #E2EEFA; }
+#tab-calendario .bg-\[\#EA4335\] { background-color: #EA4335; }
+#tab-calendario .bg-\[\#F27B22\] { background-color: #F27B22; }
+#tab-calendario .bg-\[\#1A73E8\] { background-color: #1A73E8; }
+#tab-calendario .bg-\[\#00966B\] { background-color: #00966B; }
+#tab-calendario .bg-\[\#5F6368\] { background-color: #5F6368; }
+#tab-calendario .bg-emerald-500 { background-color: #10B981; }
+
+#tab-calendario .text-\[\#4A2A1A\] { color: #4A2A1A; }
+#tab-calendario .text-\[\#8D7B6F\] { color: #8D7B6F; }
+#tab-calendario .text-\[\#266DA8\] { color: #266DA8; }
+#tab-calendario .text-\[\#1A73E8\] { color: #1A73E8; }
+#tab-calendario .text-white { color: #FFFFFF; }
+
+#tab-calendario .border-\[\#E8E2D5\] { border-color: #E8E2D5; }
+#tab-calendario .border-\[\#F0ECE3\] { border-color: #F0ECE3; }
+
+#tab-calendario .border { border-width: 1px; border-style: solid; }
+#tab-calendario .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+
+#tab-calendario .rounded-full { border-radius: 9999px; }
+#tab-calendario .rounded-2xl { border-radius: 1rem; }
+#tab-calendario .rounded-xl { border-radius: 0.75rem; }
+
+#tab-calendario .flex { display: flex; }
+#tab-calendario .inline-flex { display: inline-flex; }
+#tab-calendario .flex-col { flex-direction: column; }
+#tab-calendario .flex-wrap { flex-wrap: wrap; }
+#tab-calendario .flex-shrink-0 { flex-shrink: 0; }
+#tab-calendario .items-center { align-items: center; }
+#tab-calendario .items-stretch { align-items: stretch; }
+#tab-calendario .justify-between { justify-content: space-between; }
+#tab-calendario .justify-center { justify-content: center; }
+
+#tab-calendario .gap-1\.5 { gap: 0.375rem; }
+#tab-calendario .gap-2 { gap: 0.5rem; }
+#tab-calendario .gap-2\.5 { gap: 0.625rem; }
+#tab-calendario .gap-3 { gap: 0.75rem; }
+#tab-calendario .gap-3\.5 { gap: 0.875rem; }
+#tab-calendario .gap-4 { gap: 1rem; }
+#tab-calendario .gap-6 { gap: 1.5rem; }
+
+#tab-calendario .p-1\.5 { padding: 0.375rem; }
+#tab-calendario .p-4 { padding: 1rem; }
+#tab-calendario .pb-3 { padding-bottom: 0.75rem; }
+#tab-calendario .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+#tab-calendario .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+#tab-calendario .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+#tab-calendario .px-4 { padding-left: 1rem; padding-right: 1rem; }
+#tab-calendario .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+#tab-calendario .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+#tab-calendario .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+#tab-calendario .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+#tab-calendario .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+#tab-calendario .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+#tab-calendario .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+
+#tab-calendario .mb-1\.5 { margin-bottom: 0.375rem; }
+#tab-calendario .mb-2 { margin-bottom: 0.5rem; }
+
+#tab-calendario .w-2\.5 { width: 0.625rem; }
+#tab-calendario .h-2\.5 { height: 0.625rem; }
+#tab-calendario .w-3 { width: 0.75rem; }
+#tab-calendario .h-3 { height: 0.75rem; }
+#tab-calendario .w-3\.5 { width: 0.875rem; }
+#tab-calendario .h-3\.5 { height: 0.875rem; }
+#tab-calendario .w-4 { width: 1rem; }
+#tab-calendario .h-4 { height: 1rem; }
+#tab-calendario .w-6 { width: 1.5rem; }
+#tab-calendario .h-6 { height: 1.5rem; }
+#tab-calendario .w-7 { width: 1.75rem; }
+#tab-calendario .h-7 { height: 1.75rem; }
+#tab-calendario .w-11 { width: 2.75rem; }
+#tab-calendario .h-11 { height: 2.75rem; }
+#tab-calendario .w-full { width: 100%; }
+
+#tab-calendario .text-xs { font-size: 0.75rem; line-height: 1rem; }
+#tab-calendario .text-\[11px\] { font-size: 11px; line-height: 1rem; }
+#tab-calendario .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+#tab-calendario .text-base { font-size: 1rem; line-height: 1.5rem; }
+#tab-calendario .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+#tab-calendario .text-center { text-align: center; }
+
+#tab-calendario .font-medium { font-weight: 500; }
+#tab-calendario .font-semibold { font-weight: 600; }
+#tab-calendario .font-bold { font-weight: 700; }
+
+#tab-calendario .tracking-tight { letter-spacing: -0.025em; }
+#tab-calendario .tracking-wider { letter-spacing: 0.05em; }
+#tab-calendario .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#tab-calendario .transition { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+#tab-calendario .relative { position: relative; }
+#tab-calendario .absolute { position: absolute; }
+#tab-calendario .bottom-1 { bottom: 0.25rem; }
+
+/* Grid 12 Months */
+[data-purpose="twelve-month-calendar-grid"] {
+  display: grid !important;
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+}
+
+@media (min-width: 640px) {
+  [data-purpose="twelve-month-calendar-grid"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-purpose="twelve-month-calendar-grid"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Generic Grid Utility */
+#tab-calendario .grid {
+  display: grid !important;
+}
+#tab-calendario .grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+
+@media (min-width: 640px) {
+  #tab-calendario .sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  #tab-calendario .md\:flex-row { flex-direction: row !important; }
+  #tab-calendario .md\:items-center { align-items: center !important; }
+  #tab-calendario .md\:pr-4 { padding-right: 1rem !important; }
+  #tab-calendario .md\:border-r { border-right: 1px solid #E8E2D5 !important; }
+  #tab-calendario .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  #tab-calendario .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+
+@media (min-width: 1024px) {
+  #tab-calendario .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Grid 7 Columns for Weekdays & Days */
+.grid-cols-7 {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+}
+.gap-y-1 {
+  row-gap: 4px !important;
+}
+
+/* Hover effects */
+#tab-calendario button:hover.hover\:bg-white { background-color: #FFFFFF !important; }
+#tab-calendario button:hover.hover\:bg-\[\#361E12\] { background-color: #361E12 !important; }
+#tab-calendario button:hover.hover\:bg-\[\#6824bd\] { background-color: #6824bd !important; }
+#tab-calendario div:hover.hover\:shadow-warm-card {
+  box-shadow: 0 4px 14px -2px rgba(74, 42, 26, 0.05), 0 1px 3px 0 rgba(74, 42, 26, 0.03) !important;
 }
 
 /* ==========================================================================
-   TOOLTIP FLUTUANTE CUSTOMIZADO
+   TOOLTIP FLUTUANTE CUSTOMIZADO (ESTILO WARM TIMBER / STITCH)
    ========================================================================== */
 .cal-tooltip {
   position: fixed;
   z-index: 99999;
-  background: var(--cal-card-bg);
-  border: 1px solid var(--cal-border);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  padding: 8px 12px;
+  background: #FFFFFF;
+  border: 1px solid #E8E2D5;
+  box-shadow: 0 10px 25px -5px rgba(74, 42, 26, 0.15), 0 8px 10px -6px rgba(74, 42, 26, 0.1);
+  border-radius: 12px;
+  padding: 10px 14px;
   pointer-events: none;
-  font-size: 11.5px;
+  font-size: 12px;
   max-width: 280px;
   display: none;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   transition: opacity 0.12s ease;
 }
 
 .cal-tooltip-header {
   font-size: 11px;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: #8D7B6F;
 }
 
 .cal-tooltip-title {
   font-size: 13px;
   font-weight: 800;
-  color: var(--text-primary);
+  color: #4A2A1A;
   line-height: 1.25;
 }
 
 .cal-tooltip-category {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: 11px;
   font-weight: 700;
   margin-top: 2px;
@@ -525,23 +371,19 @@ body[data-theme="solarized"] {
 .cal-tooltip-lesson {
   margin-top: 4px;
   padding-top: 4px;
-  border-top: 1px dashed var(--cal-border);
+  border-top: 1px dashed #E8E2D5;
   font-size: 11px;
   font-weight: 700;
-  color: var(--accent-active);
+  color: #1A73E8;
 }
 
-/* Botão de Impressão A4 do Calendário */
-.cal-btn-print {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.cal-btn-print:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+/* ==========================================================================
+   MODAL DE ADICIONAR / REMOVER DIA (ESTILO STITCH)
+   ========================================================================== */
+#cal-modal-custom .day-modal-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E8E2D5;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(74, 42, 26, 0.1), 0 8px 10px -6px rgba(74, 42, 26, 0.05);
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
