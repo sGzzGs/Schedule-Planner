@@ -101,42 +101,47 @@
   visibility: hidden;
 }
 
-/* Specific highlight categories based on Stitch specification */
+/* Specific highlight categories based on Stitch specification (Semi-preenchido com transparência e bordas sólidas) */
+.highlight-feriado,
 .highlight-red {
-  border: 1.5px solid #EA4335 !important;
-  color: #EA4335 !important;
-  background-color: #FFF5F5 !important;
+  border: 1.5px solid #FF0000 !important;
+  color: #D32F2F !important;
+  background-color: rgba(255, 0, 0, 0.15) !important;
 }
 
+.highlight-emenda,
 .highlight-orange {
-  border: 1.5px solid #F27B22 !important;
-  color: #F27B22 !important;
-  background-color: #FEF8F2 !important;
+  border: 1.5px solid #FFC000 !important;
+  color: #B38600 !important;
+  background-color: rgba(255, 192, 0, 0.18) !important;
 }
 
+.highlight-ponto_facultativo,
 .highlight-blue {
-  border: 1.5px solid #1A73E8 !important;
-  color: #1A73E8 !important;
-  background-color: #F0F6FF !important;
+  border: 1.5px solid #808080 !important;
+  color: #595959 !important;
+  background-color: rgba(128, 128, 128, 0.16) !important;
 }
 
+.highlight-formatura,
 .highlight-purple {
-  background-color: #7B32D9 !important;
-  color: #FFFFFF !important;
-  border: 1.5px solid #7B32D9 !important;
-  box-shadow: 0 2px 4px rgba(123, 50, 217, 0.25) !important;
+  border: 1.5px solid #00B050 !important;
+  color: #008A3E !important;
+  background-color: rgba(0, 176, 80, 0.16) !important;
 }
 
+.highlight-ferias_fic,
 .highlight-green {
-  border: 1.5px solid #00966B !important;
-  color: #00966B !important;
-  background-color: #E8F7F2 !important;
+  border: 1.5px solid #D4B200 !important;
+  color: #8A7300 !important;
+  background-color: rgba(255, 255, 0, 0.22) !important;
 }
 
+.highlight-a_decidir,
 .highlight-gray {
-  border: 1.5px solid #5F6368 !important;
-  color: #5F6368 !important;
-  background-color: #F8F9FA !important;
+  border: 1.5px solid #00B0F0 !important;
+  color: #0086B8 !important;
+  background-color: rgba(0, 176, 240, 0.16) !important;
 }
 
 /* Active class day indicator (blue pill / rounded dot) */
@@ -381,9 +386,117 @@
    MODAL DE ADICIONAR / REMOVER DIA (ESTILO STITCH)
    ========================================================================== */
 #cal-modal-custom .day-modal-card {
-  background-color: #FFFFFF;
+  background-color: #FAF8F3;
   border: 1px solid #E8E2D5;
   border-radius: 16px;
   box-shadow: 0 20px 25px -5px rgba(74, 42, 26, 0.1), 0 8px 10px -6px rgba(74, 42, 26, 0.05);
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
+
+/* ==========================================================================
+   MENU MINIMALISTA DE CONTEXTO WARM TIMBER (BOTÃO DIREITO / CLIQUE DIRETO)
+   ========================================================================== */
+.cal-minimalist-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background-color: rgba(74, 42, 26, 0.2);
+  backdrop-filter: blur(1px);
+}
+
+.cal-minimalist-card {
+  position: fixed;
+  z-index: 99999;
+  background: #FAF8F3;
+  border: 1.5px solid #E8E2D5;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px -4px rgba(74, 42, 26, 0.18), 0 4px 12px -2px rgba(74, 42, 26, 0.08);
+  padding: 16px;
+  width: 310px;
+  max-width: 92vw;
+  box-sizing: border-box;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #4A2A1A;
+  animation: calMenuFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes calMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.cal-slider-dropdown-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.cal-slider-dropdown-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1px solid #E8E2D5;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4A2A1A;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.cal-slider-dropdown-btn:hover {
+  border-color: #D5CCA8;
+}
+
+.cal-slider-dropdown-options {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, margin 0.2s ease;
+  background: #FFFFFF;
+  border-radius: 10px;
+  border: 0 solid #E8E2D5;
+  margin-top: 0;
+  box-sizing: border-box;
+}
+
+.cal-slider-dropdown-options.open {
+  max-height: 250px;
+  opacity: 1;
+  border-width: 1px;
+  margin-top: 6px;
+  box-shadow: 0 6px 18px rgba(74, 42, 26, 0.1);
+  overflow-y: auto;
+}
+
+.cal-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #4A2A1A;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.cal-dropdown-item:hover {
+  background: #FAF8F3;
+}
+
+.cal-color-bubble {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+

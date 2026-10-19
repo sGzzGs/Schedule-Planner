@@ -2591,6 +2591,21 @@ async function compConfirmarEImprimirModal() {
   CompState.ultimasFaltasImpressas[al] = faltasAteHoje;
   delete CompState.manualFlagAlunos[al];
 
+  // Sincronizar flag de impressão com Supabase
+  if (window.authService?.client) {
+    try {
+      window.authService.client
+        .from('alunos_governanca')
+        .update({
+          faltas_ultima_impressao_docente: faltasAteHoje,
+          data_impressao_docente: new Date().toISOString()
+        })
+        .ilike('nome_discente', al);
+    } catch (e) {
+      console.warn('[Compensação] Falha ao sincronizar impressão no Supabase:', e);
+    }
+  }
+
   compFecharModalEdicaoReposicao();
   compMostrarToast('Ficha Gerada com Sucesso', `Baixando PDF oficial de ${al}...`);
 
@@ -2614,6 +2629,21 @@ async function compImprimirModalEmBranco() {
   const { faltasAteHoje } = compCalcularFrequenciaAteHoje(al);
   CompState.ultimasFaltasImpressas[al] = faltasAteHoje;
   delete CompState.manualFlagAlunos[al];
+
+  // Sincronizar flag de impressão com Supabase
+  if (window.authService?.client) {
+    try {
+      window.authService.client
+        .from('alunos_governanca')
+        .update({
+          faltas_ultima_impressao_docente: faltasAteHoje,
+          data_impressao_docente: new Date().toISOString()
+        })
+        .ilike('nome_discente', al);
+    } catch (e) {
+      console.warn('[Compensação] Falha ao sincronizar impressão no Supabase:', e);
+    }
+  }
 
   compFecharModalEdicaoReposicao();
   compMostrarToast('Ficha em Branco Gerada', `Baixando PDF oficial de ${al} com campos vazios...`);
@@ -3899,7 +3929,12 @@ function compRenderizarModoCalendario(aluno, dias, chTotal) {
                   title="Clique para editar a data de evasão">
             Evadido em: <strong>${compIsoToDDMMAAAA(dataEvasaoAtivoIso)}</strong>
           </button>
-        ` : ''}
+        ` : (CompState.evasaoRecomendadaAlunos && CompState.evasaoRecomendadaAlunos[aluno] ? `
+          <div class="docente-evasao-banner" style="display: inline-flex; align-items: center; gap: 8px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 2px 8px;">
+            <span style="font-size: 11px; color: #9f1239; font-weight: 700;">⚠️ Evasão Recomendada</span>
+            <button type="button" class="btn-aceitar-evasao" onclick="compAceitarRecomendacaoEvasao('${compEscapeAttr(aluno)}')">Aceitar Evasão</button>
+          </div>
+        ` : '')}
       </div>
 
       <!-- Action Button -->
@@ -4026,6 +4061,46 @@ function compSelecionarAlunoCalendario(nome) {
   compRenderizarDiario();
   compRenderizarVariaveis();
 }
+
+/**
+ * Aceita a recomendação de evasão escolar feita pela coordenação
+ */
+async function compAceitarRecomendacaoEvasao(nome) {
+  if (!confirm(`Confirmar a evasão escolar para o discente ${nome} recomendada pela Coordenação?`)) {
+    return;
+  }
+
+  const dataHoje = compObterDataHojeIso();
+  if (!CompState.alunosEvadidos) CompState.alunosEvadidos = {};
+  CompState.alunosEvadidos[nome] = dataHoje;
+
+  if (CompState.evasaoRecomendadaAlunos) {
+    delete CompState.evasaoRecomendadaAlunos[nome];
+  }
+
+  compSalvarEstado();
+
+  // Sincronizar com Supabase se cliente estiver ativo
+  const client = window.authService?.client;
+  if (client) {
+    try {
+      await client
+        .from('alunos_governanca')
+        .update({
+          status_evasao: 'evadido',
+          aceita_docente_em: new Date().toISOString()
+        })
+        .ilike('nome_discente', nome);
+    } catch (e) {
+      console.warn('[Compensação] Falha ao sincronizar evasão no Supabase:', e);
+    }
+  }
+
+  compMostrarToast('Evasão Confirmada', `O discente ${nome} foi marcado como evadido.`);
+  compRenderizarDiario();
+  compRenderizarVariaveis();
+}
+window.compAceitarRecomendacaoEvasao = compAceitarRecomendacaoEvasao;
 
 /**
  * Vincula interações nos cards do calendário.
@@ -5209,7 +5284,7 @@ function compTrocarAba(from, to) {
 
   if (!fromEl || !toEl) return;
 
-  const tabOrder = ['tab-cronograma', 'tab-compensacao', 'tab-calendario'];
+  const tabOrder = ['tab-cronograma', 'tab-compensacao', 'tab-calendario', 'tab-coordenacao'];
   const fromIdx = tabOrder.indexOf(from);
   const toIdx   = tabOrder.indexOf(to);
   const goingRight = toIdx > fromIdx;
@@ -5254,6 +5329,16 @@ function compTrocarAba(from, to) {
     if (typeof calRenderizar === 'function') {
       calRenderizar();
     }
+  } else if (to === 'tab-coordenacao') {
+    // Colapsar painel lateral da aba 1 para visualização da governança da coordenação
+    const sidebar = document.querySelector('.app-sidebar');
+    if (sidebar) sidebar.classList.add('is-collapsed');
+    const resizer = document.getElementById('resizer-cronograma');
+    if (resizer) resizer.style.display = 'none';
+
+    if (typeof window.coordCarregarDados === 'function') {
+      window.coordCarregarDados();
+    }
   } else if (to === 'tab-cronograma') {
     // Restaurar painel lateral da aba 1
     const sidebar = document.querySelector('.app-sidebar');
@@ -5262,6 +5347,7 @@ function compTrocarAba(from, to) {
     if (resizer) resizer.style.display = 'none';
   }
 }
+window.compTrocarAba = compTrocarAba;
 
 // ==========================================================================
 // INSPEÇÃO DE VARIÁVEIS DA ABA 2 (LISTA VERTICAL COMPLETA • MODAL E 2ª ABA NAVEGADOR)
@@ -6139,7 +6225,13 @@ window.compSincronizarAbaMae = compSincronizarAbaMae;
 window.compRenderizarDiario = compRenderizarDiario;
 window.compRenderizarVariaveis = compRenderizarVariaveis;
 window.compAlternarSubViewDiario = compAlternarSubViewDiario;
+window.compCalcularFrequenciaAteHoje = compCalcularFrequenciaAteHoje;
+window.compObterStatusFlagAluno = compObterStatusFlagAluno;
+window.compCalcularValoresVariaveis = compCalcularValoresVariaveis;
+window.compObterFaltasAteHoje = compObterFaltasAteHoje;
+window.compFormatarHorasParaHHMM = compFormatarHorasParaHHMM;
 window.CompState = CompState;
+
 
 
 if (document.readyState === 'loading') {

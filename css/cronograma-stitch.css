@@ -98,6 +98,14 @@
   background-color: #F5EFE6;
   color: #8C7769;
   border: 1px solid #EAE3D2;
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+.version-badge-container:hover .stitch-version-pill {
+  background-color: #EFE4D6;
+  color: #4E2A18;
+  border-color: #D5C3BC;
 }
 
 /* Abas de Navegação Integradas */

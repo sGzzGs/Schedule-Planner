@@ -1,19 +1,28 @@
-// Created at: 2026-10-09 13:26
+// Created at: 2026-10-19 14:24
 /**
  * calendario.js
  * Controlador da Aba 3: Calendário Escolar Anual (Motor Universal de Feriados SENAI).
  *
  * Funcionalidades:
- * - Grade Anual de 12 Meses (Quick Glance).
- * - Seletor instantâneo de ano com lazy loading ultra-rápido (<1ms) e cache pré-aquecido (2 anos).
- * - Preenchimento cromático conforme os 6 slots de legenda da base universal SENAI.
- * - Destaque roxo forte, preenchimento sólido e borda espessa em negrito para dias adicionados pelo usuário.
- * - Modal "Adicionar / Remover Dia do Calendário" com gestão de adições e desbloqueio de feriados oficiais.
- * - Tooltips dinâmicos com descrição do evento, categoria e aulas correspondentes da turma ativa.
+ * - Grade Anual de 12 Meses com layout panorâmico Warm Timber.
+ * - Suporte nativo aos anos 2026 e 2027 com novo catálogo cromático oficial.
+ * - Estilo translúcido nos dias com bordas sólidas.
+ * - Menu minimalista de contexto (acionado por botão direito ou clique direto na célula).
+ * - Slider dropdown suave com bolinhas coloridas preenchidas e ícone de lixeira para exclusão.
+ * - Tooltips dinâmicos e impressão A4 Paisagem oficial.
  */
 
 let _calAnoExibido = 2026;
 let _calTooltipEl = null;
+
+const DICIONARIO_TIPOS_CALENDARIO = [
+  { id: "feriado", label: "Feriados", cor: "#FF0000" },
+  { id: "emenda", label: "Emenda de Feriado", cor: "#FFC000" },
+  { id: "ponto_facultativo", label: "Ponto Facultativo", cor: "#808080" },
+  { id: "formatura", label: "Formatura CAI/CT", cor: "#00B050" },
+  { id: "ferias_fic", label: "Férias FIC", cor: "#FFFF00" },
+  { id: "a_decidir", label: "A Decidir", cor: "#00B0F0" }
+];
 
 /**
  * Inicialização do módulo de Calendário
@@ -94,9 +103,7 @@ function calRenderizar() {
   const aulasMap = calObterMapaAulasTurma(_calAnoExibido);
   const anoTurma = calObterAnoTurmaAtiva();
 
-  const diasSemanaSiglas = ["D", "S", "T", "Q", "Q", "S", "S"];
-
-  // 1. BEGIN: TopHeader (1:1 Stitch)
+  // 1. Cabeçalho de Navegação e Ações
   const htmlTopBar = `
     <header class="bg-white border border-[#E8E2D5] rounded-2xl px-6 py-4 shadow-warm-sm flex flex-wrap items-center justify-between gap-4" data-purpose="top-navigation">
       <div class="flex items-center gap-3.5">
@@ -111,9 +118,8 @@ function calRenderizar() {
           </div>
         </div>
       </div>
-      <!-- Controls & Actions -->
+      <!-- Controles de Ano e Ações -->
       <div class="flex items-center flex-wrap gap-2.5">
-        <!-- Year Navigator -->
         <div class="flex items-center bg-[#FAF8F3] border border-[#E8E2D5] rounded-full px-2 py-1 shadow-inner">
           <button type="button" class="w-7 h-7 rounded-full flex items-center justify-center text-[#4A2A1A] hover:bg-white transition" title="Ano Anterior" onclick="calMudarAno(${_calAnoExibido - 1})">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
@@ -126,9 +132,9 @@ function calRenderizar() {
         <button type="button" class="px-4 py-2 bg-[#4A2A1A] text-white rounded-full text-xs font-bold hover:bg-[#361E12] transition shadow-sm" onclick="calMudarAno(${anoTurma})">
           Ano da Turma (${anoTurma})
         </button>
-        <button type="button" class="px-4 py-2 bg-[#7B32D9] text-white rounded-full text-xs font-bold hover:bg-[#6824bd] transition shadow-sm flex items-center gap-1.5" onclick="calAbrirModalCustomizacao()">
+        <button type="button" class="px-4 py-2 bg-[#4A2A1A] text-white rounded-full text-xs font-bold hover:bg-[#361E12] transition shadow-sm flex items-center gap-1.5" onclick="calAbrirModalNovoDia()">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          Adicionar / Remover Dia
+          Adicionar / Gerenciar Dia
         </button>
         <button type="button" class="px-4 py-2 bg-[#FAF8F3] text-[#4A2A1A] border border-[#E8E2D5] rounded-full text-xs font-bold hover:bg-white transition shadow-sm flex items-center gap-1.5" onclick="calImprimirCalendario()">
           <svg class="w-3.5 h-3.5 text-[#8D7B6F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
@@ -138,58 +144,31 @@ function calRenderizar() {
     </header>
   `;
 
-  // 2. BEGIN: LegendBar (1:1 Stitch)
+  // 2. Barra de Legendas com as 6 novas cores e bubbles
   const htmlLegendas = `
     <div class="bg-white border border-[#E8E2D5] rounded-2xl px-5 py-3 shadow-warm-sm flex flex-wrap items-center justify-between gap-3 text-xs" data-purpose="calendar-legend">
       <div class="w-full flex flex-col md:flex-row items-stretch md:items-center gap-4">
-        <!-- Left Column: Encontros isolated -->
+        <!-- Encontros Letivos -->
         <div class="flex items-center flex-shrink-0 md:pr-4 md:border-r border-[#E8E2D5]">
           <div class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3] shadow-xs">
             <span class="w-3.5 h-1 rounded-full bg-[#1A73E8] flex-shrink-0"></span>
-            <span class="font-bold text-[#4A2A1A] text-xs tracking-tight">Encontros</span>
+            <span class="font-bold text-[#4A2A1A] text-xs tracking-tight">Encontros Letivos</span>
           </div>
         </div>
-        <!-- Right Columns: 2 items per column (2 rows flowing horizontally) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 w-full font-medium text-[#4A2A1A]">
-          <!-- Column 1 -->
-          <div class="flex flex-col gap-2">
+        <!-- 6 Categorias Oficiais com Bubbles -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 w-full font-medium text-[#4A2A1A]">
+          ${DICIONARIO_TIPOS_CALENDARIO.map(tipo => `
             <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
-              <span class="w-3 h-3 rounded-full bg-[#EA4335] shadow-xs flex-shrink-0"></span>
-              <span class="truncate">Feriados (cor 1)</span>
+              <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background: ${tipo.cor};"></span>
+              <span class="truncate text-[11px] font-semibold">${tipo.label}</span>
             </div>
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
-              <span class="w-3 h-3 rounded-full bg-[#7B32D9] shadow-xs flex-shrink-0"></span>
-              <span class="truncate">Formatura CAI/CT (cor 4)</span>
-            </div>
-          </div>
-          <!-- Column 2 -->
-          <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
-              <span class="w-3 h-3 rounded-full bg-[#F27B22] shadow-xs flex-shrink-0"></span>
-              <span class="truncate">Emenda de Feriado (cor 2)</span>
-            </div>
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
-              <span class="w-3 h-3 rounded-full bg-[#00966B] shadow-xs flex-shrink-0"></span>
-              <span class="truncate">Férias FIC (cor 5)</span>
-            </div>
-          </div>
-          <!-- Column 3 -->
-          <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
-              <span class="w-3 h-3 rounded-full bg-[#1A73E8] shadow-xs flex-shrink-0"></span>
-              <span class="truncate">Ponto Facultativo (cor 3)</span>
-            </div>
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-[#FAF8F3] border border-[#F0ECE3]">
-              <span class="w-3 h-3 rounded-full bg-[#5F6368] shadow-xs flex-shrink-0"></span>
-              <span class="truncate">A Decidir (cor 6)</span>
-            </div>
-          </div>
+          `).join("")}
         </div>
       </div>
     </div>
   `;
 
-  // 3. BEGIN: TwelveMonthsGrid (1:1 Stitch)
+  // 3. Matriz dos 12 Meses
   let htmlMeses = "";
   let totalFeriados = 0;
   let totalRecessos = 0;
@@ -199,10 +178,9 @@ function calRenderizar() {
     const badgeTexto = totalEventosMes > 0 ? `${totalEventosMes} evento${totalEventosMes > 1 ? "s" : ""}` : "0 eventos";
 
     for (const ev of mes.eventosMes) {
-      const cor = (ev.corTema || "").toLowerCase();
-      if (cor.includes("1")) {
+      if (ev.categoriaId === "feriado") {
         totalFeriados++;
-      } else if (cor.includes("2") || cor.includes("5")) {
+      } else {
         totalRecessos++;
       }
     }
@@ -212,7 +190,7 @@ function calRenderizar() {
     const totalDias = mes.totalDias;
     const offsetInicio = mes.diaSemanaInicio;
 
-    // Dias vazios que antecedem o 1º dia do mês
+    // Espaços vazios antes do dia 1
     for (let c = 0; c < offsetInicio; c++) {
       diasHtml += `<div class="day-cell day-empty"></div>`;
     }
@@ -228,21 +206,16 @@ function calRenderizar() {
       let dataAttrs = `data-date="${diaItem.data}" data-day="${diaAtual}" data-weekday="${col}" data-month="${mes.nomeMes}"`;
 
       if (hasEvent && ev) {
-        if (ev.isCustom) {
-          cellClasses.push("highlight-purple", "font-bold");
-          dataAttrs += ` data-has-event="true" data-is-custom="true" data-desc="${encodeURIComponent(ev.descricao || '')}" data-cat="${encodeURIComponent(ev.nomeCategoria || 'Personalizado')}" data-cor="cor-user"`;
-        } else {
-          const corNum = (ev.corTema || "cor 1").toLowerCase();
-          if (corNum.includes("1")) cellClasses.push("highlight-red", "font-bold");
-          else if (corNum.includes("2")) cellClasses.push("highlight-orange", "font-bold");
-          else if (corNum.includes("3")) cellClasses.push("highlight-blue", "font-bold");
-          else if (corNum.includes("4")) cellClasses.push("highlight-purple", "font-bold");
-          else if (corNum.includes("5")) cellClasses.push("highlight-green", "font-bold");
-          else if (corNum.includes("6")) cellClasses.push("highlight-gray", "font-bold");
-          else cellClasses.push("highlight-red", "font-bold");
+        const catId = ev.categoriaId || "feriado";
+        if (catId === "feriado") cellClasses.push("highlight-feriado", "font-bold");
+        else if (catId === "emenda") cellClasses.push("highlight-emenda", "font-bold");
+        else if (catId === "ponto_facultativo") cellClasses.push("highlight-ponto_facultativo", "font-bold");
+        else if (catId === "formatura") cellClasses.push("highlight-formatura", "font-bold");
+        else if (catId === "ferias_fic") cellClasses.push("highlight-ferias_fic", "font-bold");
+        else if (catId === "a_decidir") cellClasses.push("highlight-a_decidir", "font-bold");
+        else cellClasses.push("highlight-feriado", "font-bold");
 
-          dataAttrs += ` data-has-event="true" data-is-custom="false" data-desc="${encodeURIComponent(ev.descricao || '')}" data-cat="${encodeURIComponent(ev.nomeCategoria || '')}" data-cor="${encodeURIComponent(ev.corTema || '')}"`;
-        }
+        dataAttrs += ` data-has-event="true" data-cat-id="${catId}" data-desc="${encodeURIComponent(ev.descricao || '')}" data-cat="${encodeURIComponent(ev.nomeCategoria || '')}" data-cor="${encodeURIComponent(ev.corTema || '')}"`;
       }
 
       if (aulaTurma) {
@@ -254,7 +227,11 @@ function calRenderizar() {
       }
 
       diasHtml += `
-        <div class="${cellClasses.join(" ")}" ${dataAttrs} onmouseenter="calOnMouseEnterDay(this, event)" onmouseleave="calOnMouseLeaveDay()" onclick="calOnClickDay(this)">
+        <div class="${cellClasses.join(" ")}" ${dataAttrs}
+             onmouseenter="calOnMouseEnterDay(this, event)"
+             onmouseleave="calOnMouseLeaveDay()"
+             onclick="calOnClickDay(this, event)"
+             oncontextmenu="calOnContextMenuDay(this, event)">
           ${diaAtual}
         </div>
       `;
@@ -266,10 +243,10 @@ function calRenderizar() {
       <div class="bg-white border border-[#E8E2D5] rounded-2xl p-4 shadow-warm-sm hover:shadow-warm-card transition" data-purpose="month-card">
         <div class="flex items-center justify-between pb-3 mb-2 border-b border-[#F0ECE3]">
           <h2 class="font-bold text-base text-[#4A2A1A]">${mes.nomeMes}</h2>
-          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${totalEventosMes > 0 ? 'bg-[#E2EEFA] text-[#266DA8]' : 'bg-[#FAF6EE] text-[#8D7B6F] border border-[#E8E2D5]'}">${badgeTexto}</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${totalEventosMes > 0 ? 'bg-[#FAF6EE] text-[#4A2A1A] border border-[#E8E2D5]' : 'bg-[#FAF6EE] text-[#8D7B6F] border border-[#E8E2D5]'}">${badgeTexto}</span>
         </div>
         <div class="grid grid-cols-7 gap-y-1 text-center text-xs font-semibold text-[#8D7B6F] mb-1.5">
-          <div class="">D</div><div class="">S</div><div class="">T</div><div class="">Q</div><div class="">Q</div><div class="">S</div><div class="">S</div>
+          <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
         </div>
         <div class="grid grid-cols-7 gap-y-1 text-center text-xs">
           ${diasHtml}
@@ -279,27 +256,26 @@ function calRenderizar() {
   }
 
   const totalDiasLetivos = aulasMap.size > 0 ? aulasMap.size : 200;
-  const dataPascoaFormatada = HolidayService.formatDateKey(calData.pascoa).split("-").reverse().join("/");
 
-  // 4. BEGIN: QuickStatsBar (1:1 Stitch)
+  // 4. Barra de Estatísticas do Calendário
   const htmlFooter = `
     <div class="bg-white border border-[#E8E2D5] rounded-2xl p-4 shadow-warm-sm flex flex-wrap items-center justify-between gap-4 text-xs font-medium text-[#4A2A1A]" data-purpose="calendar-summary-footer">
       <div class="flex items-center gap-6 flex-wrap">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-          <span class="">Dias Letivos Previstos: <strong class="text-[#4A2A1A]">${totalDiasLetivos} dias</strong></span>
+          <span>Dias Letivos Previstos: <strong class="text-[#4A2A1A]">${totalDiasLetivos} dias</strong></span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-[#EA4335]"></span>
-          <span class="">Feriados Nacionais/Estaduais: <strong class="text-[#4A2A1A]">${totalFeriados} dias</strong></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-[#FF0000]"></span>
+          <span>Feriados: <strong class="text-[#4A2A1A]">${totalFeriados} dias</strong></span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-[#00966B]"></span>
-          <span class="">Recesso &amp; Férias: <strong class="text-[#4A2A1A]">${totalRecessos} dias</strong></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-[#00B050]"></span>
+          <span>Recessos &amp; Eventos: <strong class="text-[#4A2A1A]">${totalRecessos} dias</strong></span>
         </div>
       </div>
       <div class="text-[#8D7B6F]">
-        Páscoa em ${_calAnoExibido}: <span class="font-semibold text-[#4A2A1A]">${dataPascoaFormatada}</span>
+        Ano Exibido: <span class="font-semibold text-[#4A2A1A]">${_calAnoExibido}</span> • Botão direito no dia para editar/excluir
       </div>
     </div>
   `;
@@ -317,7 +293,7 @@ function calRenderizar() {
 }
 
 /**
- * Manipulador de evento: MouseEnter em um dia da grade
+ * Tooltip dinâmico em hover
  */
 function calOnMouseEnterDay(el, event) {
   if (!_calTooltipEl) calCriarTooltipElemento();
@@ -344,13 +320,12 @@ function calOnMouseEnterDay(el, event) {
     const desc = decodeURIComponent(el.dataset.desc || "");
     const cat = decodeURIComponent(el.dataset.cat || "");
     const cor = decodeURIComponent(el.dataset.cor || "");
-    const isCustom = el.dataset.isCustom === "true";
 
     tooltipHtml += `
       <div class="cal-tooltip-title">${desc}</div>
       <div class="cal-tooltip-category">
-        <span class="cal-legend-badge badge-${cor.replace(" ", "-")}"></span>
-        <span>${isCustom ? "★ Adicionado pelo Usuário" : cat}</span>
+        <span class="cal-color-bubble" style="background: ${cor};"></span>
+        <span>${cat}</span>
       </div>
     `;
   }
@@ -384,9 +359,6 @@ function calOnMouseEnterDay(el, event) {
   _calTooltipEl.style.top = `${top}px`;
 }
 
-/**
- * Manipulador de evento: MouseLeave
- */
 function calOnMouseLeaveDay() {
   if (_calTooltipEl) {
     _calTooltipEl.style.display = "none";
@@ -394,259 +366,241 @@ function calOnMouseLeaveDay() {
 }
 
 /**
- * Clique em um dia: Abre menu de ação rápida
+ * Clique comum no dia
  */
-function calOnClickDay(el) {
+function calOnClickDay(el, event) {
+  if (event) {
+    event.stopPropagation();
+  }
   const dateKey = el.dataset.date;
   if (!dateKey) return;
-  calAbrirModalCustomizacao(dateKey);
+  const rect = el.getBoundingClientRect();
+  calAbrirMenuMinimalista(dateKey, rect.left + rect.width / 2, rect.bottom + 6);
 }
 
 /**
- * Modal Unificado: Adicionar ou Remover Dia do Calendário
+ * Clique com o botão direito no dia
  */
-function calAbrirModalCustomizacao(dataPreenchida = "") {
-  let modal = document.getElementById("cal-modal-custom");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "cal-modal-custom";
-    modal.className = "day-modal-backdrop";
-    document.body.appendChild(modal);
+function calOnContextMenuDay(el, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const dateKey = el.dataset.date;
+  if (!dateKey) return;
+  calAbrirMenuMinimalista(dateKey, event.clientX, event.clientY);
+}
+
+/**
+ * Abrir menu a partir do botão superior "Adicionar / Gerenciar Dia"
+ */
+function calAbrirModalNovoDia() {
+  const hojeKey = HolidayService.formatDateKey(new Date());
+  calAbrirMenuMinimalista(hojeKey, window.innerWidth / 2, window.innerHeight / 2, true);
+}
+
+// ==========================================================================
+// MENU MINIMALISTA DE CONTEXTO (WARM TIMBER)
+// ==========================================================================
+
+let _calMenuCurrentDate = null;
+let _calMenuSelectedCatId = "feriado";
+
+/**
+ * Abre o menu minimalista flutuante próximo ao cursor ou centralizado
+ */
+function calAbrirMenuMinimalista(dateKey, posX, posY, isCentered = false) {
+  calFecharMenuMinimalista();
+
+  _calMenuCurrentDate = dateKey;
+  const dateInfo = dateKey ? holidayService.getDateInfo(dateKey) : null;
+  const hasExisting = !!(dateInfo && dateInfo.descricao);
+
+  _calMenuSelectedCatId = hasExisting ? (dateInfo.categoriaId || "feriado") : "feriado";
+  const descInicial = hasExisting ? dateInfo.descricao : "";
+
+  // Data formatada para exibição no topo do menu
+  let dataDisplay = "Novo Feriado / Evento";
+  if (dateKey) {
+    const [y, m, d] = dateKey.split("-").map(Number);
+    const dateObj = new Date(y, m - 1, d, 12, 0, 0);
+    const diaSemanaNomes = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+    const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    dataDisplay = `${d} de ${mesesNomes[m - 1]} de ${y} • ${diaSemanaNomes[dateObj.getDay()]}`;
   }
 
-  const mods = holidayService.getTodasModificacoesUsuario();
-  const temAdicionais = mods.adicionais && mods.adicionais.length > 0;
-  const temRemovidos = mods.removidos && mods.removidos.length > 0;
+  // Obter item ativo do dropdown
+  const catAtiva = DICIONARIO_TIPOS_CALENDARIO.find(t => t.id === _calMenuSelectedCatId) || DICIONARIO_TIPOS_CALENDARIO[0];
 
-  modal.innerHTML = `
-    <div class="day-modal-card" style="max-width: 580px; max-height: 88vh; display: flex; flex-direction: column;" role="dialog" aria-modal="true">
-      <div class="day-modal-header">
-        <div class="day-modal-title-group">
-          <div class="day-modal-icon" style="background: rgba(124, 58, 237, 0.15); color: #7c3aed;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          </div>
-          <div>
-            <h3 class="day-modal-title">Adicionar / Remover Dia do Calendário</h3>
-            <span class="day-modal-subtitle">Personalize feriados, recessos e desbloqueios da sua escola</span>
-          </div>
+  // Backdrop invisível ou translúcido
+  const backdrop = document.createElement("div");
+  backdrop.id = "cal-minimalist-backdrop";
+  backdrop.className = "cal-minimalist-backdrop";
+  backdrop.onclick = calFecharMenuMinimalista;
+  document.body.appendChild(backdrop);
+
+  // Card do menu
+  const card = document.createElement("div");
+  card.id = "cal-minimalist-card";
+  card.className = "cal-minimalist-card";
+
+  card.innerHTML = `
+    <!-- Top Header do Menu -->
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 12px;">
+      <div>
+        <div style="font-size: 13px; font-weight: 800; color: #4A2A1A; line-height: 1.3;">${dataDisplay}</div>
+        <div style="font-size: 11px; color: #8D7B6F; margin-top: 2px;">
+          ${hasExisting ? "Editar ou excluir feriado deste dia" : "Definir novo feriado ou evento"}
         </div>
-        <button type="button" class="day-modal-close" onclick="calFecharModalCustomizacao()">&times;</button>
       </div>
+      <button type="button" onclick="calFecharMenuMinimalista()" style="background: transparent; border: none; font-size: 18px; line-height: 1; color: #8D7B6F; cursor: pointer; padding: 2px;" title="Fechar">&times;</button>
+    </div>
 
-      <!-- Barra de Abas do Modal -->
-      <div style="display: flex; gap: 8px; padding: 10px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-surface);">
-        <button type="button" id="cal-modal-tab-btn-add" class="btn btn-secondary btn-sm" style="font-weight: 700; background: rgba(124, 58, 237, 0.15); color: #7c3aed; border-color: #7c3aed;" onclick="calAlternarAbaModal('add')">
-          + Adicionar Dia / Férias
-        </button>
-        <button type="button" id="cal-modal-tab-btn-rem" class="btn btn-secondary btn-sm" style="font-weight: 600;" onclick="calAlternarAbaModal('rem')">
-          Remover / Desbloquear Feriado
-        </button>
-        <button type="button" id="cal-modal-tab-btn-lista" class="btn btn-secondary btn-sm" style="font-weight: 600;" onclick="calAlternarAbaModal('lista')">
-          Minhas Modificações (${mods.adicionais.length + mods.removidos.length})
-        </button>
+    <!-- Campo Data (se aberto pelo topo sem dia específico) -->
+    ${!dateKey ? `
+      <div style="margin-bottom: 12px;">
+        <label for="cal-min-date-input" style="display: block; font-size: 11px; font-weight: 700; color: #4A2A1A; margin-bottom: 4px;">Data:</label>
+        <input type="date" id="cal-min-date-input" value="${_calAnoExibido}-01-01" style="width: 100%; box-sizing: border-box; background: #FFFFFF; border: 1px solid #E8E2D5; border-radius: 8px; padding: 7px 10px; font-size: 12px; font-family: inherit; color: #4A2A1A; outline: none;">
       </div>
+    ` : ""}
 
-      <div class="day-modal-body" style="padding: 16px 20px; overflow-y: auto; flex: 1;">
-        
-        <!-- SEÇÃO 1: ADICIONAR DIA / PERÍODO -->
-        <div id="cal-modal-sec-add">
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label style="font-weight: 700; font-size: 12px;">Tipo de Inclusão:</label>
-            <div style="display: flex; gap: 14px; margin-top: 4px;">
-              <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                <input type="radio" name="cal-custom-tipo" value="pontual" checked onchange="calToggleModoPeriodo(false)"> Data Pontual
-              </label>
-              <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                <input type="radio" name="cal-custom-tipo" value="periodo" onchange="calToggleModoPeriodo(true)"> Período Contínuo (Recesso/Férias)
-              </label>
-            </div>
-          </div>
+    <!-- Campo Descrição -->
+    <div style="margin-bottom: 12px;">
+      <label for="cal-min-desc-input" style="display: block; font-size: 11px; font-weight: 700; color: #4A2A1A; margin-bottom: 4px;">Descrição:</label>
+      <input type="text" id="cal-min-desc-input" value="${descInicial}" placeholder="Ex: Feriado, Recesso Escolar..." style="width: 100%; box-sizing: border-box; background: #FFFFFF; border: 1px solid #E8E2D5; border-radius: 8px; padding: 7px 10px; font-size: 12px; font-family: inherit; color: #4A2A1A; outline: none;">
+    </div>
 
-          <div class="form-row" style="margin-bottom: 12px;">
-            <div class="form-group" style="flex: 1;">
-              <label for="cal-input-data-inicio" style="font-weight: 700; font-size: 12px;">Data Inicial:</label>
-              <input type="date" id="cal-input-data-inicio" class="input-control" value="${dataPreenchida || `${_calAnoExibido}-01-01`}" style="font-size: 12px;">
-            </div>
-            <div class="form-group" id="cal-group-data-fim" style="flex: 1; display: none;">
-              <label for="cal-input-data-fim" style="font-weight: 700; font-size: 12px;">Data Final:</label>
-              <input type="date" id="cal-input-data-fim" class="input-control" value="${dataPreenchida || `${_calAnoExibido}-01-01`}" style="font-size: 12px;">
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label for="cal-input-descricao" style="font-weight: 700; font-size: 12px;">Descrição do Evento / Motivo:</label>
-            <input type="text" id="cal-input-descricao" class="input-control" placeholder="Ex: Semana de Planejamento, Férias Docentes..." style="font-size: 12px;">
-          </div>
-
-          <div style="font-size: 11.5px; color: #7c3aed; background: rgba(124, 58, 237, 0.08); padding: 9px 12px; border-radius: 6px; border-left: 3px solid #7c3aed; line-height: 1.4;">
-            ★ Dias adicionados pelo usuário serão destacados na grade com preenchimento <strong>roxo forte, em negrito e borda espessa</strong>.
-          </div>
-        </div>
-
-        <!-- SEÇÃO 2: REMOVER / DESBLOQUEAR FERIADO OFICIAL -->
-        <div id="cal-modal-sec-rem" style="display: none;">
-          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
-            Se a sua unidade escolar for funcionar em uma data que consta como feriado ou emenda oficial, informe a data abaixo para desbloqueá-la como dia útil regular de aula.
-          </p>
-
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label for="cal-input-data-remover" style="font-weight: 700; font-size: 12px;">Data a Desbloquear / Tornar Dia Útil:</label>
-            <input type="date" id="cal-input-data-remover" class="input-control" value="${dataPreenchida || `${_calAnoExibido}-01-01`}" style="font-size: 12px;">
-          </div>
-
-          <button type="button" class="btn btn-warning btn-sm" onclick="calExecutarDesbloqueio()" style="font-weight: 700;">
-            Desbloquear Feriado Oficial nesta Data
-          </button>
-        </div>
-
-        <!-- SEÇÃO 3: LISTA DE MODIFICAÇÕES ATIVAS DO USUÁRIO -->
-        <div id="cal-modal-sec-lista" style="display: none;">
-          ${(!temAdicionais && !temRemovidos) ? `
-            <div style="text-align: center; padding: 24px 10px; color: var(--text-secondary); font-size: 12px; font-style: italic;">
-              Nenhuma personalização cadastrada. O calendário está utilizando a base oficial pura.
-            </div>
-          ` : `
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              ${mods.adicionais.map(ad => `
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(124, 58, 237, 0.08); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 6px;">
-                  <div>
-                    <strong style="color: #7c3aed; font-size: 12px;">+ ${ad.data.split('-').reverse().join('/')}</strong>
-                    <span style="font-size: 12px; color: var(--text-primary); margin-left: 6px;">${ad.descricao}</span>
-                  </div>
-                  <button type="button" class="btn btn-secondary btn-sm" style="color: #ef4444; padding: 2px 6px; font-size: 11px;" onclick="calExcluirCustomizacao('${ad.data}')" title="Excluir esta adição">
-                    ✕
-                  </button>
-                </div>
-              `).join('')}
-
-              ${mods.removidos.map(rm => `
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px;">
-                  <div>
-                    <strong style="color: #ef4444; font-size: 12px;">✕ Desbloqueado: ${rm.split('-').reverse().join('/')}</strong>
-                    <span style="font-size: 11px; color: var(--text-secondary); margin-left: 6px;">(Feriado oficial desativado)</span>
-                  </div>
-                  <button type="button" class="btn btn-secondary btn-sm" style="color: #10b981; padding: 2px 6px; font-size: 11px;" onclick="calRestaurarOficial('${rm}')" title="Restaurar feriado oficial">
-                    Restaurar
-                  </button>
-                </div>
-              `).join('')}
-            </div>
-          `}
-        </div>
-
-      </div>
-
-      <div class="day-modal-footer" style="padding: 10px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="calRestaurarPadrao()" style="color: #ef4444;" title="Limpar todas as modificações e restaurar base oficial">
-          Restaurar Base Oficial
+    <!-- Slider Dropdown do Tipo -->
+    <div style="margin-bottom: 16px;">
+      <label style="display: block; font-size: 11px; font-weight: 700; color: #4A2A1A; margin-bottom: 4px;">Tipo:</label>
+      <div class="cal-slider-dropdown-wrap">
+        <button type="button" id="cal-dropdown-trigger" class="cal-slider-dropdown-btn" onclick="calToggleSliderDropdown(event)">
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <span id="cal-selected-bubble" class="cal-color-bubble" style="background: ${catAtiva.cor};"></span>
+            <span id="cal-selected-label">${catAtiva.label}</span>
+          </span>
+          <svg style="width: 14px; height: 14px; color: #8D7B6F;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
         </button>
-        <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="calFecharModalCustomizacao()">Fechar</button>
-          <button type="button" id="cal-modal-btn-salvar" class="btn btn-primary btn-sm" onclick="calSalvarCustomizacao()" style="font-weight: 700; background: #7c3aed; border-color: #6d28d9;">
-            Salvar Adição
-          </button>
+
+        <div id="cal-dropdown-options" class="cal-slider-dropdown-options">
+          ${DICIONARIO_TIPOS_CALENDARIO.map(tipo => `
+            <div class="cal-dropdown-item" onclick="calSelecionarTipoDropdown('${tipo.id}', '${tipo.label}', '${tipo.cor}')">
+              <span class="cal-color-bubble" style="background: ${tipo.cor};"></span>
+              <span style="font-weight: 600;">${tipo.label}</span>
+            </div>
+          `).join("")}
         </div>
+      </div>
+    </div>
+
+    <!-- Rodapé de Ações (Warm Timber) -->
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid #E8E2D5;">
+      ${hasExisting ? `
+        <button type="button" onclick="calExcluirDiaMenu()" title="Excluir este feriado / tornar dia útil" style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: #FDF2F2; border: 1px solid #FCA5A5; color: #DC2626; cursor: pointer; transition: background 0.15s;">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </button>
+      ` : `<div></div>`}
+
+      <div style="display: flex; gap: 8px; flex: 1; justify-content: flex-end;">
+        <button type="button" onclick="calFecharMenuMinimalista()" style="padding: 7px 12px; background: transparent; color: #8D7B6F; border: 1px solid #E8E2D5; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">
+          Cancelar
+        </button>
+        <button type="button" onclick="calSalvarDiaMenu()" style="padding: 7px 16px; background: #4A2A1A; color: #FFFFFF; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.15s;">
+          Salvar
+        </button>
       </div>
     </div>
   `;
 
-  calToggleModoPeriodo(false);
-  modal.style.display = "flex";
-}
+  document.body.appendChild(card);
 
-function calAlternarAbaModal(aba) {
-  const secAdd = document.getElementById("cal-modal-sec-add");
-  const secRem = document.getElementById("cal-modal-sec-rem");
-  const secLista = document.getElementById("cal-modal-sec-lista");
-  const btnAdd = document.getElementById("cal-modal-tab-btn-add");
-  const btnRem = document.getElementById("cal-modal-tab-btn-rem");
-  const btnLista = document.getElementById("cal-modal-tab-btn-lista");
-  const btnSalvar = document.getElementById("cal-modal-btn-salvar");
+  // Posicionamento inteligente na tela
+  const cardWidth = 310;
+  const cardHeight = 240;
 
-  if (secAdd) secAdd.style.display = aba === "add" ? "block" : "none";
-  if (secRem) secRem.style.display = aba === "rem" ? "block" : "none";
-  if (secLista) secLista.style.display = aba === "lista" ? "block" : "none";
+  let left, top;
 
-  if (btnSalvar) btnSalvar.style.display = aba === "add" ? "inline-flex" : "none";
-
-  if (btnAdd) {
-    btnAdd.style.background = aba === "add" ? "rgba(124, 58, 237, 0.15)" : "";
-    btnAdd.style.color = aba === "add" ? "#7c3aed" : "";
-    btnAdd.style.borderColor = aba === "add" ? "#7c3aed" : "";
-  }
-  if (btnRem) {
-    btnRem.style.background = aba === "rem" ? "rgba(124, 58, 237, 0.15)" : "";
-    btnRem.style.color = aba === "rem" ? "#7c3aed" : "";
-    btnRem.style.borderColor = aba === "rem" ? "#7c3aed" : "";
-  }
-  if (btnLista) {
-    btnLista.style.background = aba === "lista" ? "rgba(124, 58, 237, 0.15)" : "";
-    btnLista.style.color = aba === "lista" ? "#7c3aed" : "";
-    btnLista.style.borderColor = aba === "lista" ? "#7c3aed" : "";
-  }
-}
-
-function calToggleModoPeriodo(isPeriodo) {
-  const grpFim = document.getElementById("cal-group-data-fim");
-  if (grpFim) {
-    grpFim.style.display = isPeriodo ? "block" : "none";
-  }
-}
-
-function calFecharModalCustomizacao() {
-  const modal = document.getElementById("cal-modal-custom");
-  if (modal) modal.style.display = "none";
-}
-
-function calSalvarCustomizacao() {
-  const elDataInicio = document.getElementById("cal-input-data-inicio");
-  const elDataFim = document.getElementById("cal-input-data-fim");
-  const elDesc = document.getElementById("cal-input-descricao");
-  const radios = document.getElementsByName("cal-custom-tipo");
-
-  let isPeriodo = false;
-  for (const r of radios) {
-    if (r.checked && r.value === "periodo") isPeriodo = true;
-  }
-
-  const dtInicio = elDataInicio ? elDataInicio.value : "";
-  const dtFim = elDataFim ? elDataFim.value : "";
-  const desc = (elDesc && elDesc.value.trim()) ? elDesc.value.trim() : "Evento Personalizado";
-
-  if (!dtInicio) {
-    alert("Informe a data.");
-    return;
-  }
-
-  if (isPeriodo && dtFim) {
-    holidayService.adicionarPeriodoRecesso(dtInicio, dtFim, desc, "personalizado");
+  if (isCentered) {
+    left = Math.max(16, (window.innerWidth - cardWidth) / 2);
+    top = Math.max(16, (window.innerHeight - cardHeight) / 2);
   } else {
-    holidayService.adicionarCustomizacao({
-      data: dtInicio,
-      descricao: desc,
-      categoria_id: "personalizado",
-      bloqueia_aula: true
-    });
+    left = posX - (cardWidth / 2);
+    top = posY + 8;
+
+    if (left + cardWidth > window.innerWidth - 16) {
+      left = window.innerWidth - cardWidth - 16;
+    }
+    if (left < 16) left = 16;
+
+    if (top + cardHeight > window.innerHeight - 16) {
+      top = posY - cardHeight - 16;
+      if (top < 16) top = 16;
+    }
   }
 
-  calFecharModalCustomizacao();
-  calRenderizar();
+  card.style.left = `${left}px`;
+  card.style.top = `${top}px`;
 
-  if (typeof updateSchedule === "function") {
-    updateSchedule();
+  // Foco no campo de descrição
+  setTimeout(() => {
+    const inputDesc = document.getElementById("cal-min-desc-input");
+    if (inputDesc) inputDesc.focus();
+  }, 50);
+}
+
+/**
+ * Alterna a abertura com animação suave do slider dropdown
+ */
+function calToggleSliderDropdown(event) {
+  if (event) event.stopPropagation();
+  const opts = document.getElementById("cal-dropdown-options");
+  if (opts) {
+    opts.classList.toggle("open");
   }
 }
 
-function calExecutarDesbloqueio() {
-  const elDataRem = document.getElementById("cal-input-data-remover");
-  const dt = elDataRem ? elDataRem.value : "";
-  if (!dt) {
-    alert("Informe a data a desbloquear.");
+/**
+ * Seleciona um tipo no dropdown
+ */
+function calSelecionarTipoDropdown(id, label, cor) {
+  _calMenuSelectedCatId = id;
+
+  const lbl = document.getElementById("cal-selected-label");
+  const bbl = document.getElementById("cal-selected-bubble");
+  const opts = document.getElementById("cal-dropdown-options");
+
+  if (lbl) lbl.textContent = label;
+  if (bbl) bbl.style.background = cor;
+  if (opts) opts.classList.remove("open");
+}
+
+/**
+ * Salva a alteração ou novo feriado a partir do menu minimalista
+ */
+function calSalvarDiaMenu() {
+  let targetDate = _calMenuCurrentDate;
+  if (!targetDate) {
+    const dateInput = document.getElementById("cal-min-date-input");
+    targetDate = dateInput ? dateInput.value : null;
+  }
+
+  if (!targetDate) {
+    alert("Informe uma data válida.");
     return;
   }
 
-  holidayService.desbloquearDiaOficial(dt);
-  calFecharModalCustomizacao();
+  const descInput = document.getElementById("cal-min-desc-input");
+  const desc = descInput && descInput.value.trim() ? descInput.value.trim() : "Feriado / Evento";
+
+  holidayService.salvarOuAtualizarFeriado({
+    data: targetDate,
+    descricao: desc,
+    categoria_id: _calMenuSelectedCatId
+  });
+
+  calFecharMenuMinimalista();
   calRenderizar();
 
   if (typeof updateSchedule === "function") {
@@ -654,32 +608,33 @@ function calExecutarDesbloqueio() {
   }
 }
 
-function calExcluirCustomizacao(dateKey) {
-  holidayService.removerCustomizacao(dateKey);
+/**
+ * Exclui o feriado do dia selecionado via ícone de lixeira
+ */
+function calExcluirDiaMenu() {
+  if (!_calMenuCurrentDate) return;
+
+  holidayService.excluirFeriado(_calMenuCurrentDate);
+
+  calFecharMenuMinimalista();
   calRenderizar();
-  calAbrirModalCustomizacao();
+
   if (typeof updateSchedule === "function") {
     updateSchedule();
   }
 }
 
-function calRestaurarOficial(dateKey) {
-  holidayService.restaurarDiaOficial(dateKey);
-  calRenderizar();
-  calAbrirModalCustomizacao();
-  if (typeof updateSchedule === "function") {
-    updateSchedule();
+/**
+ * Fecha e remove o menu minimalista e seu backdrop
+ */
+function calFecharMenuMinimalista() {
+  const card = document.getElementById("cal-minimalist-card");
+  if (card && card.parentNode) {
+    card.parentNode.removeChild(card);
   }
-}
-
-function calRestaurarPadrao() {
-  if (confirm("Deseja realmente limpar todas as personalizações locais de feriados e restaurar a base oficial?")) {
-    holidayService.restaurarPadrao();
-    calFecharModalCustomizacao();
-    calRenderizar();
-    if (typeof updateSchedule === "function") {
-      updateSchedule();
-    }
+  const backdrop = document.getElementById("cal-minimalist-backdrop");
+  if (backdrop && backdrop.parentNode) {
+    backdrop.parentNode.removeChild(backdrop);
   }
 }
 
@@ -687,9 +642,6 @@ function calRestaurarPadrao() {
 // IMPRESSÃO OFICIAL DO CALENDÁRIO ANUAL EM A4 PAISAGEM (LANDSCAPE)
 // ==========================================================================
 
-/**
- * Gera o documento HTML oficial formatado para impressão em página A4 Paisagem estrita (297mm x 210mm).
- */
 function calGerarHtmlImpressao(ano) {
   const y = Number(ano) || _calAnoExibido;
   const calData = holidayService.getYearCalendar(y);
@@ -712,37 +664,27 @@ function calGerarHtmlImpressao(ano) {
     const totalDias = mesObj.totalDias;
 
     let cellsHtml = "";
-    // Células vazias antes do dia 1
     for (let vazio = 0; vazio < primeiroDiaSemana; vazio++) {
       cellsHtml += `<div class="print-day-cell empty"></div>`;
     }
 
-    // Dias do mês
     for (let d = 1; d <= totalDias; d++) {
       const diaObj = mesObj.dias[d - 1];
       const isSun = (primeiroDiaSemana + d - 1) % 7 === 0;
-      let corClass = "";
+      let corStyle = "";
 
       if (diaObj.temEvento && diaObj.eventInfo) {
-        if (diaObj.isCustom) {
-          corClass = "cor-user";
-        } else {
-          const cat = diaObj.eventInfo.categoriaId;
-          if (cat === "feriado") corClass = "cor-1";
-          else if (cat === "emenda") corClass = "cor-2";
-          else if (cat === "ponto_facultativo") corClass = "cor-3";
-          else if (cat === "formatura") corClass = "cor-4";
-          else if (cat === "ferias_fic") corClass = "cor-5";
-          else corClass = "cor-6";
-        }
+        const cat = diaObj.eventInfo.categoriaId;
+        const matched = DICIONARIO_TIPOS_CALENDARIO.find(t => t.id === cat);
+        const cor = matched ? matched.cor : "#FF0000";
+        corStyle = `background: ${cor} !important; color: #FFFFFF !important; font-weight: 800 !important;`;
       } else if (isSun) {
-        corClass = "is-sunday";
+        corStyle = "color: #94a3b8;";
       }
 
-      cellsHtml += `<div class="print-day-cell ${corClass}" title="${diaObj.temEvento ? diaObj.eventInfo.descricao : ''}">${d}</div>`;
+      cellsHtml += `<div class="print-day-cell" style="${corStyle}" title="${diaObj.temEvento ? diaObj.eventInfo.descricao : ''}">${d}</div>`;
     }
 
-    // Preenche até múltiplo de 7 (35 ou 42 células) para alinhamento uniforme da grade
     const totalRenderizado = primeiroDiaSemana + totalDias;
     const totalMeta = totalRenderizado > 35 ? 42 : 35;
     for (let sobra = totalRenderizado; sobra < totalMeta; sobra++) {
@@ -779,223 +721,45 @@ function calGerarHtmlImpressao(ano) {
   <meta charset="utf-8">
   <title>Calendário Escolar ${y} - SENAI</title>
   <style>
-    @page {
-      size: A4 landscape;
-      margin: 0;
-    }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
+    @page { size: A4 landscape; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: #ffffff;
-      color: #0f172a;
-      width: 297mm;
-      height: 210mm;
-      max-height: 210mm;
-      padding: 6mm 9mm;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      background: #FAF8F3;
+      color: #4A2A1A;
+      width: 297mm; height: 210mm; max-height: 210mm;
+      padding: 6mm 9mm; margin: 0 auto;
+      display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
     }
-    .print-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid #003366;
-      padding-bottom: 4px;
-      margin-bottom: 5px;
-    }
-    .print-header-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .senai-logo-text {
-      font-size: 26px;
-      font-weight: 900;
-      letter-spacing: 1px;
-      color: #e30613;
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1;
-    }
-    .print-title {
-      font-size: 13px;
-      font-weight: 800;
-      color: #003366;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      line-height: 1.2;
-    }
-    .print-subtitle {
-      font-size: 9px;
-      color: #475569;
-      font-weight: 600;
-      line-height: 1.2;
-    }
-    .print-header-meta {
-      text-align: right;
-      font-size: 8.5px;
-      color: #475569;
-      line-height: 1.3;
-    }
-    .print-grid-months {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 5px 7px;
-      flex: 1;
-      margin-bottom: 5px;
-      min-height: 0;
-    }
-    .print-month-card {
-      border: 1px solid #cbd5e1;
-      border-radius: 3px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      background: #ffffff;
-    }
-    .print-month-title {
-      background: #003366;
-      color: #ffffff;
-      text-align: center;
-      font-size: 9.5px;
-      font-weight: 800;
-      text-transform: uppercase;
-      padding: 2px 0;
-      letter-spacing: 0.5px;
-      line-height: 1.1;
-    }
-    .print-weekdays-row {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      background: #f1f5f9;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 1px 0;
-      text-align: center;
-    }
-    .print-weekday-label {
-      font-size: 7.5px;
-      font-weight: 700;
-      color: #475569;
-      line-height: 1.1;
-    }
-    .print-days-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      flex: 1;
-      padding: 1px 1px;
-      gap: 1px;
-      align-content: stretch;
-    }
-    .print-day-cell {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 8px;
-      font-weight: 600;
-      color: #0f172a;
-      border-radius: 2px;
-      line-height: 1;
-    }
-    .print-day-cell.is-sunday {
-      color: #94a3b8;
-    }
-    .print-day-cell.empty {
-      background: transparent;
-    }
-    .print-day-cell.cor-1 {
-      background: #dc2626 !important;
-      color: #ffffff !important;
-      font-weight: 800 !important;
-    }
-    .print-day-cell.cor-2 {
-      background: #ea580c !important;
-      color: #ffffff !important;
-      font-weight: 800 !important;
-    }
-    .print-day-cell.cor-3 {
-      background: #0284c7 !important;
-      color: #ffffff !important;
-      font-weight: 800 !important;
-    }
-    .print-day-cell.cor-4 {
-      background: #7c3aed !important;
-      color: #ffffff !important;
-      font-weight: 800 !important;
-    }
-    .print-day-cell.cor-5 {
-      background: #059669 !important;
-      color: #ffffff !important;
-      font-weight: 800 !important;
-    }
-    .print-day-cell.cor-6 {
-      background: #475569 !important;
-      color: #ffffff !important;
-      font-weight: 800 !important;
-    }
-    .print-day-cell.cor-user {
-      background: #7c3aed !important;
-      color: #ffffff !important;
-      font-weight: 900 !important;
-      border: 1px solid #4c1d95 !important;
-    }
-    .print-footer {
-      border-top: 1px solid #cbd5e1;
-      padding-top: 3px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 8px;
-      line-height: 1.2;
-    }
-    .print-legend-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 12px;
-      align-items: center;
-    }
-    .print-legend-pill {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 8px;
-      font-weight: 600;
-      color: #1e293b;
-    }
-    .print-swatch {
-      width: 9px;
-      height: 9px;
-      border-radius: 2px;
-      display: inline-block;
-      flex-shrink: 0;
-    }
-    .print-footer-info {
-      color: #64748b;
-      font-size: 7.5px;
-      text-align: right;
-    }
+    .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #4A2A1A; padding-bottom: 4px; margin-bottom: 5px; }
+    .senai-logo-text { font-size: 26px; font-weight: 900; letter-spacing: 1px; color: #FF0000; font-family: Arial, sans-serif; line-height: 1; }
+    .print-title { font-size: 13px; font-weight: 800; color: #4A2A1A; text-transform: uppercase; }
+    .print-subtitle { font-size: 9px; color: #8D7B6F; font-weight: 600; }
+    .print-grid-months { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 5px 7px; flex: 1; margin-bottom: 5px; }
+    .print-month-card { border: 1px solid #E8E2D5; border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; background: #ffffff; }
+    .print-month-title { background: #4A2A1A; color: #ffffff; text-align: center; font-size: 9.5px; font-weight: 800; text-transform: uppercase; padding: 2px 0; }
+    .print-weekdays-row { display: grid; grid-template-columns: repeat(7, 1fr); background: #FAF8F3; border-bottom: 1px solid #E8E2D5; padding: 1px 0; text-align: center; }
+    .print-weekday-label { font-size: 7.5px; font-weight: 700; color: #8D7B6F; }
+    .print-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); flex: 1; padding: 1px; gap: 1px; }
+    .print-day-cell { display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 600; color: #4A2A1A; border-radius: 2px; }
+    .print-footer { border-top: 1px solid #E8E2D5; padding-top: 3px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; }
+    .print-legend-row { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+    .print-legend-pill { display: flex; align-items: center; gap: 4px; font-size: 8px; font-weight: 600; color: #4A2A1A; }
+    .print-swatch { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
   </style>
 </head>
 <body>
   <div class="print-header">
-    <div class="print-header-brand">
+    <div style="display: flex; align-items: center; gap: 12px;">
       <div class="senai-logo-text">SENAI</div>
-      <div style="border-left: 2px solid #cbd5e1; padding-left: 10px;">
+      <div style="border-left: 2px solid #E8E2D5; padding-left: 10px;">
         <div class="print-title">CALENDÁRIO ESCOLAR / INSTITUCIONAL • ${y}</div>
         <div class="print-subtitle">${escolaNome}</div>
       </div>
     </div>
-    <div class="print-header-meta">
+    <div style="text-align: right; font-size: 8.5px; color: #8D7B6F;">
       ${metaTurmaHtml}
-      <div><strong>Emissão:</strong> ${dataEmissao} | <strong>Páscoa:</strong> ${pascoaStr}</div>
+      <div><strong>Emissão:</strong> ${dataEmissao}</div>
     </div>
   </div>
 
@@ -1005,46 +769,21 @@ function calGerarHtmlImpressao(ano) {
 
   <div class="print-footer">
     <div class="print-legend-row">
-      <div class="print-legend-pill">
-        <span class="print-swatch" style="background:#dc2626;"></span>
-        <span>Feriados (cor 1)</span>
-      </div>
-      <div class="print-legend-pill">
-        <span class="print-swatch" style="background:#ea580c;"></span>
-        <span>Emenda (cor 2)</span>
-      </div>
-      <div class="print-legend-pill">
-        <span class="print-swatch" style="background:#0284c7;"></span>
-        <span>Ponto Facultativo (cor 3)</span>
-      </div>
-      <div class="print-legend-pill">
-        <span class="print-swatch" style="background:#7c3aed;"></span>
-        <span>Formatura (cor 4)</span>
-      </div>
-      <div class="print-legend-pill">
-        <span class="print-swatch" style="background:#059669;"></span>
-        <span>Férias FIC (cor 5)</span>
-      </div>
-      <div class="print-legend-pill">
-        <span class="print-swatch" style="background:#475569;"></span>
-        <span>A Decidir (cor 6)</span>
-      </div>
-      <div class="print-legend-pill">
-        <span class="print-swatch" style="background:#7c3aed; border:1px solid #4c1d95;"></span>
-        <span>Adicionado Usuário</span>
-      </div>
+      ${DICIONARIO_TIPOS_CALENDARIO.map(tipo => `
+        <div class="print-legend-pill">
+          <span class="print-swatch" style="background: ${tipo.cor};"></span>
+          <span>${tipo.label}</span>
+        </div>
+      `).join("")}
     </div>
-    <div class="print-footer-info">
-      SENAI SP • Documento gerado eletronicamente em conformidade com a folha oficial A4 Paisagem.
+    <div style="color: #8D7B6F; font-size: 7.5px;">
+      SENAI SP • Documento gerado eletronicamente em conformidade com o calendário oficial.
     </div>
   </div>
 </body>
 </html>`;
 }
 
-/**
- * Aciona o diálogo de impressão nativo do navegador para o Calendário Anual A4 Paisagem
- */
 async function calImprimirCalendario(ano) {
   const y = Number(ano) || _calAnoExibido;
   const htmlDoc = calGerarHtmlImpressao(y);
@@ -1080,9 +819,22 @@ async function calImprimirCalendario(ano) {
   }
 }
 
+// Exposição global
 if (typeof window !== "undefined") {
+  window.calInit = calInit;
+  window.calRenderizar = calRenderizar;
+  window.calMudarAno = calMudarAno;
+  window.calOnClickDay = calOnClickDay;
+  window.calOnContextMenuDay = calOnContextMenuDay;
+  window.calAbrirMenuMinimalista = calAbrirMenuMinimalista;
+  window.calFecharMenuMinimalista = calFecharMenuMinimalista;
+  window.calToggleSliderDropdown = calToggleSliderDropdown;
+  window.calSelecionarTipoDropdown = calSelecionarTipoDropdown;
+  window.calSalvarDiaMenu = calSalvarDiaMenu;
+  window.calExcluirDiaMenu = calExcluirDiaMenu;
   window.calImprimirCalendario = calImprimirCalendario;
   window.calGerarHtmlImpressao = calGerarHtmlImpressao;
+  window.calAbrirModalNovoDia = calAbrirModalNovoDia;
 }
 
 if (typeof document !== "undefined") {

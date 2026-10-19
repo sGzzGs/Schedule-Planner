@@ -6,6 +6,13 @@ scratch/
 # Amostras locais e documentos de teste
 _Assets/
 
+# Dependências e Builds
+node_modules/
+dist/
+coverage/
+.vitest/
+
 # Sistema Operacional
 .DS_Store
 Thumbs.db
+

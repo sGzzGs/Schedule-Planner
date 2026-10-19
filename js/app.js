@@ -10,11 +10,49 @@ const PRESETS = {};
 
 // Variável com o histórico de alterações da versão atual
 const mudancasDeVersao = `
-<div class="version-popup-header">Alterações da versão v3</div>
-<ul class="version-popup-list">
-  <li>BugFixes encontrado pelos professores Antônio e Renan.</li>
-  <li>Overhaul visual completo, testes ainda precisarão ser efetuados.</li>
-</ul>
+<div class="version-popup-section">
+  <div class="version-popup-header">Alterações da versão 4.0</div>
+  <p class="version-popup-warning" style="margin: 0 0 10px 0; font-size: 11.5px; line-height: 1.45; color: #dc2626; font-weight: 600;">
+    Versão de testes, favor reportar possíveis bugs encontrados o mais cedo possível para melhorarmos nossa ferramenta.
+  </p>
+
+  <div class="version-popup-subheader" style="font-size: 11.5px; font-weight: 700; color: var(--accent-active, #c2410c); margin: 8px 0 4px 0;">
+    Funcionalidades disponíveis:
+  </div>
+  <ul class="version-popup-list">
+    <li>Impressão de cronogramas;</li>
+    <li>Registro de diários;</li>
+    <li>Impressão de compensações de ausências.</li>
+  </ul>
+
+  <div class="version-popup-subheader" style="font-size: 11.5px; font-weight: 700; color: var(--accent-active, #c2410c); margin: 10px 0 4px 0;">
+    Registro on-line e off-line:
+  </div>
+  <p style="margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--text-secondary, #6b5b50);">
+    O acesso por meio do NIF é opcional. Ao realizar o login, você terá um perfil no qual todas as turmas registradas na ferramenta ficarão salvas e disponíveis para acesso posterior. Além disso, os registros poderão ser consultados pela coordenação para fins de acompanhamento.
+  </p>
+</div>
+
+<div class="version-popup-divider" style="margin: 12px 0; border-top: 1px dashed var(--border-color, #e5e7eb);"></div>
+
+<div class="version-popup-section" style="opacity: 0.85;">
+  <div class="version-popup-header" style="font-size: 12px;">Alterações da versão v3</div>
+  <ul class="version-popup-list">
+    <li>BugFixes encontrado pelos professores Antônio e Renan.</li>
+    <li>Overhaul visual completo, testes ainda precisarão ser efetuados.</li>
+  </ul>
+</div>
+
+<div class="version-popup-divider" style="margin: 12px 0; border-top: 1px dashed var(--border-color, #e5e7eb);"></div>
+
+<div class="version-popup-section" style="opacity: 0.75;">
+  <div class="version-popup-header" style="font-size: 12px;">Alterações da versão V.01</div>
+  <ul class="version-popup-list">
+    <li>Exibição de horas durante os dias, com destaque visual para dias com horários diferentes do padrão.</li>
+    <li>Mudanças individuais nos dias: Possibilidade de inserir a quantidade de horas-aulas individualmente para cada dia, bem como inserir um ambiente específico para cada dia.</li>
+    <li>Ao 'Segurar o clique' num dia específico, um menu será aberto, com a possibilidade de divisão entre prática e teoria no mesmo dia.</li>
+  </ul>
+</div>
 `.trim();
 
 // 2. MOTOR UNIVERSAL DE FERIADOS (Conectado dinamicamente ao holidayService com lazy loading e multi-ano)
@@ -2093,7 +2131,7 @@ function updatePreview(preserveCustom = false) {
   // Atualiza também o subtítulo da barra superior com a versão
   const schoolLabel = document.getElementById("topbar-school-label");
   if (schoolLabel) {
-    schoolLabel.textContent = "v3";
+    schoolLabel.textContent = "4.0";
   }
 
   renderInteractiveDaysGrid();
@@ -2849,5 +2887,15 @@ function initPanelResizer() {
     });
   });
 }
+
+// Exposição para testes unitários e modularização Strangler Fig
+if (typeof window !== "undefined") {
+  window.calculateSchedule = calculateSchedule;
+  window.timeToMinutes = timeToMinutes;
+  window.minutesToHHMM = minutesToHHMM;
+  window.parseDateInputToISO = parseDateInputToISO;
+  window.isoToDDMMAAAA = isoToDDMMAAAA;
+}
+
 
 
