@@ -133,7 +133,7 @@
           <span>Calendário</span>
         </button>
       
-        <button class="app-tab" data-tab="tab-coordenacao" id="tab-nav-coordenacao" role="tab" aria-selected="false" aria-controls="tab-coordenacao" title="Painel da Coordenação Pedagógica" type="button" style="display: none;">
+        <button class="app-tab" data-tab="tab-coordenacao" id="tab-nav-coordenacao" role="tab" aria-selected="false" aria-controls="tab-coordenacao" title="Painel da Coordenação Pedagógica (Requer Autenticação)" type="button">
           <i class="fa-solid fa-shield-halved text-xs"></i>
           <span>Coordenação</span>
         </button>
@@ -673,10 +673,10 @@
 </div>
 </div>
 <div class="mt-4">
-<div class="font-numeric-stat text-numeric-stat text-primary leading-none tracking-tight" id="kpi-total-monitorado">1.248</div>
+<div class="font-numeric-stat text-numeric-stat text-primary leading-none tracking-tight" id="kpi-total-monitorado">0</div>
 <p class="font-body-sm text-body-sm text-secondary mt-1.5 flex items-center gap-1.5">
 <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-            38 turmas ativas no semestre
+            <span id="kpi-turmas-ativas">0 turmas ativas no semestre</span>
           </p>
 </div>
 </div>
@@ -691,7 +691,7 @@
 </div>
 <div class="mt-4">
 <div class="flex items-baseline gap-2">
-<span class="font-numeric-stat text-numeric-stat text-red-700 leading-none tracking-tight" id="kpi-alunos-criticos">19</span>
+<span class="font-numeric-stat text-numeric-stat text-red-700 leading-none tracking-tight" id="kpi-alunos-criticos">0</span>
 <span class="font-label-sm text-label-sm text-red-600 font-medium">discentes</span>
 </div>
 <p class="font-body-sm text-body-sm text-red-800/80 mt-1.5 flex items-center gap-1.5">
@@ -711,7 +711,7 @@
 </div>
 <div class="mt-4">
 <div class="flex items-baseline gap-2">
-<span class="font-numeric-stat text-numeric-stat text-primary leading-none tracking-tight" id="kpi-alunos-atencao">64</span>
+<span class="font-numeric-stat text-numeric-stat text-primary leading-none tracking-tight" id="kpi-alunos-atencao">0</span>
 <span class="font-label-sm text-label-sm text-secondary font-medium">em pré-aviso</span>
 </div>
 <p class="font-body-sm text-body-sm text-secondary mt-1.5 flex items-center gap-1.5">
@@ -729,13 +729,13 @@
 </div>
 </div>
 <div class="mt-2">
-<div class="font-numeric-stat text-numeric-stat text-primary leading-none tracking-tight">27</div>
+<div class="font-numeric-stat text-numeric-stat text-primary leading-none tracking-tight" id="kpi-fichas-pendentes-total">0</div>
 <div class="flex flex-wrap gap-1.5 mt-2">
 <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-red-50 text-red-700 font-label-sm text-[11px] font-medium">
-              <span id="kpi-pendencias-docente">16</span> Docentes
+              <span id="kpi-pendencias-docente">0</span> Docentes
             </span>
 <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 font-label-sm text-[11px] font-medium">
-              <span id="kpi-pendencias-coordenacao">11</span> Coordenação
+              <span id="kpi-pendencias-coordenacao">0</span> Coordenação
             </span>
 </div>
 </div>
@@ -752,12 +752,7 @@
 <div class="relative">
 <span class="material-symbols-outlined absolute left-3 top-2.5 text-secondary text-[18px]">person_outline</span>
 <select class="w-full pl-9 pr-8 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 appearance-none outline-none cursor-pointer transition-all" id="docenteFilter" onchange="applyFilters()">
-<option value="todos">Todos os Docentes (18)</option>
-<option value="Leonardo Matos">Prof. Leonardo Matos</option>
-<option value="Helena Albuquerque">Profª. Helena Albuquerque</option>
-<option value="Carlos Júnior">Prof. Carlos Júnior</option>
-<option value="Marcos Vinícius">Prof. Marcos Vinícius</option>
-<option value="Carla Silveira">Profª. Carla Silveira</option>
+<option value="todos">Todos os Docentes</option>
 </select>
 <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-secondary pointer-events-none text-[18px]">expand_more</span>
 </div>
@@ -768,11 +763,7 @@
 <div class="relative">
 <span class="material-symbols-outlined absolute left-3 top-2.5 text-secondary text-[18px]">domain</span>
 <select class="w-full pl-9 pr-8 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 appearance-none outline-none cursor-pointer transition-all" id="turmaFilter" onchange="applyFilters()">
-<option value="todas">Todas as Turmas (38)</option>
-<option value="DES-2602TG">DES-2602TG (Desenvolvimento)</option>
-<option value="MEC-2504">MEC-2504 (Mecatrônica)</option>
-<option value="AUT-2601">AUT-2601 (Automação)</option>
-<option value="ELE-2401">ELE-2401 (Eletrotécnica)</option>
+<option value="todas">Todas as Turmas</option>
 </select>
 <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-secondary pointer-events-none text-[18px]">expand_more</span>
 </div>
@@ -788,7 +779,7 @@
 <button class="relative inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md font-medium transition-colors shadow-sm" onclick="openResetPasswordModal()">
 <span class="material-symbols-outlined text-[18px]">lock_reset</span>
 <span class="">Solicitações Reset</span>
-<span class="ml-0.5 px-2 py-0.2 rounded-full bg-amber-500 text-white font-label-sm text-[10px] font-bold">3</span>
+<span class="ml-0.5 px-2 py-0.2 rounded-full bg-surface-container text-secondary font-label-sm text-[10px] font-bold" id="badge-solicitacoes-reset">0</span>
 </button>
 <button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-semibold hover:bg-primary transition-colors shadow-sm" onclick="openNewTeacherModal()">
 <span class="material-symbols-outlined text-[18px]">person_add</span>
@@ -800,16 +791,16 @@
 <div class="flex flex-wrap items-center gap-2 pt-2">
 <span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary mr-2">Filtrar por Status:</span>
 <button class="quick-pill active px-3 py-1 rounded-full text-label-sm font-semibold transition-all bg-primary-container text-on-primary" onclick="setQuickFilter('todos', this)">
-          Todos (1.248)
+          Todos (0)
         </button>
 <button class="quick-pill px-3 py-1 rounded-full text-label-sm font-semibold transition-all bg-surface-container-low hover:bg-surface-container text-secondary" onclick="setQuickFilter('alerta-docente', this)">
-          ⚠️ Somente Alerta Docente (42)
+          ⚠️ Somente Alerta Docente (0)
         </button>
 <button class="quick-pill px-3 py-1 rounded-full text-label-sm font-semibold transition-all bg-surface-container-low hover:bg-surface-container text-secondary" onclick="setQuickFilter('alerta-coordenacao', this)">
-          📋 Somente Alerta Coordenação (31)
+          📋 Somente Alerta Coordenação (0)
         </button>
 <button class="quick-pill px-3 py-1 rounded-full text-label-sm font-semibold transition-all bg-surface-container-low hover:bg-surface-container text-secondary" onclick="setQuickFilter('critico', this)">
-          🚨 Risco de Reprovação ≥25% (19)
+          🚨 Risco de Reprovação ≥25% (0)
         </button>
 </div>
 </div>
@@ -820,7 +811,7 @@
 <div class="flex items-center gap-2">
 <span class="material-symbols-outlined text-primary text-[20px]">assignment_ind</span>
 <span class="font-title-md text-title-md text-primary font-bold">Listagem Analítica de Frequência &amp; Intervenção</span>
-<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container text-secondary" id="studentsCount">7 registros exibidos</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container text-secondary" id="studentsCount">0 registros exibidos</span>
 </div>
 <div class="flex items-center gap-2">
 <button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container font-label-md text-label-md text-primary transition-colors shadow-sm" onclick="batchExportPdf()">
@@ -849,339 +840,13 @@
 </tr>
 </thead>
 <tbody class="divide-y divide-surface-container-highest/60 font-body-sm text-body-sm text-on-surface">
-<!-- Row 1: Alice (Crítico) -->
-<tr class="student-row hover:bg-surface-container-low/40 transition-colors" data-category="critico alerta-docente" data-docente="Leonardo Matos" data-mat="mat-982341" data-name="alice ferreira ramos" data-turma="DES-2602TG">
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-red-100 text-red-800 font-bold flex items-center justify-center font-label-md text-label-md shrink-0">
-                    AF
-                  </div>
-<div>
-<div class="font-title-md text-title-md font-semibold text-primary">Alice Ferreira Ramos</div>
-<div class="font-label-sm text-label-sm text-secondary">MAT-982341 • NIF 49120</div>
+<tr id="coord-no-data-row">
+<td colspan="8" class="py-12 text-center text-secondary font-medium">
+<div class="flex flex-col items-center justify-center gap-2">
+<span class="material-symbols-outlined text-4xl text-secondary/40">folder_open</span>
+<span class="text-base font-semibold text-primary">No Data</span>
+<span class="text-xs text-secondary">Nenhum professor ou discente cadastrado no sistema via Supabase.</span>
 </div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-block px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold bg-surface-container text-primary">DES-2602TG</span>
-<div class="font-label-sm text-[11px] text-secondary mt-0.5">Téc. Desenv. Sistemas</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">Prof. Leonardo Matos</div>
-<div class="font-label-sm text-[11px] text-secondary">Horista • Noturno</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">22 aulas / 88h faltadas</div>
-<div class="font-label-sm text-[11px] text-secondary">Carga Total: 320h</div>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-red-700 font-label-sm text-label-sm font-bold">
-<span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                  27.5% [Crítico]
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 font-label-sm text-[11px] font-semibold">
-<span class="relative flex h-2 w-2">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
-</span>
-                  ⚠️ Docente não imprimiu (+4 faltas)
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-label-sm text-[11px] font-medium">
-<span class="material-symbols-outlined text-[14px]">history_edu</span>
-                  ⚠️ Atesto Pendente (Aguardando Doc)
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center justify-end gap-1"><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" title="Registrar Evasão" onclick="showToast('Abrindo registro de evasão escolar para Alice Ferreira Ramos.')" type="button"><span class="material-symbols-outlined text-[18px]">person_cancel</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="openPrintModal('Alice Ferreira Ramos', 'DES-2602TG', '27.5%')" title="Imprimir Ficha de Frequência"><span class="material-symbols-outlined text-[18px]">print</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="viewHistory('Alice Ferreira Ramos', 'MAT-982341')" title="Histórico de Chamadas"><span class="material-symbols-outlined text-[18px]">history</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="downloadStudentPdf('Alice Ferreira Ramos')" title="Exportar Dossiê PDF"><span class="material-symbols-outlined text-[18px]">download</span></button></div>
-</td>
-</tr>
-<!-- Row 2: Bruno (Crítico) -->
-<tr class="student-row hover:bg-surface-container-low/40 transition-colors" data-category="critico alerta-coordenacao" data-docente="Helena Albuquerque" data-mat="mat-893011" data-name="bruno henrique sampaio" data-turma="MEC-2504">
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-red-100 text-red-800 font-bold flex items-center justify-center font-label-md text-label-md shrink-0">
-                    BH
-                  </div>
-<div>
-<div class="font-title-md text-title-md font-semibold text-primary">Bruno Henrique Sampaio</div>
-<div class="font-label-sm text-label-sm text-secondary">MAT-893011 • NIF 38102</div>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-block px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold bg-surface-container text-primary">MEC-2504</span>
-<div class="font-label-sm text-[11px] text-secondary mt-0.5">Téc. Mecatrônica Ind.</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">Profª. Helena Albuquerque</div>
-<div class="font-label-sm text-[11px] text-secondary">Mensalista • Diurno</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">21 aulas / 84h faltadas</div>
-<div class="font-label-sm text-[11px] text-secondary">Carga Total: 320h</div>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-red-700 font-label-sm text-label-sm font-bold">
-<span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                  26.0% [Crítico]
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[14px]">check</span>
-                  ✓ Impresso com 12 faltas
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 text-purple-900 font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[14px]">event</span>
-                  ⚠️ Reunião Agendada (22/10)
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center justify-end gap-1"><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" title="Registrar Evasão" onclick="showToast('Abrindo registro de evasão escolar para Bruno Henrique Sampaio.')" type="button"><span class="material-symbols-outlined text-[18px]">person_cancel</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="openPrintModal('Bruno Henrique Sampaio', 'MEC-2504', '26.0%')" title="Imprimir Ficha de Frequência"><span class="material-symbols-outlined text-[18px]">print</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="viewHistory('Bruno Henrique Sampaio', 'MAT-893011')" title="Histórico de Chamadas"><span class="material-symbols-outlined text-[18px]">history</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="downloadStudentPdf('Bruno Henrique Sampaio')" title="Exportar Dossiê PDF"><span class="material-symbols-outlined text-[18px]">download</span></button></div>
-</td>
-</tr>
-<!-- Row 3: Camila (Atenção) -->
-<tr class="student-row hover:bg-surface-container-low/40 transition-colors" data-category="alerta-docente" data-docente="Carlos Júnior" data-mat="mat-774910" data-name="camila nogueira ribeiro" data-turma="AUT-2601">
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center font-label-md text-label-md shrink-0">
-                    CN
-                  </div>
-<div>
-<div class="font-title-md text-title-md font-semibold text-primary">Camila Nogueira Ribeiro</div>
-<div class="font-label-sm text-label-sm text-secondary">MAT-774910 • NIF 29481</div>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-block px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold bg-surface-container text-primary">AUT-2601</span>
-<div class="font-label-sm text-[11px] text-secondary mt-0.5">Téc. Automação Ind.</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">Prof. Carlos Júnior</div>
-<div class="font-label-sm text-[11px] text-secondary">Horista • Vespertino</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">15 aulas / 60h faltadas</div>
-<div class="font-label-sm text-[11px] text-secondary">Carga Total: 320h</div>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-label-sm text-label-sm font-bold">
-<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                  18.5% [Atenção]
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[14px]">notification_important</span>
-                  ⚠️ Pendente 1ª convocação
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[14px]">send</span>
-                  ✓ Acompanhado (Notificação enviada)
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center justify-end gap-1"><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" title="Registrar Evasão" onclick="showToast('Abrindo registro de evasão escolar para Camila Nogueira Ribeiro.')" type="button"><span class="material-symbols-outlined text-[18px]">person_cancel</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="openPrintModal('Camila Nogueira Ribeiro', 'AUT-2601', '18.5%')" title="Imprimir Ficha de Frequência"><span class="material-symbols-outlined text-[18px]">print</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="viewHistory('Camila Nogueira Ribeiro', 'MAT-774910')" title="Histórico de Chamadas"><span class="material-symbols-outlined text-[18px]">history</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="downloadStudentPdf('Camila Nogueira Ribeiro')" title="Exportar Dossiê PDF"><span class="material-symbols-outlined text-[18px]">download</span></button></div>
-</td>
-</tr>
-<!-- Row 4: Diego (Atenção) -->
-<tr class="student-row hover:bg-surface-container-low/40 transition-colors" data-category="alerta-coordenacao" data-docente="Leonardo Matos" data-mat="mat-663812" data-name="diego martins alves" data-turma="DES-2602TG">
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center font-label-md text-label-md shrink-0">
-                    DM
-                  </div>
-<div>
-<div class="font-title-md text-title-md font-semibold text-primary">Diego Martins Alves</div>
-<div class="font-label-sm text-label-sm text-secondary">MAT-663812 • NIF 51928</div>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-block px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold bg-surface-container text-primary">DES-2602TG</span>
-<div class="font-label-sm text-[11px] text-secondary mt-0.5">Téc. Desenv. Sistemas</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">Prof. Leonardo Matos</div>
-<div class="font-label-sm text-[11px] text-secondary">Horista • Noturno</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">11 aulas / 44h faltadas</div>
-<div class="font-label-sm text-[11px] text-secondary">Carga Total: 320h</div>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-label-sm text-label-sm font-bold">
-<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                  14.0% [Atenção]
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[14px]">done_all</span>
-                  ✓ Ficha atualizada
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-label-sm text-[11px] font-medium">
-<span class="material-symbols-outlined text-[14px]">history_edu</span>
-                  ⚠️ Atesto Pendente (Aguardando Doc)
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center justify-end gap-1"><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" title="Registrar Evasão" onclick="showToast('Abrindo registro de evasão escolar para Diego Martins Alves.')" type="button"><span class="material-symbols-outlined text-[18px]">person_cancel</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="openPrintModal('Diego Martins Alves', 'DES-2602TG', '14.0%')" title="Imprimir Ficha de Frequência"><span class="material-symbols-outlined text-[18px]">print</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="viewHistory('Diego Martins Alves', 'MAT-663812')" title="Histórico de Chamadas"><span class="material-symbols-outlined text-[18px]">history</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="downloadStudentPdf('Diego Martins Alves')" title="Exportar Dossiê PDF"><span class="material-symbols-outlined text-[18px]">download</span></button></div>
-</td>
-</tr>
-<!-- Row 5: Eduarda (Regular) -->
-<tr class="student-row hover:bg-surface-container-low/40 transition-colors" data-category="regular" data-docente="Helena Albuquerque" data-mat="mat-552901" data-name="eduarda silveira costa" data-turma="MEC-2504">
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-900 font-bold flex items-center justify-center font-label-md text-label-md shrink-0">
-                    ES
-                  </div>
-<div>
-<div class="font-title-md text-title-md font-semibold text-primary">Eduarda Silveira Costa</div>
-<div class="font-label-sm text-label-sm text-secondary">MAT-552901 • NIF 88392</div>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-block px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold bg-surface-container text-primary">MEC-2504</span>
-<div class="font-label-sm text-[11px] text-secondary mt-0.5">Téc. Mecatrônica Ind.</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">Profª. Helena Albuquerque</div>
-<div class="font-label-sm text-[11px] text-secondary">Mensalista • Diurno</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">5 aulas / 20h faltadas</div>
-<div class="font-label-sm text-[11px] text-secondary">Carga Total: 320h</div>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-label-sm text-label-sm font-bold">
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                  6.2% [Regular]
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[14px]">done_all</span>
-                  ✓ Ficha atualizada
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[14px]">verified</span>
-                  ✓ Regular em conformidade
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center justify-end gap-1"><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" title="Registrar Evasão" onclick="showToast('Abrindo registro de evasão escolar para Eduarda Silveira Costa.')" type="button"><span class="material-symbols-outlined text-[18px]">person_cancel</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="openPrintModal('Eduarda Silveira Costa', 'MEC-2504', '6.2%')" title="Imprimir Ficha de Frequência"><span class="material-symbols-outlined text-[18px]">print</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="viewHistory('Eduarda Silveira Costa', 'MAT-552901')" title="Histórico de Chamadas"><span class="material-symbols-outlined text-[18px]">history</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="downloadStudentPdf('Eduarda Silveira Costa')" title="Exportar Dossiê PDF"><span class="material-symbols-outlined text-[18px]">download</span></button></div>
-</td>
-</tr>
-<!-- Row 6: Felipe (Alerta Docente) -->
-<tr class="student-row hover:bg-surface-container-low/40 transition-colors" data-category="alerta-docente" data-docente="Marcos Vinícius" data-mat="mat-441890" data-name="felipe augusto lima" data-turma="ELE-2401">
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center font-label-md text-label-md shrink-0">
-                    FL
-                  </div>
-<div>
-<div class="font-title-md text-title-md font-semibold text-primary">Felipe Augusto Lima</div>
-<div class="font-label-sm text-label-sm text-secondary">MAT-441890 • NIF 77103</div>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-block px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold bg-surface-container text-primary">ELE-2401</span>
-<div class="font-label-sm text-[11px] text-secondary mt-0.5">Téc. Eletrotécnica</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">Prof. Marcos Vinícius</div>
-<div class="font-label-sm text-[11px] text-secondary">Mensalista • Noturno</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">12 aulas / 48h faltadas</div>
-<div class="font-label-sm text-[11px] text-secondary">Carga Total: 320h</div>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-label-sm text-label-sm font-bold">
-<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                  15.0% [Atenção]
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 font-label-sm text-[11px] font-semibold">
-<span class="relative flex h-2 w-2">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
-</span>
-                  ⚠️ Docente não imprimiu (+4 faltas)
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[14px]">send</span>
-                  ✓ Acompanhado (Notificação enviada)
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center justify-end gap-1"><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" title="Registrar Evasão" onclick="showToast('Abrindo registro de evasão escolar para Felipe Augusto Lima.')" type="button"><span class="material-symbols-outlined text-[18px]">person_cancel</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="openPrintModal('Felipe Augusto Lima', 'ELE-2401', '15.0%')" title="Imprimir Ficha de Frequência"><span class="material-symbols-outlined text-[18px]">print</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="viewHistory('Felipe Augusto Lima', 'MAT-441890')" title="Histórico de Chamadas"><span class="material-symbols-outlined text-[18px]">history</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="downloadStudentPdf('Felipe Augusto Lima')" title="Exportar Dossiê PDF"><span class="material-symbols-outlined text-[18px]">download</span></button></div>
-</td>
-</tr>
-<!-- Row 7: Gabriela (Regular) -->
-<tr class="student-row hover:bg-surface-container-low/40 transition-colors" data-category="regular" data-docente="Carla Silveira" data-mat="mat-331002" data-name="gabriela rocha santos" data-turma="AUT-2601">
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-900 font-bold flex items-center justify-center font-label-md text-label-md shrink-0">
-                    GR
-                  </div>
-<div>
-<div class="font-title-md text-title-md font-semibold text-primary">Gabriela Rocha Santos</div>
-<div class="font-label-sm text-label-sm text-secondary">MAT-331002 • NIF 99201</div>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-block px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold bg-surface-container text-primary">AUT-2601</span>
-<div class="font-label-sm text-[11px] text-secondary mt-0.5">Téc. Automação Ind.</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">Profª. Carla Silveira</div>
-<div class="font-label-sm text-[11px] text-secondary">Horista • Diurno</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="font-medium text-primary">4 aulas / 16h faltadas</div>
-<div class="font-label-sm text-[11px] text-secondary">Carga Total: 320h</div>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-label-sm text-label-sm font-bold">
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                  5.0% [Regular]
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[14px]">done_all</span>
-                  ✓ Ficha atualizada
-                </span>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[14px]">verified</span>
-                  ✓ Regular em conformidade
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center justify-end gap-1"><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" title="Registrar Evasão" onclick="showToast('Abrindo registro de evasão escolar para Gabriela Rocha Santos.')" type="button"><span class="material-symbols-outlined text-[18px]">person_cancel</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="openPrintModal('Gabriela Rocha Santos', 'AUT-2601', '5.0%')" title="Imprimir Ficha de Frequência"><span class="material-symbols-outlined text-[18px]">print</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="viewHistory('Gabriela Rocha Santos', 'MAT-331002')" title="Histórico de Chamadas"><span class="material-symbols-outlined text-[18px]">history</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-colors" onclick="downloadStudentPdf('Gabriela Rocha Santos')" title="Exportar Dossiê PDF"><span class="material-symbols-outlined text-[18px]">download</span></button></div>
 </td>
 </tr>
 </tbody>
@@ -1190,7 +855,7 @@
 <!-- Pagination / Footer Table Note -->
 <div class="p-4 bg-surface-container-low/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-secondary font-label-sm text-label-sm">
 <div class="flex items-center gap-2">
-<span class="">Mostrando 1–7 de 1.248 discentes cadastrados</span>
+<span class=""><span id="coord-pagination-info">Mostrando 0 discentes cadastrados</span></span>
 <span class="">•</span>
 <span class="text-primary font-medium">Classificação ordenada por criticidade acadêmica</span>
 </div>
@@ -1215,12 +880,15 @@
 </div>
 <div>
 <h2 class="font-headline-sm text-headline-sm text-primary font-bold">Solicitações de Redefinição de Senha</h2>
-<p class="font-label-sm text-label-sm text-secondary">3 docentes aguardando liberação de acesso imediato</p>
+<p class="font-label-sm text-label-sm text-secondary"><span id="pendingResetsSubtitle">0 docentes aguardando liberação de acesso imediato</span></p>
 </div>
 </div>
-<div class="flex items-center gap-2"><span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-label-sm text-label-sm font-bold">3 pendentes</span><button type="button" id="toggleResetsBtn" onclick="toggleCardContent('resetsContentWrapper', 'toggleResetsBtn')" aria-label="Recolher painel de redefinição de senha" title="Recolher/Expandir" class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-all shadow-sm border border-outline-variant/40"><span class="material-symbols-outlined text-[20px] transition-transform duration-300">expand_less</span></button></div>
+<div class="flex items-center gap-2"><span class="px-2.5 py-1 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm font-bold" id="pendingResetsBadge">0 pendentes</span><button type="button" id="toggleResetsBtn" onclick="toggleCardContent('resetsContentWrapper', 'toggleResetsBtn')" aria-label="Recolher painel de redefinição de senha" title="Recolher/Expandir" class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-all shadow-sm border border-outline-variant/40"><span class="material-symbols-outlined text-[20px] transition-transform duration-300">expand_less</span></button></div>
 </div>
-<div id="resetsContentWrapper" class="space-y-4"><div class="space-y-2.5 pt-2" id="pendingResetsList"><div class="p-3.5 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-3" id="reset-row-1"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-label-sm">HA</div><div><div class="font-title-md text-title-md font-semibold text-primary">Profª. Helena Albuquerque</div><div class="font-label-sm text-label-sm text-secondary">NIF 103982 • Pedido há 15 min</div></div></div><button class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold hover:bg-primary transition-colors shadow-sm shrink-0" onclick="approvePasswordReset('reset-row-1', 'Profª. Helena Albuquerque')"><span class="material-symbols-outlined text-[16px]">key</span><span class="">Aprovar Reset (Senha: senai102)</span></button></div><div class="p-3.5 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-3" id="reset-row-2"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-label-sm">MV</div><div><div class="font-title-md text-title-md font-semibold text-primary">Prof. Marcos Vinícius</div><div class="font-label-sm text-label-sm text-secondary">NIF 104551 • Pedido há 42 min</div></div></div><button class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold hover:bg-primary transition-colors shadow-sm shrink-0" onclick="approvePasswordReset('reset-row-2', 'Prof. Marcos Vinícius')"><span class="material-symbols-outlined text-[16px]">key</span><span class="">Aprovar Reset (Senha: senai102)</span></button></div><div class="p-3.5 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-3" id="reset-row-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-label-sm">CS</div><div><div class="font-title-md text-title-md font-semibold text-primary">Profª. Carla Silveira</div><div class="font-label-sm text-label-sm text-secondary">NIF 102877 • Pedido há 2h</div></div></div><button class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold hover:bg-primary transition-colors shadow-sm shrink-0" onclick="approvePasswordReset('reset-row-3', 'Profª. Carla Silveira')"><span class="material-symbols-outlined text-[16px]">key</span><span class="">Aprovar Reset (Senha: senai102)</span></button></div></div><div class="pt-3 flex items-center justify-between text-secondary font-label-sm text-label-sm border-t border-surface-container-highest/60"><span class="">Padrão institucional provisório: <code class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-mono font-bold">senai102</code></span><button class="text-primary hover:underline font-semibold" onclick="approveAllResets()">Aprovar todos os 3</button></div></div>
+<div id="resetsContentWrapper" class="space-y-4"><div class="space-y-2.5 pt-2" id="pendingResetsList"><div class="py-6 text-center text-secondary text-xs flex flex-col items-center justify-center gap-1">
+<span class="font-semibold text-primary">No Data</span>
+<span>Nenhuma solicitação de redefinição de senha pendente.</span>
+</div></div><div class="pt-3 flex items-center justify-between text-secondary font-label-sm text-label-sm border-t border-surface-container-highest/60"><span class="">Padrão institucional provisório: <code class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-mono font-bold">senai102</code></span><button class="text-primary hover:underline font-semibold" onclick="approveAllResets()">Aprovar todos</button></div></div>
 </div>
 
 </div>
@@ -1239,7 +907,7 @@
 </div>
 <div class="flex items-center gap-2"><span class="font-label-sm text-[11px] text-secondary bg-surface-container px-2 py-0.5 rounded">Autenticação Única</span><button type="button" id="toggleTeacherBtn" onclick="toggleCardContent('teacherFormWrapper', 'toggleTeacherBtn')" aria-label="Recolher painel de autorização de docente" title="Recolher/Expandir" class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-all shadow-sm border border-outline-variant/40"><span class="material-symbols-outlined text-[20px] transition-transform duration-300">expand_less</span></button></div>
 </div>
-<div id="teacherFormWrapper"><form class="space-y-3" id="quickTeacherForm" onsubmit="handleQuickTeacherSubmit(event)"><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Nome Completo</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherName" placeholder="Ex: Rodrigo Mendes Castro" required="" type="text"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">NIF (Funcional)</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherNif" maxlength="6" pattern="[0-9]{6}" placeholder="Ex: SN10000" required="" type="text"></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Unidade Escolar</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-sm text-body-sm cursor-not-allowed outline-none" id="teacherUnit" readonly="" type="text" value="SENAI Humberto Reis Costa"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Categoria Contratual</label><select class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer" id="teacherCategory"><option value="Docente Horista">Docente Horista</option><option value="Docente Mensalista">Docente Mensalista</option><option value="Docente Convidado / Instrutor">Docente Convidado / Instrutor</option></select></div></div><div class="p-3 rounded-lg bg-surface-container-low flex items-start gap-2.5"><span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">info</span><p class="font-body-sm text-[12px] text-secondary leading-snug">No primeiro acesso, o docente digitará seu NIF autorizado e cadastrará sua senha individual com validação de segurança via e-mail corporativo.</p></div><div class="flex flex-wrap items-center justify-between gap-2 pt-2"><button type="button" onclick="showToast('Exibindo listagem dos 18 docentes cadastrados no sistema.')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-outline-variant/50 bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors shadow-sm"><span class="material-symbols-outlined text-[18px]">badge</span><span class="">Docentes Cadastrados (18)</span></button><div class="flex items-center gap-2"><button class="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors" type="reset">Limpar</button><button class="px-5 py-2 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-semibold hover:bg-primary transition-colors shadow-sm" type="submit">+ Autorizar NIF</button></div></div></form></div>
+<div id="teacherFormWrapper"><form class="space-y-3" id="quickTeacherForm" onsubmit="handleQuickTeacherSubmit(event)"><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Nome Completo</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherName" placeholder="Ex: Rodrigo Mendes Castro" required="" type="text"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">NIF (Funcional)</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherNif" maxlength="6" pattern="[0-9]{6}" placeholder="Ex: SN10000" required="" type="text"></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Unidade Escolar</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-sm text-body-sm cursor-not-allowed outline-none" id="teacherUnit" readonly="" type="text" value="SENAI Humberto Reis Costa"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Categoria Contratual</label><select class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer" id="teacherCategory"><option value="Docente Horista">Docente Horista</option><option value="Docente Mensalista">Docente Mensalista</option><option value="Docente Convidado / Instrutor">Docente Convidado / Instrutor</option></select></div></div><div class="p-3 rounded-lg bg-surface-container-low flex items-start gap-2.5"><span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">info</span><p class="font-body-sm text-[12px] text-secondary leading-snug">No primeiro acesso, o docente digitará seu NIF autorizado e cadastrará sua senha individual com validação de segurança via e-mail corporativo.</p></div><div class="flex flex-wrap items-center justify-between gap-2 pt-2"><button type="button" onclick="showToast('Exibindo listagem dos docentes cadastrados no sistema.')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-outline-variant/50 bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors shadow-sm"><span class="material-symbols-outlined text-[18px]">badge</span><span id="btnDocentesCadastradosCount">Docentes Cadastrados (0)</span></button><div class="flex items-center gap-2"><button class="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors" type="reset">Limpar</button><button class="px-5 py-2 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-semibold hover:bg-primary transition-colors shadow-sm" type="submit">+ Autorizar NIF</button></div></div></form></div>
 </div>
 </div>
 </div>

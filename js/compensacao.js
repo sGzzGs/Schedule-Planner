@@ -5310,15 +5310,61 @@ let _currentTab = 'tab-cronograma';
 function compInicializarAbas() {
   const tabs = document.querySelectorAll('.app-tab');
   tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
+    tab.addEventListener('click', (e) => {
       const targetTab = tab.dataset.tab;
       if (targetTab === _currentTab) return;
+
+      // Proteção de acesso à aba de Coordenação
+      if (targetTab === 'tab-coordenacao') {
+        const isCoordLogado = Boolean(
+          window.authService?.currentUser &&
+          window.authService.currentUser.role === 'coordenacao'
+        );
+        if (!isCoordLogado) {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          if (typeof window.compMostrarToast === 'function') {
+            window.compMostrarToast('Acesso Restrito', 'Necessária Autenticação de Coordenação.', 'warning');
+          } else if (typeof window.showToast === 'function') {
+            window.showToast('Necessária Autenticação de Coordenação.');
+          } else {
+            alert('Necessária Autenticação de Coordenação.');
+          }
+          if (typeof window.authService?.abrirModalLogin === 'function') {
+            window.authService.abrirModalLogin();
+          }
+          return;
+        }
+      }
+
       compTrocarAba(_currentTab, targetTab);
     });
   });
 }
 
 function compTrocarAba(from, to) {
+  // Barreira de segurança para impedir troca forçada sem autenticação de coordenação
+  if (to === 'tab-coordenacao') {
+    const isCoordLogado = Boolean(
+      window.authService?.currentUser &&
+      window.authService.currentUser.role === 'coordenacao'
+    );
+    if (!isCoordLogado) {
+      if (typeof window.compMostrarToast === 'function') {
+        window.compMostrarToast('Acesso Restrito', 'Necessária Autenticação de Coordenação.', 'warning');
+      } else if (typeof window.showToast === 'function') {
+        window.showToast('Necessária Autenticação de Coordenação.');
+      } else {
+        alert('Necessária Autenticação de Coordenação.');
+      }
+      if (typeof window.authService?.abrirModalLogin === 'function') {
+        window.authService.abrirModalLogin();
+      }
+      return;
+    }
+  }
   const fromEl = document.getElementById(from);
   const toEl   = document.getElementById(to);
   const fromTab = document.querySelector(`.app-tab[data-tab="${from}"]`);

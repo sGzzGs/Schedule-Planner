@@ -1,234 +1,35 @@
 // Created at: 2026-10-19 16:51
-/**
- * SENAI Hub de Registros • Módulo do Painel da Coordenação Pedagógica (Aba 4)
- * Governança de Frequência, Duplo Alerta de Impressão, Evasão e Gestão de NIFs
- */
 
-(function (window, document) {
-  'use strict';
-
-  let activeQuickFilter = 'todos';
-  let currentPrintStudent = null;
-  let currentEvasaoStudent = null;
-  let alunosGovernancaCache = [];
-
-  // Dados semente de alta fidelidade para garantir funcionamento instantâneo
-  const SEMENTE_ALUNOS = [
-    {
-      id: 'aluno-alice',
-      nome_discente: 'Alice Ferreira Ramos',
-      matricula: '982341',
-      nif_discente: '49120',
-      codigo_turma: 'DES-2602TG',
-      nome_curso: 'Téc. Desenvolvimento Sistemas',
-      docente_id: 'prof-leonardo',
-      nome_docente: 'Prof. Leonardo Matos',
-      total_aulas: 320,
-      horas_faltadas: 88,
-      total_faltas: 22,
-      perc_faltas: 27.5,
-      faltas_ultima_impressao_docente: 14,
-      data_impressao_docente: '2026-09-15T14:30:00Z',
-      atestado_coordenacao: true,
-      status_evasao: 'ativo'
-    },
-    {
-      id: 'aluno-bruno',
-      nome_discente: 'Bruno Henrique Sampaio',
-      matricula: '893011',
-      nif_discente: '38102',
-      codigo_turma: 'MEC-2504',
-      nome_curso: 'Téc. Mecatrônica Ind.',
-      docente_id: 'prof-helena',
-      nome_docente: 'Profª. Helena Albuquerque',
-      total_aulas: 320,
-      horas_faltadas: 84,
-      total_faltas: 21,
-      perc_faltas: 26.3,
-      faltas_ultima_impressao_docente: 21,
-      data_impressao_docente: '2026-10-10T11:00:00Z',
-      atestado_coordenacao: false,
-      status_evasao: 'recomendada_coordenacao',
-      motivo_evasao: 'Acúmulo de ausências sem atestado médico.'
-    },
-    {
-      id: 'aluno-camila',
-      nome_discente: 'Camila Duarte',
-      matricula: '746192',
-      nif_discente: '29481',
-      codigo_turma: 'AUT-2601T',
-      nome_curso: 'Téc. Automação Industrial',
-      docente_id: 'prof-carlos',
-      nome_docente: 'Prof. Carlos Júnior',
-      total_aulas: 320,
-      horas_faltadas: 76,
-      total_faltas: 19,
-      perc_faltas: 23.8,
-      faltas_ultima_impressao_docente: 12,
-      data_impressao_docente: '2026-09-20T10:00:00Z',
-      atestado_coordenacao: true,
-      status_evasao: 'ativo'
-    },
-    {
-      id: 'aluno-diego',
-      nome_discente: 'Diego Martins de Souza',
-      matricula: '654321',
-      nif_discente: '77103',
-      codigo_turma: 'ELE-2502',
-      nome_curso: 'Téc. Eletroeletrônica',
-      docente_id: 'prof-marcos',
-      nome_docente: 'Prof. Marcos Vinícius',
-      total_aulas: 320,
-      horas_faltadas: 56,
-      total_faltas: 14,
-      perc_faltas: 17.5,
-      faltas_ultima_impressao_docente: 6,
-      data_impressao_docente: '2026-08-28T09:00:00Z',
-      atestado_coordenacao: false,
-      status_evasao: 'ativo'
-    },
-    {
-      id: 'aluno-felipe',
-      nome_discente: 'Felipe Augusto Barreto',
-      matricula: '982343',
-      nif_discente: '49122',
-      codigo_turma: 'DES-2602TG',
-      nome_curso: 'Téc. Desenvolvimento Sistemas',
-      docente_id: 'prof-leonardo',
-      nome_docente: 'Prof. Leonardo Matos',
-      total_aulas: 320,
-      horas_faltadas: 80,
-      total_faltas: 20,
-      perc_faltas: 25.0,
-      faltas_ultima_impressao_docente: 10,
-      data_impressao_docente: '2026-09-02T16:00:00Z',
-      atestado_coordenacao: false,
-      status_evasao: 'ativo'
-    },
-    {
-      id: 'aluno-gabriel',
-      nome_discente: 'Gabriel Barbosa da Silva',
-      matricula: '321987',
-      nif_discente: '99201',
-      codigo_turma: 'LOG-2601',
-      nome_curso: 'Téc. Logística Integrada',
-      docente_id: 'prof-carla',
-      nome_docente: 'Profª. Carla Silveira',
-      total_aulas: 320,
-      horas_faltadas: 36,
-      total_faltas: 9,
-      perc_faltas: 11.3,
-      faltas_ultima_impressao_docente: 9,
-      data_impressao_docente: '2026-10-05T15:20:00Z',
-      atestado_coordenacao: true,
-      status_evasao: 'ativo'
-    }
-  ];
-
-  /**
-   * Inicializa o painel de governança da coordenação
-   */
-  async function coordCarregarDados() {
-    console.log('[Coordenação] Carregando dados de governança institucional...');
-    const client = window.authService?.client;
-
-    let dadosCarregados = null;
-
-    if (client) {
-      try {
-        const { data, error } = await client
-          .from('alunos_governanca')
-          .select('*')
-          .order('perc_faltas', { ascending: false });
-
-        if (data && data.length > 0 && !error) {
-          dadosCarregados = data;
-        }
-      } catch (err) {
-        console.warn('[Coordenação] Falha ao consultar Supabase, utilizando base sincronizada:', err);
-      }
-    }
-
-    // Se a tabela estiver vazia no Supabase, mesclar com turmas locais do docente
-    if (!dadosCarregados || dadosCarregados.length === 0) {
-      dadosCarregados = extrairAlunosLocais() || SEMENTE_ALUNOS;
-    }
-
-    alunosGovernancaCache = dadosCarregados;
-    coordAtualizarMetricas(alunosGovernancaCache);
-    coordPreencherFiltros(alunosGovernancaCache);
-    coordRenderizarTabela(alunosGovernancaCache);
-    coordCarregarResetsPendentes();
-    coordCarregarNifsAutorizados();
-  }
-
-  /**
-   * Extrai discentes das turmas salvas no LocalStorage para retrocompatibilidade
-   */
-  function extrairAlunosLocais() {
-    try {
-      const raw = localStorage.getItem('senai_compensacao_turmas');
-      if (!raw) return null;
-      const turmasObj = JSON.parse(raw);
-      const listaAlunos = [];
-
-      Object.entries(turmasObj).forEach(([codTurma, turma]) => {
-        const discentes = turma.discentes || [];
-        discentes.forEach(d => {
-          const totalAulas = Number(turma.cargaHoraria || 320);
-          const faltas = Number(d.faltas || d.totalFaltas || 0);
-          const perc = totalAulas > 0 ? Number(((faltas / totalAulas) * 100).toFixed(1)) : 0;
-
-          listaAlunos.push({
-            id: `local-${codTurma}-${d.matricula || d.id}`,
-            nome_discente: d.nome || d.nomeDiscente || 'Discente sem Nome',
-            matricula: d.matricula || String(d.id || '000000'),
-            nif_discente: d.nif || '',
-            codigo_turma: codTurma,
-            nome_curso: turma.nomeCurso || 'Curso Técnico',
-            docente_id: 'docente-responsavel',
-            nome_docente: turma.docente || 'Docente Responsável',
-            total_aulas: totalAulas,
-            horas_faltadas: faltas * 4,
-            total_faltas: faltas,
-            perc_faltas: perc,
-            faltas_ultima_impressao_docente: Number(d.faltasUltimaImpressao || 0),
-            data_impressao_docente: d.dataUltimaImpressao || null,
-            atestado_coordenacao: Boolean(d.atestadoCoord),
-            status_evasao: d.statusEvasao || 'ativo',
-            motivo_evasao: d.motivoEvasao || ''
-          });
-        });
-      });
-
-      return listaAlunos.length > 0 ? listaAlunos : null;
-    } catch (e) {
-      console.warn('[Coordenação] Falha ao extrair alunos locais:', e);
-      return null;
-    }
-  }
 
   /**
    * Atualiza os Cards de KPIs de Governança
    */
   function coordAtualizarMetricas(alunos) {
-    if (!alunos) return;
-
-    let totalAlunos = alunos.length;
+    const lista = alunos || [];
+    let totalAlunos = lista.length;
     let somaFreq = 0;
     let criticos25 = 0;
+    let atencao10 = 0;
     let pendenciasDocente = 0;
+    let pendenciasCoord = 0;
     let evasoesRecomendadas = 0;
+    const turmasSet = new Set();
 
-    alunos.forEach(a => {
+    lista.forEach(a => {
       const perc = Number(a.perc_faltas || 0);
       somaFreq += Math.max(0, 100 - perc);
       if (perc >= 25) criticos25++;
+      else if (perc >= 10) atencao10++;
+
+      if (a.codigo_turma) turmasSet.add(a.codigo_turma);
 
       const faltas = Number(a.total_faltas || 0);
       const faltasImpressao = Number(a.faltas_ultima_impressao_docente || 0);
       if (faltas > 0 && faltas > faltasImpressao) {
         pendenciasDocente++;
+      }
+      if (!a.atestado_coordenacao && perc >= 10) {
+        pendenciasCoord++;
       }
 
       if (a.status_evasao === 'recomendada_coordenacao') {
@@ -238,18 +39,51 @@
 
     const mediaFreq = totalAlunos > 0 ? (somaFreq / totalAlunos).toFixed(1) : '100.0';
 
-    // Atualizar elementos no DOM se presentes
-    const kpiFreqEl = document.getElementById('kpi-media-frequencia');
-    if (kpiFreqEl) kpiFreqEl.textContent = `${mediaFreq}%`;
+    const kpiTotalEl = document.getElementById('kpi-total-monitorado');
+    if (kpiTotalEl) kpiTotalEl.textContent = totalAlunos;
+
+    const kpiTurmasEl = document.getElementById('kpi-turmas-ativas');
+    if (kpiTurmasEl) kpiTurmasEl.textContent = `${turmasSet.size} turmas ativas no semestre`;
 
     const kpiCriticosEl = document.getElementById('kpi-alunos-criticos');
     if (kpiCriticosEl) kpiCriticosEl.textContent = criticos25;
 
-    const kpiPendenciasEl = document.getElementById('kpi-pendencias-docente');
-    if (kpiPendenciasEl) kpiPendenciasEl.textContent = pendenciasDocente;
+    const kpiAtencaoEl = document.getElementById('kpi-alunos-atencao');
+    if (kpiAtencaoEl) kpiAtencaoEl.textContent = atencao10;
+
+    const kpiPendenciasDocEl = document.getElementById('kpi-pendencias-docente');
+    if (kpiPendenciasDocEl) kpiPendenciasDocEl.textContent = pendenciasDocente;
+
+    const kpiPendenciasCoordEl = document.getElementById('kpi-pendencias-coordenacao');
+    if (kpiPendenciasCoordEl) kpiPendenciasCoordEl.textContent = pendenciasCoord;
+
+    const kpiFichasTotalEl = document.getElementById('kpi-fichas-pendentes-total');
+    if (kpiFichasTotalEl) kpiFichasTotalEl.textContent = (pendenciasDocente + pendenciasCoord);
+
+    const kpiFreqEl = document.getElementById('kpi-media-frequencia');
+    if (kpiFreqEl) kpiFreqEl.textContent = `${mediaFreq}%`;
 
     const kpiEvasoesEl = document.getElementById('kpi-evasoes-recomendadas');
     if (kpiEvasoesEl) kpiEvasoesEl.textContent = evasoesRecomendadas;
+
+    const countEl = document.getElementById('studentsCount');
+    if (countEl) countEl.textContent = `${totalAlunos} registros exibidos`;
+
+    const pagInfo = document.getElementById('coord-pagination-info');
+    if (pagInfo) pagInfo.textContent = `Mostrando ${totalAlunos} discentes cadastrados`;
+
+    // Atualizar pílulas de filtros rápidos
+    const pillTodos = document.getElementById('filter-pill-todos');
+    if (pillTodos) pillTodos.textContent = `Todos (${totalAlunos})`;
+
+    const pillDoc = document.getElementById('filter-pill-docente');
+    if (pillDoc) pillDoc.textContent = `⚠️ Somente Alerta Docente (${pendenciasDocente})`;
+
+    const pillCoord = document.getElementById('filter-pill-coordenacao');
+    if (pillCoord) pillCoord.textContent = `📋 Somente Alerta Coordenação (${pendenciasCoord})`;
+
+    const pillCrit = document.getElementById('filter-pill-critico');
+    if (pillCrit) pillCrit.textContent = `🚨 Risco de Reprovação ≥25% (${criticos25})`;
   }
 
   /**
@@ -283,7 +117,23 @@
     const tbody = document.getElementById('studentsTable');
     if (!tbody) return;
 
-    // Ordenar decrescente por % de faltas
+    if (!alunos || alunos.length === 0) {
+      tbody.innerHTML = `
+        <tr id="coord-no-data-row">
+          <td colspan="8" class="py-12 text-center text-secondary font-medium">
+            <div class="flex flex-col items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-4xl text-secondary/40">folder_open</span>
+              <span class="text-base font-semibold text-primary">No Data</span>
+              <span class="text-xs text-secondary">Nenhum professor ou discente cadastrado no sistema via Supabase.</span>
+            </div>
+          </td>
+        </tr>
+      `;
+      const countEl = document.getElementById('studentsCount');
+      if (countEl) countEl.textContent = '0 registros exibidos';
+      return;
+    }
+
     const ordenados = [...alunos].sort((a, b) => Number(b.perc_faltas || 0) - Number(a.perc_faltas || 0));
 
     tbody.innerHTML = ordenados.map(aluno => {
@@ -637,33 +487,51 @@
    */
   async function coordCarregarNifsAutorizados() {
     const client = window.authService?.client;
-    if (!client) return;
+    let data = null;
 
-    try {
-      const { data, error } = await client
-        .from('nifs_autorizados')
-        .select('*')
-        .order('criado_em', { ascending: false });
+    if (client) {
+      try {
+        const res = await client
+          .from('nifs_autorizados')
+          .select('*')
+          .order('criado_em', { ascending: false });
 
-      if (data && !error) {
-        // Atualizar lista se houver container
-        const container = document.getElementById('authorizedNifsList');
-        if (container) {
-          container.innerHTML = data.map(n => `
-            <div class="flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg text-xs">
-              <div>
-                <strong class="text-primary">${n.nome}</strong> (NIF: ${n.nif})
-                <div class="text-secondary">${n.categoria || 'Docente'}</div>
-              </div>
-              <span class="px-2 py-0.5 rounded-full ${n.utilizado ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'} font-semibold">
-                ${n.utilizado ? 'Ativado' : 'Disponível'}
-              </span>
-            </div>
-          `).join('');
+        if (!res.error && res.data) {
+          data = res.data;
         }
+      } catch (e) {
+        console.warn('[Coordenação] Falha ao carregar NIFs autorizados:', e);
       }
-    } catch (e) {
-      console.warn('[Coordenação] Falha ao carregar NIFs autorizados:', e);
+    }
+
+    const count = data ? data.length : 0;
+    const btnCount = document.getElementById('btnDocentesCadastradosCount');
+    if (btnCount) {
+      btnCount.textContent = `Docentes Cadastrados (${count})`;
+    }
+
+    const container = document.getElementById('authorizedNifsList');
+    if (container) {
+      if (data && data.length > 0) {
+        container.innerHTML = data.map(n => `
+          <div class="flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg text-xs">
+            <div>
+              <strong class="text-primary">${n.nome}</strong> (NIF: ${n.nif})
+              <div class="text-secondary">${n.categoria || 'Docente'}</div>
+            </div>
+            <span class="px-2 py-0.5 rounded-full ${n.utilizado ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'} font-semibold">
+              ${n.utilizado ? 'Ativado' : 'Disponível'}
+            </span>
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = `
+          <div class="py-4 text-center text-secondary text-xs flex flex-col items-center justify-center gap-1">
+            <span class="font-semibold text-primary">No Data</span>
+            <span>Nenhum docente cadastrado via Supabase.</span>
+          </div>
+        `;
+      }
     }
   }
 
@@ -718,34 +586,104 @@
    */
   async function coordCarregarResetsPendentes() {
     const client = window.authService?.client;
-    if (!client) return;
+    let data = null;
 
-    try {
-      const { data, error } = await client
-        .from('solicitacoes_reset')
-        .select('*')
-        .eq('status', 'pendente')
-        .order('solicitada_em', { ascending: false });
+    if (client) {
+      try {
+        const res = await client
+          .from('solicitacoes_reset')
+          .select('*')
+          .eq('status', 'pendente')
+          .order('solicitada_em', { ascending: false });
 
-      if (data && !error && data.length > 0) {
-        const container = document.getElementById('pendingResetsList');
-        if (container) {
-          container.innerHTML = data.map((r, idx) => `
-            <div class="flex items-center justify-between p-3 bg-surface-container-low rounded-lg text-xs" id="reset-row-${r.id}">
-              <div>
-                <strong class="text-primary">${r.nome}</strong> (NIF: ${r.nif})
-                <div class="text-secondary">Solicitado em: ${new Date(r.solicitada_em).toLocaleString('pt-BR')}</div>
-              </div>
-              <button class="px-3 py-1 bg-primary text-on-primary rounded font-semibold hover:bg-primary-container transition-colors"
-                      onclick="coordAprovarReset('${r.id}', '${r.nif}', '${r.nome}')">
-                Aprovar (senai102)
-              </button>
-            </div>
-          `).join('');
+        if (!res.error && res.data) {
+          data = res.data;
         }
+      } catch (e) {
+        console.warn('[Coordenação] Falha ao listar solicitações de reset:', e);
       }
-    } catch (e) {
-      console.warn('[Coordenação] Falha ao listar solicitações de reset:', e);
+    }
+
+    const container = document.getElementById('pendingResetsList');
+    const badge = document.getElementById('pendingResetsBadge');
+    const topBadge = document.getElementById('badge-solicitacoes-reset');
+    const sub = document.getElementById('pendingResetsSubtitle');
+    const modalList = document.getElementById('modalResetPasswordList');
+
+    if (data && data.length > 0) {
+      if (container) {
+        container.innerHTML = data.map((r) => `
+          <div class="p-3.5 rounded-lg bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-3" id="reset-row-${r.id}">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-label-sm">
+                ${(r.nome || 'Docente').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+              </div>
+              <div>
+                <div class="font-title-md text-title-md font-semibold text-primary">${r.nome}</div>
+                <div class="font-label-sm text-label-sm text-secondary">NIF ${r.nif} • ${new Date(r.solicitada_em).toLocaleDateString('pt-BR')}</div>
+              </div>
+            </div>
+            <button class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold hover:bg-primary transition-colors shadow-sm shrink-0"
+                    onclick="coordAprovarReset('${r.id}', '${r.nif}', '${r.nome}')">
+              <span class="material-symbols-outlined text-[16px]">key</span>
+              <span>Aprovar Reset (Senha: senai102)</span>
+            </button>
+          </div>
+        `).join('');
+      }
+      if (modalList) {
+        modalList.innerHTML = data.map((r) => `
+          <div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+            <div>
+              <div class="font-title-md text-title-md font-semibold text-primary">${r.nome}</div>
+              <div class="font-label-sm text-label-sm text-secondary">NIF ${r.nif}</div>
+            </div>
+            <button class="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold hover:bg-primary transition-colors shadow-sm"
+                    onclick="coordAprovarReset('${r.id}', '${r.nif}', '${r.nome}')">
+              Aprovar (senai102)
+            </button>
+          </div>
+        `).join('');
+      }
+      if (badge) {
+        badge.textContent = `${data.length} pendentes`;
+        badge.className = 'px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-label-sm text-label-sm font-bold';
+      }
+      if (topBadge) {
+        topBadge.textContent = data.length;
+        topBadge.className = 'ml-0.5 px-2 py-0.2 rounded-full bg-amber-500 text-white font-label-sm text-[10px] font-bold';
+      }
+      if (sub) {
+        sub.textContent = `${data.length} docentes aguardando liberação de acesso imediato`;
+      }
+    } else {
+      if (container) {
+        container.innerHTML = `
+          <div class="py-6 text-center text-secondary text-xs flex flex-col items-center justify-center gap-1">
+            <span class="font-semibold text-primary">No Data</span>
+            <span>Nenhuma solicitação de redefinição de senha pendente.</span>
+          </div>
+        `;
+      }
+      if (modalList) {
+        modalList.innerHTML = `
+          <div class="py-6 text-center text-secondary text-xs flex flex-col items-center justify-center gap-1">
+            <span class="font-semibold text-primary">No Data</span>
+            <span>Nenhuma solicitação pendente no Supabase.</span>
+          </div>
+        `;
+      }
+      if (badge) {
+        badge.textContent = '0 pendentes';
+        badge.className = 'px-2.5 py-1 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm font-bold';
+      }
+      if (topBadge) {
+        topBadge.textContent = '0';
+        topBadge.className = 'ml-0.5 px-2 py-0.2 rounded-full bg-surface-container text-secondary font-label-sm text-[10px] font-bold';
+      }
+      if (sub) {
+        sub.textContent = '0 docentes aguardando liberação de acesso imediato';
+      }
     }
   }
 

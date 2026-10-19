@@ -99,6 +99,13 @@ function calRenderizar() {
     return;
   }
 
+  const isCoord = Boolean(
+    typeof window !== 'undefined' &&
+    window.authService &&
+    window.authService.currentUser &&
+    window.authService.currentUser.role === 'coordenacao'
+  );
+
   const calData = holidayService.getYearCalendar(_calAnoExibido);
   const aulasMap = calObterMapaAulasTurma(_calAnoExibido);
   const anoTurma = calObterAnoTurmaAtiva();
@@ -132,7 +139,7 @@ function calRenderizar() {
         <button type="button" class="px-4 py-2 bg-[#4A2A1A] text-white rounded-full text-xs font-bold hover:bg-[#361E12] transition shadow-sm" onclick="calMudarAno(${anoTurma})">
           Ano da Turma (${anoTurma})
         </button>
-        <button type="button" class="px-4 py-2 bg-[#4A2A1A] text-white rounded-full text-xs font-bold hover:bg-[#361E12] transition shadow-sm flex items-center gap-1.5" onclick="calAbrirModalNovoDia()">
+        <button type="button" id="cal-btn-gerenciar-dia" style="${isCoord ? '' : 'opacity: 0.45; cursor: not-allowed; filter: grayscale(0.6);'}" class="px-4 py-2 bg-[#4A2A1A] text-white rounded-full text-xs font-bold hover:bg-[#361E12] transition shadow-sm flex items-center gap-1.5" title="${isCoord ? 'Adicionar ou remover dias letivos/feriados' : 'Acesso restrito à Coordenação'}" onclick="calAbrirModalNovoDia()">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           Adicionar / Gerenciar Dia
         </button>
@@ -386,6 +393,25 @@ function calOnContextMenuDay(el, event) {
     event.preventDefault();
     event.stopPropagation();
   }
+  const isCoord = Boolean(
+    typeof window !== 'undefined' &&
+    window.authService &&
+    window.authService.currentUser &&
+    window.authService.currentUser.role === 'coordenacao'
+  );
+  if (typeof window !== 'undefined' && window.authService && !isCoord) {
+    if (typeof window.compMostrarToast === 'function') {
+      window.compMostrarToast('Acesso Restrito', 'Necessária Autenticação de Coordenação.', 'warning');
+    } else if (typeof window.showToast === 'function') {
+      window.showToast('Necessária Autenticação de Coordenação.');
+    } else if (typeof alert === 'function') {
+      alert('Necessária Autenticação de Coordenação.');
+    }
+    if (typeof window.authService?.abrirModalLogin === 'function') {
+      window.authService.abrirModalLogin();
+    }
+    return;
+  }
   const dateKey = el.dataset.date;
   if (!dateKey) return;
   calAbrirMenuMinimalista(dateKey, event.clientX, event.clientY);
@@ -397,6 +423,25 @@ function calOnContextMenuDay(el, event) {
 let _calAbaAtivaGerenciar = 'add';
 
 function calAbrirModalNovoDia(dataPrefill) {
+  const isCoord = Boolean(
+    typeof window !== 'undefined' &&
+    window.authService &&
+    window.authService.currentUser &&
+    window.authService.currentUser.role === 'coordenacao'
+  );
+  if (typeof window !== 'undefined' && window.authService && !isCoord) {
+    if (typeof window.compMostrarToast === 'function') {
+      window.compMostrarToast('Acesso Restrito', 'Necessária Autenticação de Coordenação.', 'warning');
+    } else if (typeof window.showToast === 'function') {
+      window.showToast('Necessária Autenticação de Coordenação.');
+    } else if (typeof alert === 'function') {
+      alert('Necessária Autenticação de Coordenação.');
+    }
+    if (typeof window.authService?.abrirModalLogin === 'function') {
+      window.authService.abrirModalLogin();
+    }
+    return;
+  }
   const modal = document.getElementById('cal-modal-gerenciar-dia');
   if (!modal) {
     const hojeKey = HolidayService.formatDateKey(new Date());
@@ -651,6 +696,25 @@ let _calMenuSelectedCatId = "feriado";
  * Abre o menu minimalista flutuante próximo ao cursor ou centralizado
  */
 function calAbrirMenuMinimalista(dateKey, posX, posY, isCentered = false) {
+  const isCoord = Boolean(
+    typeof window !== 'undefined' &&
+    window.authService &&
+    window.authService.currentUser &&
+    window.authService.currentUser.role === 'coordenacao'
+  );
+  if (typeof window !== 'undefined' && window.authService && !isCoord) {
+    if (typeof window.compMostrarToast === 'function') {
+      window.compMostrarToast('Acesso Restrito', 'Necessária Autenticação de Coordenação.', 'warning');
+    } else if (typeof window.showToast === 'function') {
+      window.showToast('Necessária Autenticação de Coordenação.');
+    } else if (typeof alert === 'function') {
+      alert('Necessária Autenticação de Coordenação.');
+    }
+    if (typeof window.authService?.abrirModalLogin === 'function') {
+      window.authService.abrirModalLogin();
+    }
+    return;
+  }
   calFecharMenuMinimalista();
 
   _calMenuCurrentDate = dateKey;

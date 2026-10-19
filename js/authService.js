@@ -449,12 +449,13 @@
           }
         }
 
-        // Exibir aba de coordenação apenas se o usuário for 'coordenacao'
+        // Aba de coordenação na barra superior permanece clicável (requer autenticação)
         if (tabNavCoord) {
+          tabNavCoord.style.display = 'inline-flex';
           if (this.currentUser.role === 'coordenacao') {
-            tabNavCoord.style.display = 'inline-flex';
+            tabNavCoord.title = 'Painel da Coordenação Pedagógica (Autenticado)';
           } else {
-            tabNavCoord.style.display = 'none';
+            tabNavCoord.title = 'Painel da Coordenação Pedagógica (Requer Autenticação)';
           }
         }
 
@@ -466,16 +467,35 @@
           if (typeof compAtualizarSecaoCoordModalReposicao === 'function') compAtualizarSecaoCoordModalReposicao();
           if (typeof compRenderizarVariaveis === 'function') compRenderizarVariaveis();
         }
+
+        if (isCoord && typeof window.coordCarregarDados === 'function') {
+          const activeTab = document.querySelector('.app-tab.active')?.dataset?.tab;
+          if (activeTab === 'tab-coordenacao') {
+            window.coordCarregarDados();
+          }
+        }
       } else {
         if (btnLogin) btnLogin.style.display = 'inline-flex';
         if (userProfile) userProfile.style.display = 'none';
-        if (tabNavCoord) tabNavCoord.style.display = 'none';
+        if (tabNavCoord) {
+          tabNavCoord.style.display = 'inline-flex';
+          tabNavCoord.title = 'Painel da Coordenação Pedagógica (Requer Autenticação)';
+        }
 
         if (typeof CompState !== 'undefined' && CompState.coordenacao) {
           CompState.coordenacao.desbloqueada = false;
           if (typeof compAtualizarStatusCadeadoUI === 'function') compAtualizarStatusCadeadoUI();
           if (typeof compAtualizarSecaoCoordModalReposicao === 'function') compAtualizarSecaoCoordModalReposicao();
           if (typeof compRenderizarVariaveis === 'function') compRenderizarVariaveis();
+        }
+      }
+
+      // Re-renderizar o topo do Calendário para refletir o estado de coordenação
+      if (typeof window.calRenderizar === 'function') {
+        try {
+          window.calRenderizar();
+        } catch (e) {
+          // Calendário ainda não inicializado
         }
       }
     }
