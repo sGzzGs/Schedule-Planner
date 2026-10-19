@@ -232,6 +232,25 @@
    ESTILOS ESPECÍFICOS DO PAINEL DA COORDENAÇÃO (ABA 4)
    ========================================================================== */
 
+#tab-coordenacao:not(.page-active) {
+  display: none !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#tab-coordenacao.page-active {
+  display: block !important;
+  position: relative !important;
+  overflow-y: auto !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+}
+
 #tab-coordenacao {
   background-color: #fff9ec;
   min-height: calc(100vh - 64px);

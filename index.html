@@ -58,7 +58,37 @@
             "outline": "#83746e",
             "outline-variant": "#d5c3bc",
             "error": "#ba1a1a",
-            "error-container": "#ffdad6"
+            "error-container": "#ffdad6",
+            timber: {
+              50: '#FAF8F3',
+              100: '#F5EFEB',
+              200: '#E8E2D5',
+              300: '#D5C9B8',
+              400: '#C5BCAC',
+              500: '#8D7B6F',
+              600: '#6B584D',
+              700: '#553725',
+              800: '#4A2A1A',
+              900: '#321B0F',
+            },
+            amberSoft: {
+              50: '#FFFBEB',
+              100: '#FEF3C7',
+              200: '#FDE68A',
+              800: '#92400E',
+            },
+            accent: {
+              purple: '#7C3AED',
+              purpleHover: '#6D28D9',
+              purpleSoft: '#F5F3FF',
+              purpleBorder: '#DDD6FE',
+              purpleText: '#6D28D9'
+            }
+          },
+          boxShadow: {
+            'warm-modal': '0 20px 40px -8px rgba(74, 42, 26, 0.12), 0 1px 3px rgba(74, 42, 26, 0.05)',
+            'modal': '0 20px 45px -10px rgba(74, 42, 26, 0.14), 0 8px 20px -6px rgba(74, 42, 26, 0.08)',
+            'timber-modal': '0 20px 45px -10px rgba(74, 42, 26, 0.15), 0 8px 18px -6px rgba(74, 42, 26, 0.08)'
           }
         }
       }
@@ -492,19 +522,14 @@
           </span>
           <span class="stitch-banner-dot">•</span>
           <span class="stitch-banner-meta">
-            <i class="fa-regular fa-hourglass-half"></i> Total Faltas: <strong id="comp-banner-total-faltas" class="stitch-text-coral">0h00</strong>
+            <i class="fa-regular fa-clock"></i> Horas Ministradas: <strong id="comp-banner-horas-ministradas">0h00</strong>
           </span>
           <span class="stitch-banner-dot">•</span>
           <span class="stitch-badge-hoje">
-            <i class="fa-regular fa-calendar"></i> Hoje: <strong id="comp-banner-hoje-data">15/10/2026</strong>
+            <i class="fa-regular fa-calendar"></i> Hoje: <strong id="comp-banner-hoje-data"></strong>
           </span>
         </div>
-        <div class="stitch-context-right">
-          <span class="stitch-teacher-label">Professor(a): <strong id="comp-banner-docente">Docente</strong></span>
-          <button type="button" id="comp-btn-lock-coord" class="stitch-icon-circle-btn" title="Área Restrita da Coordenação (Protegida por Senha)">
-            <i class="fa-solid fa-lock"></i>
-          </button>
-        </div>
+
       </section>
       <!-- END: Stitch ContextClassBanner -->
 
@@ -589,7 +614,7 @@
   <!-- ================================================================
        PÁGINA 4 — PAINEL DA COORDENAÇÃO PEDAGÓGICA (GOVERNANÇA & NIFS)
        ================================================================ -->
-  <div class="app-page" id="tab-coordenacao" role="tabpanel" aria-labelledby="tab-coordenacao" style="display: none;">
+  <div class="app-page" id="tab-coordenacao" role="tabpanel" aria-labelledby="tab-coordenacao">
     <div class="max-w-[1700px] mx-auto p-gutter"><div class="flex flex-col w-full">
 <!-- Toast Feedback Simulation -->
 <div class="fixed bottom-6 right-6 z-50 transform transition-all duration-300 ease-out flex items-center gap-3 px-5 py-3.5 rounded-xl bg-surface-container-lowest shadow-xl text-on-surface translate-y-24 opacity-0 pointer-events-none" id="toastNotification">
@@ -1575,70 +1600,295 @@
     </div>
   </div>
 
-  <!-- MODAL DE ANOTAÇÃO / OCORRÊNCIA DA FALTA NO CALENDÁRIO (BOTÃO DIREITO / LONG PRESS) -->
-  <div id="comp-note-modal" class="day-modal-backdrop" style="display: none;">
-    <div class="day-modal-card" style="max-width: 440px;" role="dialog" aria-modal="true" aria-labelledby="note-modal-title">
-      <div class="day-modal-header">
-        <div class="day-modal-title-group">
-          <div class="day-modal-icon" style="background: rgba(38, 139, 210, 0.12); color: var(--accent-active);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+  <!-- MODAL DE ANOTAÇÃO / OCORRÊNCIA DA FALTA NO CALENDÁRIO (REDESIGN STITCH: BOTÃO DIREITO / LONG PRESS) -->
+  <div id="comp-note-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+    <!-- Dimmed warm backdrop simulating the context above the dashboard -->
+    <div aria-hidden="true" class="fixed inset-0 bg-[#4A2A1A]/20 backdrop-blur-[2px] transition-opacity" onclick="document.getElementById('comp-note-modal').style.display='none'"></div>
+    <!-- Modal Dialog -->
+    <main aria-labelledby="note-modal-title" aria-modal="true" class="relative w-full max-w-lg bg-white rounded-2xl shadow-warm-modal border border-timber-300/80 overflow-hidden z-10 transition-all transform scale-100" role="dialog">
+      <!-- Modal Header -->
+      <header class="px-6 py-5 bg-[#FAF8F3]/60 border-b border-timber-300/70 flex items-start justify-between gap-4">
+        <!-- Header Left: Icon badge and titles -->
+        <div class="flex items-center gap-3.5">
+          <!-- Edit Icon Badge -->
+          <div class="w-11 h-11 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shadow-sm shrink-0" data-purpose="icon-badge">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+              <path d="m15 5 4 4"></path>
+            </svg>
           </div>
           <div>
-            <h3 id="note-modal-title" class="day-modal-title">Anotação da Falta / Ocorrência</h3>
-            <span id="note-modal-subtitle" class="day-modal-subtitle">DD/MM/AAAA • Discente</span>
+            <!-- Title with class & lesson details -->
+            <h2 class="text-[17px] font-bold text-timber-800 leading-snug tracking-tight" id="note-modal-title">
+              Nota / Ocorrência <span class="text-timber-400 mx-1">•</span> Aula
+            </h2>
+            <!-- Subtitle with date and student name -->
+            <p class="text-xs font-medium text-timber-500 mt-0.5" id="note-modal-subtitle">
+              DD/MM/AAAA <span class="text-timber-300 mx-1">•</span> Discente
+            </p>
           </div>
         </div>
-        <button type="button" id="comp-note-modal-close" class="day-modal-close" title="Fechar">&times;</button>
-      </div>
-      <div class="day-modal-body" style="padding: 16px 20px;">
-        <div class="modal-field-group">
-          <label for="comp-note-input" style="font-size: 11px; font-weight: 700; margin-bottom: 6px; display: block;">Motivo da Falta / Observação:</label>
-          <textarea id="comp-note-input" class="input-control" rows="4" style="resize: vertical; font-size: 12px; line-height: 1.45;" placeholder="Informe a justificativa ou nota (ex: Atestado médico, consulta, saída antecipada, trabalho)..."></textarea>
+        <!-- Close Button -->
+        <button id="comp-note-modal-close" aria-label="Fechar modal" class="w-8 h-8 rounded-lg flex items-center justify-center text-timber-500 hover:text-timber-800 hover:bg-timber-200/60 transition-colors" data-purpose="close-modal-trigger" type="button">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <line x1="18" x2="6" y1="6" y2="18"></line>
+            <line x1="6" x2="18" y1="6" y2="18"></line>
+          </svg>
+        </button>
+      </header>
+      <!-- Modal Form -->
+      <form id="attendance-note-form" onsubmit="event.preventDefault();">
+        <!-- Body Section with Textarea Field -->
+        <div class="px-6 py-5 bg-[#FAF8F3]/30">
+          <label class="block text-xs font-bold text-timber-800 uppercase tracking-wider mb-2" for="comp-note-input">
+            Motivo da Falta / Observação:
+          </label>
+          <div class="relative">
+            <textarea class="w-full text-sm rounded-xl border border-timber-300 bg-white p-3.5 text-timber-800 placeholder-timber-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition resize-y outline-none leading-relaxed shadow-inner" id="comp-note-input" name="observacao" placeholder="Informe a justificativa ou nota (ex: Atestado médico, consulta, saída antecipada, trabalho)..." rows="4"></textarea>
+          </div>
         </div>
-      </div>
-      <div class="day-modal-footer">
-        <button type="button" id="comp-note-modal-remove" class="comp-btn-banner-action btn-banner-danger" style="font-size: 11px;">Remover Nota</button>
-        <div style="display: flex; gap: 8px;">
-          <button type="button" id="comp-note-modal-cancel" class="comp-btn-banner-action" style="font-size: 11px;">Cancelar</button>
-          <button type="button" id="comp-note-modal-save" class="comp-btn-banner-action btn-banner-primary" style="font-size: 11px; font-weight: 800;">Salvar Nota</button>
-        </div>
-      </div>
-    </div>
+        <!-- Modal Footer -->
+        <footer class="px-6 py-4 bg-[#FAF8F3] border-t border-timber-300/70 flex items-center justify-between gap-3">
+          <button id="comp-note-modal-remove" class="px-4 py-2.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs tracking-wide transition shadow-sm" type="button" style="display: none;">
+            Remover Nota
+          </button>
+          <div class="flex items-center gap-3 ml-auto">
+            <button id="comp-note-modal-cancel" class="px-5 py-2.5 rounded-lg border border-timber-300 bg-white hover:bg-timber-50 text-timber-600 hover:text-timber-800 font-semibold text-xs tracking-wide transition shadow-sm" data-purpose="cancel-action" type="button">
+              Cancelar
+            </button>
+            <button id="comp-note-modal-save" class="px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-semibold text-xs tracking-wide transition shadow-sm flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1" data-purpose="save-action" type="submit">
+              <span>Salvar Nota</span>
+            </button>
+          </div>
+        </footer>
+      </form>
+    </main>
   </div>
 
-  <!-- MODAL DE CONFIRMAÇÃO DE EVASÃO COM DATA -->
-  <div id="comp-modal-evasao" class="day-modal-backdrop" style="display: none;">
-    <div class="day-modal-card" style="max-width: 440px;" role="dialog" aria-modal="true" aria-labelledby="evasao-modal-title">
-      <div class="day-modal-header">
-        <div class="day-modal-title-group">
-          <div class="day-modal-icon" style="background: rgba(88, 110, 117, 0.18); color: var(--text-primary);">
-            <span style="font-weight: 900; font-size: 15px;">e</span>
+  <!-- MODAL DE CONFIRMAÇÃO DE EVASÃO COM DATA (REDESIGN STITCH) -->
+  <div id="comp-modal-evasao" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+    <!-- Dimmed warm backdrop -->
+    <div aria-hidden="true" class="fixed inset-0 bg-[#4A2A1A]/20 backdrop-blur-sm z-10 transition-opacity" onclick="document.getElementById('comp-modal-evasao').style.display='none'"></div>
+
+    <main class="relative z-20 w-full max-w-[480px]" data-purpose="evasion-dialog-wrapper">
+      <div class="bg-white rounded-2xl shadow-modal border border-timber-200 overflow-hidden transform transition-all">
+        <!-- Modal Header -->
+        <header class="px-6 pt-6 pb-5 flex items-start justify-between border-b border-timber-200/60 bg-white" data-purpose="modal-header">
+          <div class="flex items-center gap-3.5">
+            <!-- Student Initial Badge -->
+            <div class="w-11 h-11 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0 shadow-sm" data-purpose="student-avatar-badge">
+              <span class="font-bold text-lg text-amber-800 lowercase">e</span>
+            </div>
+            <div>
+              <h2 id="evasao-modal-title" class="text-lg font-bold text-timber-800 leading-snug tracking-tight">
+                Registrar Evasão do Discente
+              </h2>
+              <p id="evasao-modal-subtitle" class="text-xs font-semibold text-timber-500 tracking-wide mt-0.5">
+                Discente
+              </p>
+            </div>
+          </div>
+          <!-- Close Button -->
+          <button id="comp-modal-evasao-close" aria-label="Fechar janela" class="text-timber-500 hover:text-timber-800 hover:bg-timber-100/70 p-1.5 rounded-lg transition-colors inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-timber-300" type="button">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+        </header>
+
+        <!-- Modal Body -->
+        <section class="p-6 space-y-5 bg-white" data-purpose="modal-content-form">
+          <!-- Context & Policy Notice Box -->
+          <div class="p-4 rounded-xl bg-timber-50 border border-timber-200/80 flex gap-3 text-slate-600" data-purpose="evasion-notice-banner">
+            <div class="shrink-0 text-amber-700/80 pt-0.5">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+            <p class="text-[13px] leading-relaxed text-slate-600 font-normal">
+              Ao marcar o discente como evadido, ele será movido para o <strong class="font-semibold text-slate-700">final da chamada</strong> e suas presenças a partir da data de evasão serão exibidas em <strong class="font-semibold text-slate-700">tom acinzentado</strong> no calendário.
+            </p>
+          </div>
+
+          <!-- Form Field: Evasion Date -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-timber-800" for="comp-modal-evasao-data">
+              Data da Evasão:
+            </label>
+            <div class="relative rounded-xl border border-timber-300 bg-white shadow-sm focus-within:border-sky-600 focus-within:ring-2 focus-within:ring-sky-600/20 transition-all">
+              <input class="w-full bg-transparent border-0 py-2.5 pl-3.5 pr-11 text-sm font-semibold text-slate-800 placeholder-slate-400 focus:ring-0 focus:outline-none" id="comp-modal-evasao-data" name="data_evasao" type="date">
+              <!-- Datepicker Icon Trigger -->
+              <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400 peer-focus:text-sky-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </div>
+            </div>
+            <p class="text-xs text-timber-500 font-medium">
+              Presenças a partir desta data ficarão acinzentadas na visão calendário.
+            </p>
+          </div>
+        </section>
+
+        <!-- Modal Footer -->
+        <footer class="px-6 py-4 bg-timber-50/70 border-t border-timber-200 flex items-center justify-end gap-3" data-purpose="modal-actions">
+          <button id="comp-modal-evasao-cancel" class="px-4 py-2.5 rounded-xl border border-timber-200 bg-white text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-timber-100/60 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-timber-300" type="button">
+            Cancelar
+          </button>
+          <button id="comp-modal-evasao-confirm" class="px-4 py-2.5 rounded-xl bg-[#4A2A1A] hover:bg-[#341A0E] text-white text-xs font-bold tracking-wide shadow-sm hover:shadow transition-all focus:outline-none focus:ring-2 focus:ring-timber-700 focus:ring-offset-1 flex items-center gap-1.5" type="button">
+            <span>Confirmar Evasão</span>
+          </button>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL - ADICIONAR OU REMOVER DIA DO CALENDÁRIO (REDESIGN STITCH) -->
+  <div id="cal-modal-gerenciar-dia" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style="display: none;">
+    <!-- Backdrop -->
+    <div aria-hidden="true" class="fixed inset-0 bg-stone-900/40 backdrop-blur-[2px] transition-opacity" onclick="calFecharModalNovoDia()"></div>
+
+    <!-- Modal Dialog -->
+    <div aria-labelledby="cal-modal-title" aria-modal="true" class="relative z-10 w-full max-w-2xl bg-white rounded-2xl sm:rounded-3xl shadow-timber-modal border border-timber-200 overflow-hidden flex flex-col my-auto transition-all transform animate-in fade-in zoom-in-95 duration-200" data-purpose="modal-wrapper" role="dialog">
+      <!-- Modal Header -->
+      <header class="px-6 sm:px-8 pt-7 pb-5 border-b border-timber-100 flex items-start justify-between bg-gradient-to-b from-[#FFFDFB] to-white">
+        <div class="flex items-start gap-4">
+          <!-- Calendar Icon Badge with Warm Accent -->
+          <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-timber-700 shadow-sm shrink-0">
+            <svg class="w-6 h-6 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
           </div>
           <div>
-            <h3 id="evasao-modal-title" class="day-modal-title">Registrar Evasão do Discente</h3>
-            <span id="evasao-modal-subtitle" class="day-modal-subtitle">Discente</span>
+            <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-timber-800 leading-snug" id="cal-modal-title">
+              Adicionar / Remover Dia do Calendário
+            </h2>
+            <p class="text-xs text-timber-500 font-medium mt-1">Gerencie feriados, recessos contínuos e férias docentes no calendário escolar</p>
           </div>
         </div>
-        <button type="button" id="comp-modal-evasao-close" class="day-modal-close" title="Fechar">&times;</button>
+        <!-- Close Button -->
+        <button id="cal-modal-btn-close" aria-label="Fechar janela" onclick="calFecharModalNovoDia()" class="w-9 h-9 rounded-full flex items-center justify-center text-timber-500 hover:text-timber-800 hover:bg-timber-100 transition-colors ml-2 focus:outline-none focus:ring-2 focus:ring-timber-600/30" data-purpose="close-modal" type="button">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+          </svg>
+        </button>
+      </header>
+
+      <!-- SegmentedTabBar -->
+      <div class="px-6 sm:px-8 pt-5 pb-3 bg-white">
+        <nav aria-label="Ações de Modificação" class="flex flex-wrap gap-2 text-xs sm:text-sm font-semibold">
+          <button id="cal-tab-btn-add" class="px-4 py-2 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 shadow-xs font-bold transition hover:bg-purple-100 flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-purple-300" onclick="calAlternarAbaGerenciar('add')" type="button">
+            <span class="text-base leading-none font-bold">+</span>
+            Add Dia / Férias
+          </button>
+          <button id="cal-tab-btn-remove" class="px-4 py-2 rounded-xl bg-timber-50 text-timber-500 hover:text-timber-800 hover:bg-timber-100 border border-timber-200/80 transition font-medium focus:outline-none focus:ring-2 focus:ring-timber-400" onclick="calAlternarAbaGerenciar('remove')" type="button">
+            Remover / Desbloquear
+          </button>
+          <button id="cal-tab-btn-modificacoes" class="px-4 py-2 rounded-xl bg-timber-50 text-timber-500 hover:text-timber-800 hover:bg-timber-100 border border-timber-200/80 transition font-medium flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-timber-400" onclick="calAlternarAbaGerenciar('modificacoes')" type="button">
+            Modificações (<span id="cal-badge-total-mods">0</span>)
+          </button>
+        </nav>
       </div>
-      <div class="day-modal-body" style="padding: 16px 20px;">
-        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 14px;">
-          Ao marcar o discente como evadido, ele será movido para o final da chamada e suas presenças a partir da data de evasão serão exibidas em tom acinzentado no calendário.
-        </p>
-        <div class="modal-field-group">
-          <label for="comp-modal-evasao-data" style="font-size: 11.5px; font-weight: 700; display: block; margin-bottom: 6px;">
-            Data da Evasão:
+
+      <!-- FormBody (Aba Add) -->
+      <div id="cal-content-add" class="px-6 sm:px-8 py-4 space-y-5 overflow-y-auto max-h-[60vh]">
+        <!-- Inclusion Type Radio Group -->
+        <fieldset class="space-y-2">
+          <legend class="text-xs font-bold uppercase tracking-wider text-timber-600 mb-1">
+            Tipo de Inclusão:
+          </legend>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <label class="relative flex items-center gap-3 p-3.5 rounded-xl border border-timber-200 bg-[#FCFBF8] cursor-pointer hover:border-amber-400 hover:bg-amber-50/20 transition-all select-none">
+              <input checked="" class="w-4 h-4 text-timber-800 focus:ring-timber-700 focus:ring-offset-1 border-timber-300" name="cal_tipo_inclusao" type="radio" value="pontual" onchange="calMudarTipoInclusao('pontual')">
+              <div class="flex flex-col">
+                <span class="text-sm font-semibold text-timber-800">Data Pontual</span>
+                <span class="text-xs text-timber-500">Único dia letivo ou feriado local</span>
+              </div>
+            </label>
+            <label class="relative flex items-center gap-3 p-3.5 rounded-xl border border-timber-200 bg-[#FCFBF8] cursor-pointer hover:border-amber-400 hover:bg-amber-50/20 transition-all select-none">
+              <input class="w-4 h-4 text-timber-800 focus:ring-timber-700 focus:ring-offset-1 border-timber-300" name="cal_tipo_inclusao" type="radio" value="continuo" onchange="calMudarTipoInclusao('continuo')">
+              <div class="flex flex-col">
+                <span class="text-sm font-semibold text-timber-800">Período Contínuo</span>
+                <span class="text-xs text-timber-500">Recesso, férias docentes ou emendas</span>
+              </div>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Date Range Inputs -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-timber-600" for="cal-data-inicial">
+              Data Inicial:
+            </label>
+            <div class="relative">
+              <input class="w-full bg-[#FAF7F2] border border-timber-200 rounded-xl px-4 py-2.5 text-sm text-timber-800 font-semibold focus:outline-none focus:ring-2 focus:ring-timber-600 focus:border-transparent transition" id="cal-data-inicial" name="data_inicial" type="date">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-timber-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-1.5" id="cal-wrap-data-final" style="display: none;">
+            <label class="block text-xs font-bold uppercase tracking-wider text-timber-600" for="cal-data-final">
+              Data Final (Inclusivo):
+            </label>
+            <div class="relative">
+              <input class="w-full bg-[#FAF7F2] border border-timber-200 rounded-xl px-4 py-2.5 text-sm text-timber-800 font-semibold focus:outline-none focus:ring-2 focus:ring-timber-600 focus:border-transparent transition" id="cal-data-final" name="data_final" type="date">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-timber-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event Description Field -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold uppercase tracking-wider text-timber-600" for="cal-descricao-evento">
+            Descrição do Evento / Motivo:
           </label>
-          <input type="date" id="comp-modal-evasao-data" class="input-control" style="width: 100%; font-size: 12px; padding: 7px 10px;">
-          <span style="font-size: 10.5px; color: var(--text-secondary); margin-top: 4px; display: block;">
-            Presenças a partir desta data ficarão acinzentadas na visão calendário.
-          </span>
+          <input class="w-full bg-[#FAF7F2] border border-timber-200 rounded-xl px-4 py-2.5 text-sm text-timber-800 placeholder-timber-400 focus:outline-none focus:ring-2 focus:ring-timber-600 focus:border-transparent transition" id="cal-descricao-evento" name="descricao_evento" placeholder="Ex: Semana de Planejamento, Férias Docentes..." type="text">
         </div>
       </div>
-      <div class="day-modal-footer" style="padding: 10px 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 8px;">
-        <button type="button" id="comp-modal-evasao-cancel" class="btn btn-secondary btn-sm">Cancelar</button>
-        <button type="button" id="comp-modal-evasao-confirm" class="btn btn-sm" style="background: #586e75; color: #fff; font-weight: 700;">Confirmar Evasão</button>
+
+      <!-- Content Aba Remover -->
+      <div id="cal-content-remove" class="px-6 sm:px-8 py-4 space-y-4 overflow-y-auto max-h-[60vh]" style="display: none;">
+        <p class="text-xs text-timber-500 font-medium">Informe a data do feriado/evento que deseja desbloquear para torná-la dia letivo:</p>
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold uppercase tracking-wider text-timber-600" for="cal-data-remover">Data a Desbloquear:</label>
+          <input class="w-full bg-[#FAF7F2] border border-timber-200 rounded-xl px-4 py-2.5 text-sm text-timber-800 font-semibold focus:outline-none focus:ring-2 focus:ring-timber-600 focus:border-transparent transition" id="cal-data-remover" type="date">
+        </div>
       </div>
+
+      <!-- Content Aba Modificações -->
+      <div id="cal-content-modificacoes" class="px-6 sm:px-8 py-4 space-y-4 overflow-y-auto max-h-[60vh]" style="display: none;">
+        <div id="cal-lista-modificacoes" class="space-y-2 text-xs">
+          <!-- Preenchido dinamicamente -->
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <footer class="px-6 sm:px-8 py-5 border-t border-timber-100 bg-[#FCFBF9] flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
+        <!-- Muted Reset Action -->
+        <button id="cal-btn-restaurar-base" onclick="calRestaurarBaseOficialConfirm()" class="w-full sm:w-auto px-4 py-2.5 text-xs sm:text-sm font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl border border-rose-200/80 transition-colors flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-rose-400/40" data-purpose="restore-default" type="button">
+          <svg class="w-4 h-4 stroke-[2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          Restaurar Base Oficial
+        </button>
+        <!-- Primary Confirmation Actions -->
+        <div class="w-full sm:w-auto flex items-center gap-2.5">
+          <button onclick="calFecharModalNovoDia()" class="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl border border-timber-200 text-xs sm:text-sm font-bold text-timber-700 bg-white hover:bg-timber-50 transition shadow-2xs focus:outline-none focus:ring-2 focus:ring-timber-300" data-purpose="cancel-action" type="button">
+            Fechar
+          </button>
+          <button id="cal-btn-salvar-adicao" onclick="calConfirmarAdicaoModal()" class="w-1/2 sm:w-auto px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-purple-700 hover:bg-purple-800 shadow-sm hover:shadow transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-700" data-purpose="submit-action" type="button">
+            Salvar Adição
+          </button>
+        </div>
+      </footer>
     </div>
   </div>
 

@@ -695,7 +695,8 @@ function compAtualizarBannerContextual() {
   const elAnoWrapper = document.getElementById('comp-banner-ano-wrapper');
   const elAnoDot = document.getElementById('comp-banner-ano-dot');
   const elDocente = document.getElementById('comp-banner-docente');
-  const elTotalFaltas = document.getElementById('comp-banner-total-faltas');
+  const elHorasMinistradas = document.getElementById('comp-banner-horas-ministradas') || document.getElementById('comp-banner-total-faltas');
+  const elHojeData = document.getElementById('comp-banner-hoje-data');
 
   const curso = CompState.turmaInfo.curso || '-';
   const turma = CompState.turmaInfo.turma || '-';
@@ -704,6 +705,12 @@ function compAtualizarBannerContextual() {
   if (elCurso) elCurso.textContent = curso;
   if (elTurma) elTurma.textContent = turma;
   if (elDocente) elDocente.textContent = docente;
+
+  // Atualiza data de Hoje dinamicamente
+  const dataHojeIso = compObterDataHojeIso();
+  if (elHojeData) {
+    elHojeData.textContent = compIsoToDDMMAAAA(dataHojeIso);
+  }
 
   // Extração do Ano: primeiros 2 dígitos após o '_' (ex: MPOWERBI_2503TG -> 25)
   // Caso não seja possível identificar, estritamente vazio (sem texto, sem placeholder, sem hint)
@@ -725,22 +732,22 @@ function compAtualizarBannerContextual() {
     if (elAnoDot) elAnoDot.style.display = 'none';
   }
 
-  // Total de Faltas consolidado da turma
-  let totalGeralFaltas = 0;
-  const dataHojeIso = compObterDataHojeIso();
+  // Horas Ministradas consolidada da turma até hoje (dias letivos <= hoje)
+  let totalHorasMinistradas = 0;
   const diasValidos = CompState.diasLetivos || [];
-  for (const aluno of (CompState.alunos || [])) {
-    const faltasAluno = CompState.faltasPorAluno[aluno] || {};
-    for (const d of diasValidos) {
-      if (d <= dataHojeIso) {
-        totalGeralFaltas += Number(faltasAluno[d]) || 0;
-      }
+  for (const d of diasValidos) {
+    if (d <= dataHojeIso) {
+      totalHorasMinistradas += compObterHorasAula(d);
     }
   }
 
-  if (elTotalFaltas) {
-    elTotalFaltas.textContent = totalGeralFaltas > 0 ? compFormatarHorasDecimais(totalGeralFaltas) : '0h00';
-    elTotalFaltas.style.color = totalGeralFaltas > 0 ? '#ef4444' : '#10b981';
+  const chTotal = CompState.turmaInfo.chTotal || 0;
+  if (chTotal > 0 && totalHorasMinistradas > chTotal) {
+    totalHorasMinistradas = chTotal;
+  }
+
+  if (elHorasMinistradas) {
+    elHorasMinistradas.textContent = totalHorasMinistradas > 0 ? compFormatarHorasDecimais(totalHorasMinistradas) : '0h00';
   }
 }
 
@@ -834,7 +841,11 @@ function compObterDataHojeIso() {
   if (CompState.dataSimuladaHoje) {
     return CompState.dataSimuladaHoje;
   }
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /**
@@ -1836,7 +1847,7 @@ function compAbrirModalAuthCoordenacao() {
 }
 
 function compAbrirModalCoordenacao() {
-  if (!CompState.coordenacao.desbloqueada) {
+  if (!compIsCoordenacaoDesbloqueada()) {
     compAbrirModalAuthCoordenacao();
   } else {
     compFocarSecaoCoordModal();
@@ -1876,6 +1887,18 @@ function compAutenticarCoordenacao() {
 // --------------------------------------------------------------------------
 
 /**
+ * Verifica se as funções da coordenação estão liberadas:
+ * Seja por login autenticado como coordenador ou pelo flag desbloqueada
+ */
+function compIsCoordenacaoDesbloqueada() {
+  if (window.authService && typeof window.authService.isCoordenacao === 'function') {
+    if (window.authService.isCoordenacao()) return true;
+  }
+  return Boolean(CompState?.coordenacao?.desbloqueada);
+}
+window.compIsCoordenacaoDesbloqueada = compIsCoordenacaoDesbloqueada;
+
+/**
  * Alterna entre as abas do modal de reposição e impressão:
  * 'reposicao' (Quadro Demonstrativo) ou 'coordenacao' (Parecer da Coordenação)
  * @param {'reposicao'|'coordenacao'} abaId
@@ -1888,7 +1911,7 @@ function compAlternarAbaModalReposicao(abaId) {
 
   if (abaId === 'coordenacao') {
     // Se o cadeado estiver trancado, exige autenticação primeiro
-    if (!CompState.coordenacao.desbloqueada) {
+    if (!compIsCoordenacaoDesbloqueada()) {
       compAbrirModalAuthCoordenacao();
       return;
     }
@@ -1918,7 +1941,7 @@ function compAtualizarSecaoCoordModalReposicao() {
   const actionBtnCoord = document.getElementById('comp-modal-reposicao-btn-coordenacao');
   const contentCoord = document.getElementById('comp-modal-tab-content-coordenacao');
 
-  if (!CompState.coordenacao.desbloqueada) {
+  if (!compIsCoordenacaoDesbloqueada()) {
     if (tabBtnCoord) tabBtnCoord.style.display = 'none';
     if (actionBtnCoord) actionBtnCoord.style.display = 'none';
     if (contentCoord) contentCoord.hidden = true;
@@ -2736,6 +2759,12 @@ async function compImprimirTodosHoje() {
  */
 function compNavegarDataSimulada(delta) {
   const atual = compObterDataHojeIso();
+  const now = new Date();
+  const hojeRealIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  if (delta > 0 && atual >= hojeRealIso) {
+    compMostrarToast('Limite da Chamada', 'A chamada está travada na data de hoje.', 'info');
+    return;
+  }
   const dias = CompState.diasLetivos;
 
   if (dias.length > 0) {
@@ -2744,14 +2773,20 @@ function compNavegarDataSimulada(delta) {
     if (idx !== -1) {
       const nextIdx = idx + delta;
       if (nextIdx >= 0 && nextIdx < dias.length) {
+        if (dias[nextIdx] > hojeRealIso) {
+          compMostrarToast('Limite da Chamada', 'A chamada está travada na data de hoje.', 'info');
+          return;
+        }
         compDefinirDataSimulada(dias[nextIdx]);
         return;
       }
     } else {
       // Procura primeiro dia letivo maior ou menor
       if (delta > 0) {
-        const prox = dias.find(d => d > atual);
+        const prox = dias.find(d => d > atual && d <= hojeRealIso);
         if (prox) { compDefinirDataSimulada(prox); return; }
+        compMostrarToast('Limite da Chamada', 'A chamada está travada na data de hoje.', 'info');
+        return;
       } else {
         const rev = [...dias].reverse();
         const ant = rev.find(d => d < atual);
@@ -2765,6 +2800,10 @@ function compNavegarDataSimulada(delta) {
   const dateObj = new Date(y, m - 1, d);
   dateObj.setDate(dateObj.getDate() + delta);
   const novaIso = dateObj.toISOString().slice(0, 10);
+  if (delta > 0 && novaIso > hojeRealIso) {
+    compMostrarToast('Limite da Chamada', 'A chamada está travada na data de hoje.', 'info');
+    return;
+  }
   compDefinirDataSimulada(novaIso);
 }
 
@@ -3098,7 +3137,7 @@ function compRenderizarVariaveis() {
     const config = CompState.variaveisConfig[v.key] || {};
     const valorAtual = valoresCalculados[v.key];
     const isOverridden = overridesDoAluno.hasOwnProperty(v.key);
-    const isProtected = v.protegida && !CompState.coordenacao.desbloqueada;
+    const isProtected = v.protegida && !compIsCoordenacaoDesbloqueada();
 
     const itemCard = document.createElement('div');
     itemCard.className = `comp-var-item-card${isOverridden ? ' is-overridden' : ''}`;
@@ -3823,7 +3862,8 @@ function compRenderizarDiario() {
   `;
 
   // Obtém os dias letivos filtrados pelo recorte de mês(es) selecionado(s)
-  const diasFiltrados = compFiltrarDiasPorMesesSelecionados(dias);
+  // e trava a chamada na data de hoje, sem mostrar dias posteriores
+  const diasFiltrados = compFiltrarDiasPorMesesSelecionados(dias).filter(d => d <= dataHojeIso);
 
   // Renderiza corpo do modo selecionado
   if (CompState.viewMode === 'calendar') {
@@ -3833,6 +3873,8 @@ function compRenderizarDiario() {
     container.innerHTML = toolbarHtml + compRenderizarModoTabela(alunos, diasFiltrados, chTotal);
     compVincularEventosTabelaGeral();
   }
+
+  compAtualizarBannerContextual();
 }
 
 /**
@@ -5299,6 +5341,7 @@ function compTrocarAba(from, to) {
   toEl.classList.add('page-active');
   toEl.style.transform = '';
   toEl.style.opacity   = '';
+  toEl.style.display   = '';
 
   setTimeout(() => {
     fromEl.classList.remove('page-exit-left', 'page-exit-right');

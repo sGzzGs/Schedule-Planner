@@ -457,10 +457,26 @@
             tabNavCoord.style.display = 'none';
           }
         }
+
+        // Desbloqueio automático das funções do cadeado para a coordenação
+        const isCoord = (this.currentUser.role === 'coordenacao');
+        if (typeof CompState !== 'undefined' && CompState.coordenacao) {
+          CompState.coordenacao.desbloqueada = isCoord;
+          if (typeof compAtualizarStatusCadeadoUI === 'function') compAtualizarStatusCadeadoUI();
+          if (typeof compAtualizarSecaoCoordModalReposicao === 'function') compAtualizarSecaoCoordModalReposicao();
+          if (typeof compRenderizarVariaveis === 'function') compRenderizarVariaveis();
+        }
       } else {
         if (btnLogin) btnLogin.style.display = 'inline-flex';
         if (userProfile) userProfile.style.display = 'none';
         if (tabNavCoord) tabNavCoord.style.display = 'none';
+
+        if (typeof CompState !== 'undefined' && CompState.coordenacao) {
+          CompState.coordenacao.desbloqueada = false;
+          if (typeof compAtualizarStatusCadeadoUI === 'function') compAtualizarStatusCadeadoUI();
+          if (typeof compAtualizarSecaoCoordModalReposicao === 'function') compAtualizarSecaoCoordModalReposicao();
+          if (typeof compRenderizarVariaveis === 'function') compRenderizarVariaveis();
+        }
       }
     }
 

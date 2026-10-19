@@ -392,11 +392,252 @@ function calOnContextMenuDay(el, event) {
 }
 
 /**
- * Abrir menu a partir do botão superior "Adicionar / Gerenciar Dia"
+ * Controle e Gerenciamento do Modal Oficial Stitch: Adicionar / Remover Dia do Calendário
  */
-function calAbrirModalNovoDia() {
-  const hojeKey = HolidayService.formatDateKey(new Date());
-  calAbrirMenuMinimalista(hojeKey, window.innerWidth / 2, window.innerHeight / 2, true);
+let _calAbaAtivaGerenciar = 'add';
+
+function calAbrirModalNovoDia(dataPrefill) {
+  const modal = document.getElementById('cal-modal-gerenciar-dia');
+  if (!modal) {
+    const hojeKey = HolidayService.formatDateKey(new Date());
+    calAbrirMenuMinimalista(hojeKey, window.innerWidth / 2, window.innerHeight / 2, true);
+    return;
+  }
+
+  const hoje = dataPrefill || HolidayService.formatDateKey(new Date());
+  const inputIni = document.getElementById('cal-data-inicial');
+  const inputFim = document.getElementById('cal-data-final');
+  const inputDesc = document.getElementById('cal-descricao-evento');
+  const inputRemover = document.getElementById('cal-data-remover');
+
+  if (inputIni) inputIni.value = hoje;
+  if (inputFim) inputFim.value = hoje;
+  if (inputRemover) inputRemover.value = hoje;
+
+  // Pré-preenchimento de descrição caso exista
+  const dateInfo = holidayService.getDateInfo(hoje);
+  if (inputDesc) {
+    inputDesc.value = (dateInfo && dateInfo.descricao) ? dateInfo.descricao : '';
+  }
+
+  calAlternarAbaGerenciar('add');
+  calAtualizarBadgeModificacoes();
+
+  modal.style.display = 'flex';
+}
+
+function calFecharModalNovoDia() {
+  const modal = document.getElementById('cal-modal-gerenciar-dia');
+  if (modal) modal.style.display = 'none';
+}
+
+function calAlternarAbaGerenciar(aba) {
+  _calAbaAtivaGerenciar = aba;
+
+  const btnAdd = document.getElementById('cal-tab-btn-add');
+  const btnRemove = document.getElementById('cal-tab-btn-remove');
+  const btnMods = document.getElementById('cal-tab-btn-modificacoes');
+
+  const contentAdd = document.getElementById('cal-content-add');
+  const contentRemove = document.getElementById('cal-content-remove');
+  const contentMods = document.getElementById('cal-content-modificacoes');
+
+  const btnSalvar = document.getElementById('cal-btn-salvar-adicao');
+
+  const activeClasses = ['bg-purple-50', 'text-purple-700', 'border-purple-200', 'font-bold'];
+  const inactiveClasses = ['bg-timber-50', 'text-timber-500', 'border-timber-200/80', 'font-medium'];
+
+  function setBtnState(btn, isActive) {
+    if (!btn) return;
+    if (isActive) {
+      btn.classList.remove(...inactiveClasses);
+      btn.classList.add(...activeClasses);
+    } else {
+      btn.classList.remove(...activeClasses);
+      btn.classList.add(...inactiveClasses);
+    }
+  }
+
+  setBtnState(btnAdd, aba === 'add');
+  setBtnState(btnRemove, aba === 'remove');
+  setBtnState(btnMods, aba === 'modificacoes');
+
+  if (contentAdd) contentAdd.style.display = aba === 'add' ? 'block' : 'none';
+  if (contentRemove) contentRemove.style.display = aba === 'remove' ? 'block' : 'none';
+  if (contentMods) contentMods.style.display = aba === 'modificacoes' ? 'block' : 'none';
+
+  if (btnSalvar) {
+    if (aba === 'add') {
+      btnSalvar.style.display = 'inline-flex';
+      btnSalvar.textContent = 'Salvar Adição';
+    } else if (aba === 'remove') {
+      btnSalvar.style.display = 'inline-flex';
+      btnSalvar.textContent = 'Desbloquear Dia';
+    } else {
+      btnSalvar.style.display = 'none';
+    }
+  }
+
+  if (aba === 'modificacoes') {
+    calRenderizarListaModificacoes();
+  }
+}
+
+function calMudarTipoInclusao(tipo) {
+  const wrapFim = document.getElementById('cal-wrap-data-final');
+  if (wrapFim) {
+    wrapFim.style.display = tipo === 'continuo' ? 'block' : 'none';
+  }
+}
+
+function calAtualizarBadgeModificacoes() {
+  const mods = holidayService.getTodasModificacoesUsuario();
+  const total = (mods.adicionais ? mods.adicionais.length : 0) + (mods.removidos ? mods.removidos.length : 0);
+  const badge = document.getElementById('cal-badge-total-mods');
+  if (badge) badge.textContent = total;
+}
+
+function calRenderizarListaModificacoes() {
+  const container = document.getElementById('cal-lista-modificacoes');
+  if (!container) return;
+
+  const mods = holidayService.getTodasModificacoesUsuario();
+  const adicionais = mods.adicionais || [];
+  const removidos = mods.removidos || [];
+
+  if (adicionais.length === 0 && removidos.length === 0) {
+    container.innerHTML = '<div class="p-4 text-center text-timber-400 italic bg-timber-50 rounded-xl">Nenhuma modificação manual registrada. O calendário segue a base oficial.</div>';
+    return;
+  }
+
+  let listHtml = '';
+  function formatIso(iso) {
+    if (!iso) return '';
+    const parts = iso.split('-');
+    return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : iso;
+  }
+
+  adicionais.forEach(item => {
+    listHtml += `
+      <div class="flex items-center justify-between p-3 bg-white border border-timber-200 rounded-xl shadow-xs">
+        <div>
+          <span class="font-bold text-timber-800">${formatIso(item.data)}</span>
+          <span class="text-timber-600 ml-2">${item.descricao || 'Feriado Customizado'}</span>
+          <span class="inline-block ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">Adicionado</span>
+        </div>
+        <button type="button" onclick="calExcluirModificacao('${item.data}')" class="p-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded" title="Remover modificação">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        </button>
+      </div>
+    `;
+  });
+
+  removidos.forEach(dateKey => {
+    listHtml += `
+      <div class="flex items-center justify-between p-3 bg-white border border-timber-200 rounded-xl shadow-xs">
+        <div>
+          <span class="font-bold text-timber-800">${formatIso(dateKey)}</span>
+          <span class="text-timber-600 ml-2">Dia Desbloqueado para Aula</span>
+          <span class="inline-block ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">Desbloqueado</span>
+        </div>
+        <button type="button" onclick="calExcluirModificacao('${dateKey}')" class="p-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded" title="Restaurar padrão oficial">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        </button>
+      </div>
+    `;
+  });
+
+  container.innerHTML = listHtml;
+}
+
+function calExcluirModificacao(dateKey) {
+  holidayService.restaurarDiaOficial(dateKey);
+  holidayService.customizations.itensAdicionais = holidayService.customizations.itensAdicionais.filter(i => i.data !== dateKey);
+  holidayService.saveCustomizations();
+  calAtualizarBadgeModificacoes();
+  calRenderizarListaModificacoes();
+  calRenderizar();
+}
+
+function calConfirmarAdicaoModal() {
+  if (_calAbaAtivaGerenciar === 'add') {
+    const inputIni = document.getElementById('cal-data-inicial');
+    const inputFim = document.getElementById('cal-data-final');
+    const inputDesc = document.getElementById('cal-descricao-evento');
+    const radioContinuo = document.querySelector('input[name="cal_tipo_inclusao"][value="continuo"]');
+    const isContinuo = radioContinuo ? radioContinuo.checked : false;
+
+    const dtIniStr = inputIni ? inputIni.value : '';
+    const desc = (inputDesc ? inputDesc.value : '').trim() || 'Férias / Recesso';
+
+    if (!dtIniStr) {
+      alert('Por favor, informe a data inicial.');
+      return;
+    }
+
+    if (isContinuo) {
+      const dtFimStr = inputFim ? inputFim.value : '';
+      if (!dtFimStr) {
+        alert('Por favor, informe a data final do período.');
+        return;
+      }
+
+      let cur = new Date(dtIniStr + 'T12:00:00');
+      const end = new Date(dtFimStr + 'T12:00:00');
+
+      if (cur > end) {
+        alert('A data inicial não pode ser posterior à data final.');
+        return;
+      }
+
+      while (cur <= end) {
+        const k = HolidayService.formatDateKey(cur);
+        holidayService.salvarOuAtualizarFeriado({
+          data: k,
+          descricao: desc,
+          categoria_id: 'ferias_fic'
+        });
+        cur.setDate(cur.getDate() + 1);
+      }
+    } else {
+      holidayService.salvarOuAtualizarFeriado({
+        data: dtIniStr,
+        descricao: desc,
+        categoria_id: 'feriado'
+      });
+    }
+
+    calFecharModalNovoDia();
+    calRenderizar();
+    if (typeof window.showToast === 'function') {
+      window.showToast('Data(s) adicionada(s) ao calendário com sucesso!');
+    }
+  } else if (_calAbaAtivaGerenciar === 'remove') {
+    const inputRemover = document.getElementById('cal-data-remover');
+    const dtRemover = inputRemover ? inputRemover.value : '';
+    if (!dtRemover) {
+      alert('Por favor, selecione a data a desbloquear.');
+      return;
+    }
+
+    holidayService.desbloquearDiaOficial(dtRemover);
+    calFecharModalNovoDia();
+    calRenderizar();
+    if (typeof window.showToast === 'function') {
+      window.showToast('Dia desbloqueado para aulas com sucesso!');
+    }
+  }
+}
+
+function calRestaurarBaseOficialConfirm() {
+  if (confirm('Deseja realmente restaurar a base oficial de feriados e eventos do SENAI? Todas as inclusões e exclusões manuais serão resetadas.')) {
+    holidayService.restaurarPadrao();
+    calFecharModalNovoDia();
+    calRenderizar();
+    if (typeof window.showToast === 'function') {
+      window.showToast('Base oficial do calendário restaurada com sucesso!');
+    }
+  }
 }
 
 // ==========================================================================
@@ -835,6 +1076,12 @@ if (typeof window !== "undefined") {
   window.calImprimirCalendario = calImprimirCalendario;
   window.calGerarHtmlImpressao = calGerarHtmlImpressao;
   window.calAbrirModalNovoDia = calAbrirModalNovoDia;
+  window.calFecharModalNovoDia = calFecharModalNovoDia;
+  window.calAlternarAbaGerenciar = calAlternarAbaGerenciar;
+  window.calMudarTipoInclusao = calMudarTipoInclusao;
+  window.calConfirmarAdicaoModal = calConfirmarAdicaoModal;
+  window.calRestaurarBaseOficialConfirm = calRestaurarBaseOficialConfirm;
+  window.calExcluirModificacao = calExcluirModificacao;
 }
 
 if (typeof document !== "undefined") {
