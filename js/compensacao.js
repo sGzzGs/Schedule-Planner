@@ -427,11 +427,18 @@ function compSincronizarAbaMae() {
   // ========================================================================
   // PERSISTÊNCIA ISOLADA POR TURMA & GERADOR DE TESTES
   // ========================================================================
-  const COMP_STORAGE_KEY = 'SENAI_COMP_TURMAS_DATA';
+  function getCompStorageKey() {
+    const user = (typeof window !== 'undefined' && window.authService?.currentUser) ? window.authService.currentUser : null;
+    if (user && user.id) {
+      return 'SENAI_COMP_TURMAS_DATA_' + user.id;
+    }
+    return 'SENAI_COMP_TURMAS_DATA';
+  }
+  const COMP_STORAGE_KEY = getCompStorageKey();
 
   function carregarBancoTurmas() {
     try {
-      const bruto = localStorage.getItem(COMP_STORAGE_KEY);
+      const bruto = localStorage.getItem(getCompStorageKey());
       const banco = bruto ? JSON.parse(bruto) : {};
       // Sanitização de produção: remove dados de teste simulados que possam ter ficado em cache local
       const mockSet = new Set([
@@ -467,7 +474,7 @@ function compSincronizarAbaMae() {
 
   function salvarBancoTurmas(banco) {
     try {
-      localStorage.setItem(COMP_STORAGE_KEY, JSON.stringify(banco));
+      localStorage.setItem(getCompStorageKey(), JSON.stringify(banco));
     } catch (e) {}
   }
 
@@ -1408,40 +1415,58 @@ function compAlternarAbaConteudo(modo) {
   const tabAmbas = document.getElementById('comp-conteudo-tab-btn-ambas');
   const drawerLote = document.getElementById('comp-drawer-lote');
   const drawerAulas = document.getElementById('comp-drawer-aulas');
+  const bodyLote = document.getElementById('comp-drawer-lote-body');
+  const bodyAulas = document.getElementById('comp-drawer-aulas-body');
+  const iconLote = document.getElementById('comp-drawer-lote-icon');
+  const iconAulas = document.getElementById('comp-drawer-aulas-icon');
 
-  if (tabAulas) tabAulas.classList.toggle('is-active', modo === 'aulas');
-  if (tabLote) tabLote.classList.toggle('is-active', modo === 'lote');
-  if (tabAmbas) tabAmbas.classList.toggle('is-active', modo === 'ambas');
+  const activeClasses = ['bg-[#277BC0]', 'text-white', 'shadow-xs'];
+  const inactiveClasses = ['bg-[#EAE2CE]', 'text-[#554332]', 'border', 'border-[#DDD3BD]'];
+
+  const aplicarEstiloTab = (tab, ativo) => {
+    if (!tab) return;
+    if (ativo) {
+      tab.classList.remove(...inactiveClasses);
+      tab.classList.add(...activeClasses);
+    } else {
+      tab.classList.remove(...activeClasses);
+      tab.classList.add(...inactiveClasses);
+    }
+  };
+
+  aplicarEstiloTab(tabAmbas, modo === 'ambas');
+  aplicarEstiloTab(tabAulas, modo === 'aulas');
+  aplicarEstiloTab(tabLote, modo === 'lote');
 
   if (modo === 'aulas') {
-    // Exibe apenas a grade de aulas do cronograma ocupando a altura total
-    if (drawerLote) {
-      drawerLote.style.display = 'none';
-      drawerLote.classList.add('is-collapsed');
-    }
+    if (drawerLote) drawerLote.style.display = 'none';
     if (drawerAulas) {
-      drawerAulas.style.display = 'flex';
+      drawerAulas.style.display = 'block';
       drawerAulas.classList.remove('is-collapsed');
+      if (bodyAulas) bodyAulas.style.display = 'block';
+      if (iconAulas) iconAulas.style.transform = '';
     }
   } else if (modo === 'lote') {
-    // Exibe apenas a gaveta de preenchimento em lote
     if (drawerLote) {
-      drawerLote.style.display = 'flex';
+      drawerLote.style.display = 'block';
       drawerLote.classList.remove('is-collapsed');
+      if (bodyLote) bodyLote.style.display = 'block';
+      if (iconLote) iconLote.style.transform = '';
     }
-    if (drawerAulas) {
-      drawerAulas.style.display = 'none';
-      drawerAulas.classList.add('is-collapsed');
-    }
+    if (drawerAulas) drawerAulas.style.display = 'none';
   } else {
-    // 'ambas': Exibe as duas seções com gavetas retráteis
+    // 'ambas'
     if (drawerLote) {
-      drawerLote.style.display = 'flex';
+      drawerLote.style.display = 'block';
       drawerLote.classList.remove('is-collapsed');
+      if (bodyLote) bodyLote.style.display = 'block';
+      if (iconLote) iconLote.style.transform = '';
     }
     if (drawerAulas) {
-      drawerAulas.style.display = 'flex';
+      drawerAulas.style.display = 'block';
       drawerAulas.classList.remove('is-collapsed');
+      if (bodyAulas) bodyAulas.style.display = 'block';
+      if (iconAulas) iconAulas.style.transform = '';
     }
   }
 
@@ -1451,16 +1476,26 @@ function compAlternarAbaConteudo(modo) {
 function compToggleDrawerLote(event) {
   if (event && event.stopPropagation) event.stopPropagation();
   const drawerLote = document.getElementById('comp-drawer-lote');
+  const bodyLote = document.getElementById('comp-drawer-lote-body');
+  const iconLote = document.getElementById('comp-drawer-lote-icon');
   if (!drawerLote) return;
   drawerLote.classList.toggle('is-collapsed');
+  const isCol = drawerLote.classList.contains('is-collapsed');
+  if (bodyLote) bodyLote.style.display = isCol ? 'none' : 'block';
+  if (iconLote) iconLote.style.transform = isCol ? 'rotate(-90deg)' : '';
   compAtualizarBotoesDrawerHeader();
 }
 
 function compToggleDrawerAulas(event) {
   if (event && event.stopPropagation) event.stopPropagation();
   const drawerAulas = document.getElementById('comp-drawer-aulas');
+  const bodyAulas = document.getElementById('comp-drawer-aulas-body');
+  const iconAulas = document.getElementById('comp-drawer-aulas-icon');
   if (!drawerAulas) return;
   drawerAulas.classList.toggle('is-collapsed');
+  const isCol = drawerAulas.classList.contains('is-collapsed');
+  if (bodyAulas) bodyAulas.style.display = isCol ? 'none' : 'block';
+  if (iconAulas) iconAulas.style.transform = isCol ? 'rotate(-90deg)' : '';
   compAtualizarBotoesDrawerHeader();
 }
 
@@ -1506,11 +1541,9 @@ function compRenderizarListaConteudoProgramatico() {
   tbody.innerHTML = '';
   if (dias.length === 0) {
     tbody.innerHTML = `
-      <tr>
-        <td colspan="2" style="text-align: center; padding: 20px; color: var(--text-secondary);">
-          Nenhum dia letivo encontrado no cronograma. Cadastre as aulas na Aba 1.
-        </td>
-      </tr>
+      <div style="padding: 24px; text-align: center; font-size: 12px; color: #756653;">
+        Nenhum dia letivo encontrado no cronograma. Cadastre as aulas na Aba 1.
+      </div>
     `;
     return;
   }
@@ -1518,21 +1551,22 @@ function compRenderizarListaConteudoProgramatico() {
   const conteudos = CompState.conteudoProgramaticoPorDia || {};
 
   dias.forEach((isoDate, idx) => {
-    const tr = document.createElement('tr');
+    const row = document.createElement('div');
+    row.className = 'grid grid-cols-12 gap-3 items-center px-2 py-1 bg-white/40 rounded-lg hover:bg-white/80 transition-all';
     const dataBr = compIsoToDDMMAAAA(isoDate);
     const diaSem = compObterDiaSemanaAbrev(isoDate);
     const val = conteudos[isoDate] || '';
 
-    tr.innerHTML = `
-      <td style="padding: 6px 10px; vertical-align: middle;">
-        <div style="font-weight: 700; color: var(--text-primary); font-size: 11.5px;">Aula ${idx + 1}</div>
-        <div style="font-size: 11px; color: var(--text-secondary);">${dataBr} (${diaSem})</div>
-      </td>
-      <td style="padding: 4px 10px; vertical-align: middle;">
-        <input type="text" class="input-control" value="${compEscapeAttr(val)}" style="width: 100%; font-size: 11.5px; padding: 4px 8px;" placeholder="Ex: Metrologia e leitura de paquímetro..." oninput="compAtualizarConteudoDia('${isoDate}', this.value)">
-      </td>
+    row.innerHTML = `
+      <div class="col-span-3">
+        <div class="text-xs font-bold text-[#233544]">Aula ${idx + 1}</div>
+        <div class="text-[11px] text-[#716353]">${dataBr} (${diaSem})</div>
+      </div>
+      <div class="col-span-9">
+        <input class="w-full text-xs rounded-lg border border-[#D9CDB8] bg-[#FCFAF5] py-2 px-3 text-[#33251A] placeholder-[#A49784] focus:border-[#9A7000] focus:ring-1 focus:ring-[#9A7000] outline-none transition-all" placeholder="Ex: Metrologia e leitura de paquímetro..." type="text" value="${compEscapeAttr(val)}" oninput="compAtualizarConteudoDia('${isoDate}', this.value)">
+      </div>
     `;
-    tbody.appendChild(tr);
+    tbody.appendChild(row);
   });
 }
 
@@ -5365,36 +5399,37 @@ function compTrocarAba(from, to) {
       return;
     }
   }
-  const fromEl = document.getElementById(from);
-  const toEl   = document.getElementById(to);
-  const fromTab = document.querySelector(`.app-tab[data-tab="${from}"]`);
-  const toTab   = document.querySelector(`.app-tab[data-tab="${to}"]`);
 
-  if (!fromEl || !toEl) return;
+  const toEl = document.getElementById(to);
+  if (!toEl) return;
 
-  const tabOrder = ['tab-cronograma', 'tab-compensacao', 'tab-calendario', 'tab-coordenacao'];
-  const fromIdx = tabOrder.indexOf(from);
-  const toIdx   = tabOrder.indexOf(to);
-  const goingRight = toIdx > fromIdx;
+  // 1. Exclusão mútua universal de páginas: oculta e desativa todas as outras
+  document.querySelectorAll('.app-page').forEach(page => {
+    if (page.id !== to) {
+      page.classList.remove('page-active', 'page-exit-left', 'page-exit-right');
+      page.style.display = 'none';
+      page.style.opacity = '0';
+      page.style.pointerEvents = 'none';
+    }
+  });
 
-  fromEl.classList.remove('page-active');
-  fromEl.classList.add(goingRight ? 'page-exit-left' : 'page-exit-right');
+  // 2. Exclusão mútua na barra de navegação de abas
+  document.querySelectorAll('.app-tab').forEach(tab => {
+    if (tab.dataset.tab === to) {
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+    } else {
+      tab.classList.remove('active');
+      tab.setAttribute('aria-selected', 'false');
+    }
+  });
 
-  toEl.style.transform = goingRight ? 'translateX(24px)' : 'translateX(-24px)';
-  toEl.style.opacity = '0';
-  void toEl.offsetWidth;
-
+  // 3. Ativa com exclusividade a página de destino
   toEl.classList.add('page-active');
+  toEl.style.display = '';
+  toEl.style.opacity = '1';
   toEl.style.transform = '';
-  toEl.style.opacity   = '';
-  toEl.style.display   = '';
-
-  setTimeout(() => {
-    fromEl.classList.remove('page-exit-left', 'page-exit-right');
-  }, 320);
-
-  if (fromTab) fromTab.classList.remove('active');
-  if (toTab)   toTab.classList.add('active');
+  toEl.style.pointerEvents = 'all';
 
   _currentTab = to;
 

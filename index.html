@@ -907,7 +907,7 @@
 </div>
 <div class="flex items-center gap-2"><span class="font-label-sm text-[11px] text-secondary bg-surface-container px-2 py-0.5 rounded">Autenticação Única</span><button type="button" id="toggleTeacherBtn" onclick="toggleCardContent('teacherFormWrapper', 'toggleTeacherBtn')" aria-label="Recolher painel de autorização de docente" title="Recolher/Expandir" class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-all shadow-sm border border-outline-variant/40"><span class="material-symbols-outlined text-[20px] transition-transform duration-300">expand_less</span></button></div>
 </div>
-<div id="teacherFormWrapper"><form class="space-y-3" id="quickTeacherForm" onsubmit="handleQuickTeacherSubmit(event)"><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Nome Completo</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherName" placeholder="Ex: Rodrigo Mendes Castro" required="" type="text"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">NIF (Funcional)</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherNif" maxlength="6" pattern="[0-9]{6}" placeholder="Ex: SN10000" required="" type="text"></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Unidade Escolar</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-sm text-body-sm cursor-not-allowed outline-none" id="teacherUnit" readonly="" type="text" value="SENAI Humberto Reis Costa"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Categoria Contratual</label><select class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer" id="teacherCategory"><option value="Docente Horista">Docente Horista</option><option value="Docente Mensalista">Docente Mensalista</option><option value="Docente Convidado / Instrutor">Docente Convidado / Instrutor</option></select></div></div><div class="p-3 rounded-lg bg-surface-container-low flex items-start gap-2.5"><span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">info</span><p class="font-body-sm text-[12px] text-secondary leading-snug">No primeiro acesso, o docente digitará seu NIF autorizado e cadastrará sua senha individual com validação de segurança via e-mail corporativo.</p></div><div class="flex flex-wrap items-center justify-between gap-2 pt-2"><button type="button" onclick="showToast('Exibindo listagem dos docentes cadastrados no sistema.')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-outline-variant/50 bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors shadow-sm"><span class="material-symbols-outlined text-[18px]">badge</span><span id="btnDocentesCadastradosCount">Docentes Cadastrados (0)</span></button><div class="flex items-center gap-2"><button class="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors" type="reset">Limpar</button><button class="px-5 py-2 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-semibold hover:bg-primary transition-colors shadow-sm" type="submit">+ Autorizar NIF</button></div></div></form></div>
+<div id="teacherFormWrapper"><form class="space-y-3" id="quickTeacherForm" onsubmit="handleQuickTeacherSubmit(event)"><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Nome Completo</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherName" placeholder="Ex: Rodrigo Mendes Castro" required="" type="text"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">NIF / SN (Funcional)</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherNif" maxlength="14" placeholder="Ex: SN10000" required="" type="text"></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Unidade Escolar</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-sm text-body-sm cursor-not-allowed outline-none" id="teacherUnit" readonly="" type="text" value="SENAI Humberto Reis Costa"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Categoria Contratual</label><select class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer" id="teacherCategory"><option value="Docente Horista">Docente Horista</option><option value="Docente Mensalista">Docente Mensalista</option><option value="Docente Convidado / Instrutor">Docente Convidado / Instrutor</option></select></div></div><div class="p-3 rounded-lg bg-surface-container-low flex items-start gap-2.5"><span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">info</span><p class="font-body-sm text-[12px] text-secondary leading-snug">No primeiro acesso, o docente digitará seu NIF autorizado e cadastrará sua senha individual com validação de segurança via e-mail corporativo.</p></div><div class="flex flex-wrap items-center justify-between gap-2 pt-2"><button type="button" onclick="showToast('Exibindo listagem dos docentes cadastrados no sistema.')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-outline-variant/50 bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors shadow-sm"><span class="material-symbols-outlined text-[18px]">badge</span><span id="btnDocentesCadastradosCount">Docentes Cadastrados (0)</span></button><div class="flex items-center gap-2"><button class="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors" type="reset">Limpar</button><button class="px-5 py-2 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-semibold hover:bg-primary transition-colors shadow-sm" type="submit">+ Autorizar NIF</button></div></div></form></div>
 </div>
 </div>
 </div>
@@ -933,8 +933,8 @@
 </div>
 <div class="grid grid-cols-2 gap-3">
 <div>
-<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">NIF (6 dígitos)</label>
-<input class="w-full px-3.5 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none" id="modalTeacherNif" maxlength="6" pattern="[0-9]{6}" placeholder="Ex: SN10000" required="" type="text">
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">NIF / SN (Funcional)</label>
+<input class="w-full px-3.5 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none" id="modalTeacherNif" maxlength="14" placeholder="Ex: SN10000" required="" type="text">
 </div>
 <div>
 <label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Categoria</label>
@@ -1718,106 +1718,141 @@
     </div>
   </div>
 
-  <!-- MODAL / POPOVER DE PREENCHIMENTO DE CONTEÚDO PROGRAMÁTICO DAS AULAS -->
-  <div id="comp-modal-conteudo-programatico" class="day-modal-backdrop" style="display: none;">
-    <div class="day-modal-card comp-modal-conteudo-card" style="max-width: 880px; max-height: 90vh; display: flex; flex-direction: column;" role="dialog" aria-modal="true" aria-labelledby="conteudo-modal-title">
-      <div class="day-modal-header">
-        <div class="day-modal-title-group">
-          <div class="day-modal-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+  <!-- MODAL / POPOVER DE PREENCHIMENTO DE CONTEÚDO PROGRAMÁTICO DAS AULAS (STITCH WARM TIMBER) -->
+  <div id="comp-modal-conteudo-programatico" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#352B24]/40 backdrop-blur-[2px] transition-opacity" style="display: none;">
+    <!-- BEGIN: MainModalContainer -->
+    <main aria-labelledby="modal-title" aria-modal="true" class="relative z-10 w-full max-w-[880px] bg-[#FAF6EC] rounded-[22px] border border-[#DDD3BF] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]" role="dialog">
+      <!-- BEGIN: HeaderSection -->
+      <header class="px-7 pt-6 pb-4 bg-[#FAF6EC] border-b border-[#E8DEC7]/60 flex items-start justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <!-- Icon Badge -->
+          <div class="w-12 h-12 rounded-xl bg-[#E3EFE3] text-[#248A3D] flex items-center justify-center shadow-xs shrink-0 border border-[#CEE4CE]" data-purpose="header-badge-icon">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
           </div>
           <div>
-            <h3 id="conteudo-modal-title" class="day-modal-title">Plano de Conteúdo Programático das Aulas</h3>
-            <span id="conteudo-modal-subtitle" class="day-modal-subtitle">Defina o conteúdo ministrado em cada aula para preenchimento automático na compensação</span>
+            <h1 class="text-[1.28rem] font-bold tracking-tight text-[#1E2E38] leading-snug" id="modal-title">
+              Plano de Conteúdo Programático das Aulas
+            </h1>
+            <p class="text-xs sm:text-[13px] text-[#556977] font-normal mt-0.5">
+              Defina o conteúdo ministrado em cada aula para preenchimento automático na compensação
+            </p>
           </div>
         </div>
-        <button type="button" id="comp-modal-conteudo-close" class="day-modal-close" title="Fechar">&times;</button>
-      </div>
+        <!-- Close Button -->
+        <button id="comp-modal-conteudo-close" aria-label="Fechar modal" class="text-[#8C9BA5] hover:text-[#2D3748] hover:bg-[#EFE7D5]/70 p-1.5 rounded-lg transition-all" type="button">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </button>
+      </header>
+      <!-- END: HeaderSection -->
 
-      <!-- Barra de Abas / Modos de Visualização das Drawers -->
-      <div class="comp-conteudo-tabs-bar">
-        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-          <button type="button" id="comp-conteudo-tab-btn-ambas" class="comp-conteudo-tab-btn is-active" onclick="compAlternarAbaConteudo('ambas')" title="Exibir ambas as seções com gavetas retráteis">
+      <!-- BEGIN: TabsFilterBar -->
+      <nav aria-label="Filtro de visualização do plano" class="px-7 py-3 bg-[#FAF6EC] flex flex-wrap items-center justify-between gap-3 border-b border-[#ECE2CD]">
+        <div class="flex items-center gap-2">
+          <button id="comp-conteudo-tab-btn-ambas" class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-[#277BC0] text-white shadow-xs hover:bg-[#1E67A3] transition-all" type="button" onclick="compAlternarAbaConteudo('ambas')">
             Exibir Ambas
           </button>
-          <button type="button" id="comp-conteudo-tab-btn-aulas" class="comp-conteudo-tab-btn" onclick="compAlternarAbaConteudo('aulas')">
+          <button id="comp-conteudo-tab-btn-aulas" class="px-4 py-1.5 text-xs font-medium rounded-lg bg-[#EAE2CE] text-[#554332] hover:bg-[#E1D7C0] transition-all border border-[#DDD3BD]" type="button" onclick="compAlternarAbaConteudo('aulas')">
             Aulas do Cronograma (<span id="comp-conteudo-badge-total-aulas">0</span>)
           </button>
-          <button type="button" id="comp-conteudo-tab-btn-lote" class="comp-conteudo-tab-btn" onclick="compAlternarAbaConteudo('lote')">
+          <button id="comp-conteudo-tab-btn-lote" class="px-4 py-1.5 text-xs font-medium rounded-lg bg-[#EAE2CE] text-[#554332] hover:bg-[#E1D7C0] transition-all border border-[#DDD3BD]" type="button" onclick="compAlternarAbaConteudo('lote')">
             Preenchimento em Lote
           </button>
         </div>
-        <span id="comp-conteudo-dica-modo" style="font-size: 11px; color: var(--text-secondary);">Disponível para todo o curso</span>
-      </div>
+        <span class="text-xs text-[#7A6C58] font-medium tracking-wide">
+          Disponível para todo o curso
+        </span>
+      </nav>
+      <!-- END: TabsFilterBar -->
 
-      <div class="day-modal-body" style="padding: 12px 18px; flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;">
-        <!-- DRAWER 1: PREENCHIMENTO RÁPIDO EM LOTE (RETRAÍVEL) -->
-        <div id="comp-drawer-lote" class="comp-drawer-panel is-collapsed">
-          <div class="comp-drawer-header" onclick="compToggleDrawerLote()">
-            <div style="display: flex; align-items: center;">
-              <svg id="comp-drawer-lote-icon" class="comp-drawer-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              <strong style="font-size: 12px; color: var(--text-primary);">Preenchimento Rápido em Lote</strong>
-              <span style="font-size: 11px; color: var(--text-secondary); margin-left: 8px;">(cole o plano separado por ":::")</span>
+      <!-- BEGIN: ScrollableContentBody -->
+      <div class="flex-1 overflow-y-auto px-7 py-5 space-y-4 custom-scrollbar">
+        <!-- BEGIN: BatchFillingAccordionSection -->
+        <section id="comp-drawer-lote" class="border border-[#DECDB2] bg-[#F7F2E6] rounded-xl overflow-hidden shadow-xs transition-all" data-purpose="collapsible-card">
+          <!-- Collapsible Bar -->
+          <div class="px-4 py-3 flex items-center justify-between bg-[#F4EDE0] border-b border-[#DECDB2]/70 cursor-pointer" onclick="compToggleDrawerLote()">
+            <div class="flex items-center gap-2.5">
+              <svg id="comp-drawer-lote-icon" class="w-4 h-4 text-[#5D4E3A] transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <h2 class="text-xs sm:text-[13px] font-bold text-[#3E3023]">
+                Preenchimento Rápido em Lote
+                <span class="font-normal text-[#756653] ml-1">(cole o plano separado por ":::")</span>
+              </h2>
             </div>
-            <button type="button" id="comp-drawer-lote-toggle-btn" class="comp-drawer-toggle-btn" onclick="compToggleDrawerLote(event)">
-              Descer / Expandir
-            </button>
-          </div>
-          <div id="comp-drawer-lote-body" class="comp-drawer-body">
-            <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.35;">
-              Cada bloco entre ":::" será atribuído em ordem ao próximo dia letivo do cronograma. Se sobrarem dias, o excesso será agrupado no último dia com aviso de overflow.
-            </p>
-            <textarea id="comp-conteudo-lote-input" class="input-control" rows="3" style="width: 100%; font-size: 11.5px; padding: 8px; border-radius: 6px; resize: vertical;" placeholder="Ex: Apresentação do curso e normas ::: Metrologia e leitura de paquímetro ::: Prática de ajustagem mecânica ::: Usinagem em torno CNC..."></textarea>
-          </div>
-        </div>
-
-        <!-- DRAWER 2: GRADE DE AULAS DO CRONOGRAMA COM SCROLL DEDICADO -->
-        <div id="comp-drawer-aulas" class="comp-drawer-panel" style="flex: 1; min-height: 0; display: flex; flex-direction: column; margin-bottom: 0;">
-          <div class="comp-drawer-header" onclick="compToggleDrawerAulas()">
-            <div style="display: flex; align-items: center;">
-              <svg id="comp-drawer-aulas-icon" class="comp-drawer-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              <strong style="font-size: 12px; color: var(--text-primary);">Aulas do Cronograma (<span id="comp-conteudo-total-aulas-count">0</span> dias letivos)</strong>
-            </div>
-            <button type="button" id="comp-drawer-aulas-toggle-btn" class="comp-drawer-toggle-btn" onclick="compToggleDrawerAulas(event)">
+            <button id="comp-drawer-lote-toggle-btn" class="text-[11px] font-semibold text-[#8C6212] bg-[#EDE1C8] hover:bg-[#E2D4B7] border border-[#D8C7A5] px-3 py-1 rounded-md transition-all shadow-xs" type="button" onclick="compToggleDrawerLote(event)">
               Subir / Recolher
             </button>
           </div>
-          <div id="comp-drawer-aulas-body" class="comp-drawer-body" style="flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 10px 14px;">
-            <div class="comp-conteudo-table-scroll">
-              <table class="comp-chamada-table" style="width: 100%; font-size: 11px;">
-                <thead>
-                  <tr style="background: var(--bg-surface);">
-                    <th style="width: 220px; text-align: left; padding: 7px 10px;">Aula / Data</th>
-                    <th style="text-align: left; padding: 7px 10px;">Conteúdo Programático da Aula</th>
-                  </tr>
-                </thead>
-                <tbody id="comp-modal-conteudo-tbody">
-                  <!-- Preenchido dinamicamente com os dias letivos -->
-                </tbody>
-              </table>
+          <!-- Section Content Area -->
+          <div id="comp-drawer-lote-body" class="p-4 space-y-2.5">
+            <p class="text-xs text-[#6B5C49] leading-relaxed">
+              Cada bloco entre ":::" será atribuído em ordem ao próximo dia letivo do cronograma. Se sobrarem dias, o excesso será agrupado no último dia com aviso de overflow.
+            </p>
+            <div class="relative">
+              <textarea id="comp-conteudo-lote-input" class="w-full text-xs sm:text-[13px] rounded-lg border border-[#D5C6AC] bg-[#FAF8F2] text-[#3D3023] placeholder-[#A49784] p-3 shadow-inner focus:border-[#9A7000] focus:ring-1 focus:ring-[#9A7000] outline-none transition-all resize-y" placeholder="Ex: Apresentação do curso e normas ::: Metrologia e leitura de paquímetro ::: Prática de ajustagem mecânica ::: Usinagem em torno CNC..." rows="3"></textarea>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+        <!-- END: BatchFillingAccordionSection -->
 
-      <!-- Barra Inferior do Modal com Botões de Ação Movidos para Baixo -->
-      <div class="day-modal-footer" style="padding: 10px 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <button type="button" id="comp-btn-aplicar-conteudo-lote" class="btn btn-primary btn-sm" style="font-weight: 700;">
+        <!-- BEGIN: ScheduleClassesAccordionSection -->
+        <section id="comp-drawer-aulas" class="border border-[#DECDB2] bg-[#F7F2E6] rounded-xl overflow-hidden shadow-xs transition-all" data-purpose="collapsible-card">
+          <!-- Collapsible Bar -->
+          <div class="px-4 py-3 flex items-center justify-between bg-[#F4EDE0] border-b border-[#DECDB2]/70 cursor-pointer" onclick="compToggleDrawerAulas()">
+            <div class="flex items-center gap-2.5">
+              <svg id="comp-drawer-aulas-icon" class="w-4 h-4 text-[#5D4E3A] transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <h2 class="text-xs sm:text-[13px] font-bold text-[#3E3023]">
+                Aulas do Cronograma (<span id="comp-conteudo-total-aulas-count">0</span> dias letivos)
+              </h2>
+            </div>
+            <button id="comp-drawer-aulas-toggle-btn" class="text-[11px] font-semibold text-[#8C6212] bg-[#EDE1C8] hover:bg-[#E2D4B7] border border-[#D8C7A5] px-3 py-1 rounded-md transition-all shadow-xs" type="button" onclick="compToggleDrawerAulas(event)">
+              Subir / Recolher
+            </button>
+          </div>
+          <!-- Content Table Container -->
+          <div id="comp-drawer-aulas-body" class="p-3">
+            <!-- Table Column Headers -->
+            <div class="grid grid-cols-12 gap-3 pb-2 px-2 border-b border-[#E3D6C1] text-[11px] font-bold uppercase tracking-wider text-[#73634F]">
+              <div class="col-span-3 sm:col-span-3">Aula / Data</div>
+              <div class="col-span-9 sm:col-span-9">Conteúdo Programático da Aula</div>
+            </div>
+            <!-- Class Rows List -->
+            <div id="comp-modal-conteudo-tbody" class="space-y-2 mt-2 max-h-[305px] overflow-y-auto pr-1.5 custom-scrollbar">
+              <!-- Preenchido dinamicamente com os dias letivos -->
+            </div>
+          </div>
+        </section>
+        <!-- END: ScheduleClassesAccordionSection -->
+      </div>
+      <!-- END: ScrollableContentBody -->
+
+      <!-- BEGIN: FooterActionButtons -->
+      <footer class="px-7 py-4 bg-[#FAF6EC] border-t border-[#E8DEC7] flex flex-wrap items-center justify-between gap-3">
+        <!-- Left side controls -->
+        <div class="flex items-center gap-3">
+          <button id="comp-btn-aplicar-conteudo-lote" class="px-5 py-2.5 rounded-lg bg-[#9A7000] hover:bg-[#855E00] text-white font-bold text-xs tracking-wide shadow-sm hover:shadow transition-all" type="button">
             Distribuir Conteúdo nas Aulas
           </button>
-          <button type="button" id="comp-btn-limpar-conteudos-todos" class="btn btn-secondary btn-sm comp-btn-solarized-danger" style="color: #ef4444;" title="Limpar todos os conteúdos cadastrados">
+          <button id="comp-btn-limpar-conteudos-todos" class="px-4 py-2.5 rounded-lg border border-[#E57373] text-[#D32F2F] hover:bg-[#FEECEC] font-bold text-xs tracking-wide transition-all" type="button" title="Limpar todos os conteúdos cadastrados">
             Limpar Todos
           </button>
         </div>
-
-        <div id="comp-conteudo-lote-alerta" style="display: none; font-size: 11px; padding: 4px 10px; border-radius: 6px; flex: 1; max-width: 360px; text-align: center;"></div>
-
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <button type="button" id="comp-modal-conteudo-btn-fechar" class="btn btn-secondary btn-sm" style="font-weight: 700;">Concluído / Fechar</button>
+        <div id="comp-conteudo-lote-alerta" style="display: none;" class="text-xs font-semibold px-3 py-1.5 rounded-lg border"></div>
+        <!-- Right side controls -->
+        <div>
+          <button id="comp-modal-conteudo-btn-fechar" class="px-6 py-2.5 rounded-lg bg-[#4A2A1A] hover:bg-[#352B24] text-white font-bold text-xs tracking-wide shadow-sm hover:shadow transition-all" type="button">
+            Concluído / Fechar
+          </button>
         </div>
-      </div>
-    </div>
+      </footer>
+      <!-- END: FooterActionButtons -->
+    </main>
   </div>
 
   <!-- MODAL DE SENHA DA COORDENAÇÃO -->
@@ -2037,8 +2072,8 @@
       <form id="form-auth-login" class="auth-modal-body" onsubmit="executarLogin(event)">
         <div class="auth-field-group">
           <label class="auth-field-label" for="auth-login-nif">NIF ou Usuário</label>
-          <input type="text" id="auth-login-nif" class="auth-field-input" placeholder="Ex: SN10000 ou carlos" required autocomplete="username">
-          <span style="font-size: 11px; color: #83746e; margin-top: 4px; display: block;">Coordenação: digite <code>carlos</code>. Docentes: digite seu NIF numérico.</span>
+          <input type="text" id="auth-login-nif" class="auth-field-input" placeholder="Ex: SN0000" maxlength="14" required autocomplete="username">
+          <span style="font-size: 11px; color: #83746e; margin-top: 4px; display: block;">Digite seu NIF ou SN cadastrado.</span>
         </div>
 
         <div class="auth-field-group">
@@ -2064,7 +2099,7 @@
 
         <div class="auth-field-group">
           <label class="auth-field-label" for="auth-reg-nif">Seu NIF (Código SN)</label>
-          <input type="text" id="auth-reg-nif" class="auth-field-input" placeholder="Ex: SN10000" required>
+          <input type="text" id="auth-reg-nif" class="auth-field-input" placeholder="Ex: SN10000" maxlength="14" required>
         </div>
 
         <div class="auth-field-group">
@@ -2106,7 +2141,7 @@
 
         <div class="auth-field-group">
           <label class="auth-field-label" for="auth-reset-nif">Seu NIF</label>
-          <input type="text" id="auth-reset-nif" class="auth-field-input" placeholder="Ex: SN10000" required>
+          <input type="text" id="auth-reset-nif" class="auth-field-input" placeholder="Ex: SN10000" maxlength="14" required>
         </div>
 
         <div class="auth-field-group">

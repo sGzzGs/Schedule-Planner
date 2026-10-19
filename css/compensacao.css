@@ -93,6 +93,14 @@
   overflow: hidden;
 }
 
+.app-page:not(.page-active) {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  transform: translateX(24px) !important;
+}
+
 .app-page.page-active {
   opacity: 1;
   transform: translateX(0);

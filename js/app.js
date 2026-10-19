@@ -134,14 +134,24 @@ function isoToDDMMAAAA(isoStr) {
   return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
 }
 
-// 4. PERSISTÊNCIA EM LOCALSTORAGE & GERENCIAMENTO DE PERFIL
+// 4. PERSISTÊNCIA EM LOCALSTORAGE & GERENCIAMENTO DE PERFIL (SCOPED POR PERFIL)
+function getActiveUserModelKey() {
+  const user = (typeof window !== 'undefined' && window.authService?.currentUser) ? window.authService.currentUser : null;
+  if (user && user.id) {
+    return 'SENAI_SAVED_MODELS_' + user.id;
+  }
+  return 'SENAI_SAVED_MODELS';
+}
+
 function getSavedModels() {
-  const models = localStorage.getItem("SENAI_SAVED_MODELS");
+  const key = getActiveUserModelKey();
+  const models = localStorage.getItem(key);
   return models ? JSON.parse(models) : {};
 }
 
 function saveModels(models) {
-  localStorage.setItem("SENAI_SAVED_MODELS", JSON.stringify(models));
+  const key = getActiveUserModelKey();
+  localStorage.setItem(key, JSON.stringify(models));
 }
 
 function populatePresetDropdown() {
@@ -218,6 +228,21 @@ function saveCurrentModel() {
   if (select) {
     select.value = "SAVED_" + formData.codigoTurma;
   }
+  // Sincronização em tempo real com o perfil online (Supabase) quando logado
+  if (typeof window !== 'undefined' && window.authService?.client && window.authService.currentUser) {
+    const user = window.authService.currentUser;
+    window.authService.client.from('turmas_docente').upsert({
+      docente_id: user.id,
+      codigo_turma: formData.codigoTurma,
+      nome_curso: formData.nomeCurso || '',
+      unidade_curricular: formData.unidadeCurricular || '',
+      dados: formData,
+      atualizado_em: new Date().toISOString()
+    }, { onConflict: 'docente_id, codigo_turma' }).then(({ error }) => {
+      if (error) console.warn('[CloudSync] Erro ao sincronizar turma no Supabase:', error);
+      else console.log('[CloudSync] Turma sincronizada em tempo real no Supabase:', formData.codigoTurma);
+    });
+  }
   alert(`Modelo "${formData.codigoTurma}" salvo com sucesso!`);
 }
 
@@ -236,6 +261,17 @@ function deleteSelectedModel() {
     const saved = getSavedModels();
     delete saved[key];
     saveModels(saved);
+    // Deleta do Supabase em tempo real quando logado
+    if (typeof window !== 'undefined' && window.authService?.client && window.authService.currentUser) {
+      const user = window.authService.currentUser;
+      window.authService.client.from('turmas_docente').delete()
+        .eq('docente_id', user.id)
+        .eq('codigo_turma', key)
+        .then(({ error }) => {
+          if (error) console.warn('[CloudSync] Erro ao excluir turma no Supabase:', error);
+          else console.log('[CloudSync] Turma excluída do Supabase:', key);
+        });
+    }
     populatePresetDropdown();
 
     const remainingKeys = Object.keys(saved);
@@ -2899,3 +2935,91 @@ if (typeof window !== "undefined") {
 
 
 
+
+// ============================================================================
+// CICLO DE VIDA DO PERFIL: ISOLAMENTO ESTREITO ENTRE LOCAL (GUEST) E ONLINE
+// ============================================================================
+async function appHandleAuthChange(user) {
+  if (user && user.id) {
+    console.log('[AuthLifecycle] Docente/Coordenação autenticado:', user.nome || user.nif);
+
+    // 1. Reset da tela e memória temporária para impedir vazamento de dados locais
+    if (typeof resetFormToEmpty === 'function') resetFormToEmpty();
+    if (typeof activeLessons !== 'undefined') activeLessons = [];
+    if (typeof interactiveDays !== 'undefined') interactiveDays = [];
+    if (typeof CompState !== 'undefined') {
+      CompState.alunos = [];
+      CompState.faltasPorAluno = {};
+      CompState.conteudoProgramaticoPorDia = {};
+      CompState.ultimaTurmaCarregada = null;
+    }
+
+    // 2. Carregar turmas do perfil online via Supabase
+    const client = window.authService?.client;
+    let modelosOnline = {};
+
+    if (client) {
+      try {
+        const { data, error } = await client
+          .from('turmas_docente')
+          .select('*')
+          .eq('docente_id', user.id);
+
+        if (!error && Array.isArray(data)) {
+          data.forEach(item => {
+            if (item.codigo_turma && item.dados) {
+              modelosOnline[item.codigo_turma] = item.dados;
+            }
+          });
+          const key = 'SENAI_SAVED_MODELS_' + user.id;
+          localStorage.setItem(key, JSON.stringify(modelosOnline));
+        }
+      } catch (err) {
+        console.warn('[CloudSync] Falha ao consultar turmas online do Supabase:', err);
+      }
+    }
+
+    // 3. Atualizar seletor de modelos com os dados isolados do usuário
+    populatePresetDropdown();
+
+    const keys = Object.keys(modelosOnline);
+    if (keys.length > 0) {
+      const firstKey = keys[0];
+      const select = document.getElementById('presetSelect');
+      if (select) select.value = 'SAVED_' + firstKey;
+      applyPreset('SAVED_' + firstKey);
+    } else {
+      resetFormToEmpty();
+    }
+
+    if (typeof updatePreview === 'function') updatePreview(true);
+    if (typeof compSincronizarAbaMae === 'function') compSincronizarAbaMae();
+    if (typeof compRenderizarDiario === 'function') compRenderizarDiario();
+
+  } else {
+    console.log('[AuthLifecycle] Usuário deslogado. Retornando ao modo local convidado.');
+
+    // Reset limpo da tela ao deslogar
+    if (typeof resetFormToEmpty === 'function') resetFormToEmpty();
+    if (typeof activeLessons !== 'undefined') activeLessons = [];
+    if (typeof interactiveDays !== 'undefined') interactiveDays = [];
+    if (typeof CompState !== 'undefined') {
+      CompState.alunos = [];
+      CompState.faltasPorAluno = {};
+      CompState.conteudoProgramaticoPorDia = {};
+      CompState.ultimaTurmaCarregada = null;
+    }
+
+    // Restaura lista de modelos locais de convidado
+    populatePresetDropdown();
+    if (typeof updatePreview === 'function') updatePreview(true);
+    if (typeof compSincronizarAbaMae === 'function') compSincronizarAbaMae();
+    if (typeof compRenderizarDiario === 'function') compRenderizarDiario();
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('senai:auth-changed', (e) => {
+    appHandleAuthChange(e.detail?.user);
+  });
+}
