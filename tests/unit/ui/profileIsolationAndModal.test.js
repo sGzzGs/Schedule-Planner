@@ -48,6 +48,31 @@ describe("SCO01-d • Verificação de NIF, Isolamento de Perfil e Modal Stitch"
       expect(resetNif).not.toBeNull();
       expect(resetNif.getAttribute("maxlength")).toBe("14");
     });
+
+    it("no Primeiro Acesso, não deve pedir o nome completo e a senha deve ter minlength 3", () => {
+      const regForm = document.getElementById("form-auth-register");
+      expect(regForm).not.toBeNull();
+
+      // Não deve ter campo para redigitar nome
+      const inputNome = regForm.querySelector("#auth-reg-nome");
+      expect(inputNome).toBeNull();
+
+      // Senha mínima deve ser 3 caracteres
+      const inputSenha = regForm.querySelector("#auth-reg-senha");
+      expect(inputSenha).not.toBeNull();
+      expect(inputSenha.getAttribute("minlength")).toBe("3");
+
+      const previewGroup = document.getElementById("auth-reg-nome-preview-group");
+      expect(previewGroup).not.toBeNull();
+    });
+
+    it("modal de docentes cadastrados e lista authorizedNifsList devem existir no DOM", () => {
+      const modal = document.getElementById("modalDocentesCadastrados");
+      expect(modal).not.toBeNull();
+
+      const list = document.getElementById("authorizedNifsList");
+      expect(list).not.toBeNull();
+    });
   });
 
   describe("2. Modal de Conteúdo Programático Stitch Warm Timber", () => {

@@ -67,13 +67,19 @@ describe('AuthService & Gestão de NIFs (SENAI)', () => {
 
   describe('3. Primeiro Acesso e Validações', () => {
     it('deve rejeitar primeiro acesso com campos vazios', async () => {
-      await expect(auth.primeiroAcesso({ nif: '', nome: '', senha: '' }))
-        .rejects.toThrow(/Preencha todos os campos/);
+      await expect(auth.primeiroAcesso({ nif: '', senha: '' }))
+        .rejects.toThrow(/Preencha/);
     });
 
-    it('deve rejeitar senha com menos de 6 caracteres', async () => {
-      await expect(auth.primeiroAcesso({ nif: '123456', nome: 'Prof. Teste', senha: '123' }))
-        .rejects.toThrow(/mínimo 6 caracteres/);
+    it('deve rejeitar senha com menos de 3 caracteres', async () => {
+      await expect(auth.primeiroAcesso({ nif: '123456', senha: '12' }))
+        .rejects.toThrow(/mínimo 3 caracteres/);
+    });
+
+    it('deve aceitar senha a partir de 3 caracteres', async () => {
+      const res = await auth.primeiroAcesso({ nif: '123456', senha: '123' });
+      expect(res.success).toBe(true);
+      expect(res.user.nif).toBe('123456');
     });
   });
 });

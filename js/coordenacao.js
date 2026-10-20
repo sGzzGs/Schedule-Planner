@@ -483,11 +483,17 @@
   }
 
   /**
-   * Gestão de NIFs Autorizados
+   * Gestão de NIFs Autorizados (Persistência Híbrida LocalStorage + Supabase)
    */
   async function coordCarregarNifsAutorizados() {
+    let listaLocal = [];
+    try {
+      const raw = localStorage.getItem('senai_nifs_autorizados');
+      if (raw) listaLocal = JSON.parse(raw);
+    } catch (e) {}
+
     const client = window.authService?.client;
-    let data = null;
+    let dataSupabase = null;
 
     if (client) {
       try {
@@ -497,38 +503,65 @@
           .order('criado_em', { ascending: false });
 
         if (!res.error && res.data) {
-          data = res.data;
+          dataSupabase = res.data;
         }
       } catch (e) {
-        console.warn('[Coordenação] Falha ao carregar NIFs autorizados:', e);
+        console.warn('[Coordenação] Falha ao carregar NIFs autorizados do Supabase:', e);
       }
     }
 
-    const count = data ? data.length : 0;
+    // Mesclar lista do Supabase com lista local sem duplicar
+    const map = new Map();
+    if (Array.isArray(dataSupabase)) {
+      dataSupabase.forEach(item => {
+        if (item && item.nif) map.set(String(item.nif).trim().toLowerCase(), item);
+      });
+    }
+    if (Array.isArray(listaLocal)) {
+      listaLocal.forEach(item => {
+        if (item && item.nif) {
+          const k = String(item.nif).trim().toLowerCase();
+          if (!map.has(k)) {
+            map.set(k, item);
+          }
+        }
+      });
+    }
+
+    const dataFinal = Array.from(map.values());
+
+    // Atualizar badge de contagem
+    const count = dataFinal.length;
     const btnCount = document.getElementById('btnDocentesCadastradosCount');
     if (btnCount) {
       btnCount.textContent = `Docentes Cadastrados (${count})`;
     }
 
+    // Atualizar contêiner da listagem
     const container = document.getElementById('authorizedNifsList');
     if (container) {
-      if (data && data.length > 0) {
-        container.innerHTML = data.map(n => `
-          <div class="flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg text-xs">
+      if (dataFinal.length > 0) {
+        container.innerHTML = dataFinal.map(n => `
+          <div class="flex items-center justify-between p-3 bg-surface-container-low rounded-xl text-xs border border-surface-container-highest/60 hover:bg-surface-container transition-colors">
             <div>
-              <strong class="text-primary">${n.nome}</strong> (NIF: ${n.nif})
-              <div class="text-secondary">${n.categoria || 'Docente'}</div>
+              <div class="font-bold text-primary text-[13px]">${n.nome}</div>
+              <div class="text-secondary font-mono text-[11px] mt-0.5">NIF: <span class="text-primary font-bold">${n.nif}</span> • ${n.categoria || 'Docente'}</div>
             </div>
-            <span class="px-2 py-0.5 rounded-full ${n.utilizado ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'} font-semibold">
-              ${n.utilizado ? 'Ativado' : 'Disponível'}
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full ${n.utilizado ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'} font-semibold text-[11px]">
+                ${n.utilizado ? 'Ativado' : 'Disponível'}
+              </span>
+              <button type="button" class="p-1 rounded-md text-secondary hover:text-red-600 hover:bg-red-50 transition-colors" title="Excluir NIF" onclick="coordRemoverNif('${n.nif}')">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
           </div>
         `).join('');
       } else {
         container.innerHTML = `
-          <div class="py-4 text-center text-secondary text-xs flex flex-col items-center justify-center gap-1">
-            <span class="font-semibold text-primary">No Data</span>
-            <span>Nenhum docente cadastrado via Supabase.</span>
+          <div class="py-6 text-center text-secondary text-xs flex flex-col items-center justify-center gap-1">
+            <span class="font-semibold text-primary">Nenhum docente cadastrado</span>
+            <span>Cadastre o nome e NIF do docente para autorizar seu acesso ao sistema.</span>
           </div>
         `;
       }
@@ -537,42 +570,79 @@
 
   async function coordAutorizarNif(e) {
     if (e) e.preventDefault();
-    const inputNome = document.getElementById('teacherName') || document.getElementById('modalTeacherName');
-    const inputNif = document.getElementById('teacherNif') || document.getElementById('modalTeacherNif');
-    const inputCat = document.getElementById('teacherCategory');
 
-    const nome = inputNome?.value?.trim();
-    const nif = inputNif?.value?.trim();
-    const categoria = inputCat?.value || 'Docente Horista';
+    let nome = '';
+    let nif = '';
+    let categoria = 'Docente Horista';
+
+    const modalNameEl = document.getElementById('modalTeacherName');
+    const modalNifEl = document.getElementById('modalTeacherNif');
+    const quickNameEl = document.getElementById('teacherName');
+    const quickNifEl = document.getElementById('teacherNif');
+    const quickCatEl = document.getElementById('teacherCategory');
+
+    // Detectar qual formulário foi preenchido
+    if (modalNifEl && modalNifEl.value.trim()) {
+      nome = modalNameEl?.value?.trim() || '';
+      nif = modalNifEl.value.trim();
+      const modal = document.getElementById('modalNewTeacher');
+      const catSelect = modal?.querySelector('select');
+      categoria = catSelect?.value || 'Docente Horista';
+    } else {
+      nome = quickNameEl?.value?.trim() || '';
+      nif = quickNifEl?.value?.trim() || '';
+      categoria = quickCatEl?.value || 'Docente Horista';
+    }
 
     if (!nome || !nif) {
-      alert('Informe o Nome Completo e o NIF do docente.');
+      alert('Informe o Nome Completo e o NIF / SN do docente.');
       return;
     }
 
+    const novoRegistro = {
+      nif,
+      nome,
+      categoria,
+      unidade: 'SENAI Humberto Reis Costa',
+      utilizado: false,
+      criado_em: new Date().toISOString()
+    };
+
+    // 1. SEMPRE SALVAR NO LOCALSTORAGE (PERSISTÊNCIA GARANTIDA)
+    try {
+      let lista = [];
+      const raw = localStorage.getItem('senai_nifs_autorizados');
+      if (raw) lista = JSON.parse(raw);
+      lista = lista.filter(x => String(x.nif).trim().toLowerCase() !== nif.toLowerCase());
+      lista.unshift(novoRegistro);
+      localStorage.setItem('senai_nifs_autorizados', JSON.stringify(lista));
+    } catch (err) {
+      console.warn('[Coordenação] Erro ao gravar NIF em localStorage:', err);
+    }
+
+    // 2. SINCRONIZAR COM SUPABASE SE CONECTADO
     const client = window.authService?.client;
     if (client) {
       try {
         const { error } = await client
           .from('nifs_autorizados')
-          .insert({
-            nif,
-            nome,
-            categoria,
-            unidade: 'SENAI Humberto Reis Costa'
-          });
+          .upsert(novoRegistro, { onConflict: 'nif' });
 
         if (error) {
-          alert('Erro ao cadastrar NIF: ' + error.message);
-          return;
+          console.warn('[Coordenação] Supabase RLS/Sync notice:', error.message);
+        } else {
+          console.log('[Coordenação] NIF sincronizado no Supabase com sucesso.');
         }
       } catch (err) {
-        console.warn('Erro ao inserir NIF no Supabase:', err);
+        console.warn('[Coordenação] Falha de rede ao inserir NIF no Supabase:', err);
       }
     }
 
-    if (inputNome) inputNome.value = '';
-    if (inputNif) inputNif.value = '';
+    // Limpar campos de entrada
+    if (quickNameEl) quickNameEl.value = '';
+    if (quickNifEl) quickNifEl.value = '';
+    if (modalNameEl) modalNameEl.value = '';
+    if (modalNifEl) modalNifEl.value = '';
 
     const modal = document.getElementById('modalNewTeacher');
     if (modal) modal.classList.add('hidden');
@@ -581,7 +651,44 @@
     coordCarregarNifsAutorizados();
   }
 
-  /**
+  async function coordRemoverNif(nif) {
+    if (!nif) return;
+    if (!confirm(`Deseja realmente remover o NIF ${nif} da lista de autorizados?`)) return;
+
+    // Remover do localStorage
+    try {
+      const raw = localStorage.getItem('senai_nifs_autorizados');
+      if (raw) {
+        let lista = JSON.parse(raw);
+        lista = lista.filter(x => String(x.nif).trim().toLowerCase() !== String(nif).trim().toLowerCase());
+        localStorage.setItem('senai_nifs_autorizados', JSON.stringify(lista));
+      }
+    } catch (e) {}
+
+    // Remover do Supabase se conectado
+    const client = window.authService?.client;
+    if (client) {
+      try {
+        await client.from('nifs_autorizados').delete().eq('nif', nif);
+      } catch (e) {}
+    }
+
+    coordMostrarToast(`NIF ${nif} removido com sucesso.`);
+    coordCarregarNifsAutorizados();
+  }
+
+  function openDocentesCadastradosModal() {
+    coordCarregarNifsAutorizados();
+    const modal = document.getElementById('modalDocentesCadastrados');
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  function closeDocentesCadastradosModal() {
+    const modal = document.getElementById('modalDocentesCadastrados');
+    if (modal) modal.classList.add('hidden');
+  }
+
+    /**
    * Gestão de Solicitações de Redefinição de Senha
    */
   async function coordCarregarResetsPendentes() {

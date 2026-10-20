@@ -907,7 +907,7 @@
 </div>
 <div class="flex items-center gap-2"><span class="font-label-sm text-[11px] text-secondary bg-surface-container px-2 py-0.5 rounded">Autenticação Única</span><button type="button" id="toggleTeacherBtn" onclick="toggleCardContent('teacherFormWrapper', 'toggleTeacherBtn')" aria-label="Recolher painel de autorização de docente" title="Recolher/Expandir" class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-all shadow-sm border border-outline-variant/40"><span class="material-symbols-outlined text-[20px] transition-transform duration-300">expand_less</span></button></div>
 </div>
-<div id="teacherFormWrapper"><form class="space-y-3" id="quickTeacherForm" onsubmit="handleQuickTeacherSubmit(event)"><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Nome Completo</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherName" placeholder="Ex: Rodrigo Mendes Castro" required="" type="text"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">NIF / SN (Funcional)</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherNif" maxlength="14" placeholder="Ex: SN10000" required="" type="text"></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Unidade Escolar</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-sm text-body-sm cursor-not-allowed outline-none" id="teacherUnit" readonly="" type="text" value="SENAI Humberto Reis Costa"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Categoria Contratual</label><select class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer" id="teacherCategory"><option value="Docente Horista">Docente Horista</option><option value="Docente Mensalista">Docente Mensalista</option><option value="Docente Convidado / Instrutor">Docente Convidado / Instrutor</option></select></div></div><div class="p-3 rounded-lg bg-surface-container-low flex items-start gap-2.5"><span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">info</span><p class="font-body-sm text-[12px] text-secondary leading-snug">No primeiro acesso, o docente digitará seu NIF autorizado e cadastrará sua senha individual com validação de segurança via e-mail corporativo.</p></div><div class="flex flex-wrap items-center justify-between gap-2 pt-2"><button type="button" onclick="showToast('Exibindo listagem dos docentes cadastrados no sistema.')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-outline-variant/50 bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors shadow-sm"><span class="material-symbols-outlined text-[18px]">badge</span><span id="btnDocentesCadastradosCount">Docentes Cadastrados (0)</span></button><div class="flex items-center gap-2"><button class="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors" type="reset">Limpar</button><button class="px-5 py-2 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-semibold hover:bg-primary transition-colors shadow-sm" type="submit">+ Autorizar NIF</button></div></div></form></div>
+<div id="teacherFormWrapper"><form class="space-y-3" id="quickTeacherForm" onsubmit="handleQuickTeacherSubmit(event)"><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Nome Completo</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherName" placeholder="Ex: Rodrigo Mendes Castro" required="" type="text"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">NIF / SN (Funcional)</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="teacherNif" maxlength="14" placeholder="Ex: SN10000" required="" type="text"></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Unidade Escolar</label><input class="w-full px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-sm text-body-sm cursor-not-allowed outline-none" id="teacherUnit" readonly="" type="text" value="SENAI Humberto Reis Costa"></div><div><label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Categoria Contratual</label><select class="w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer" id="teacherCategory"><option value="Docente Horista">Docente Horista</option><option value="Docente Mensalista">Docente Mensalista</option><option value="Docente Convidado / Instrutor">Docente Convidado / Instrutor</option></select></div></div><div class="p-3 rounded-lg bg-surface-container-low flex items-start gap-2.5"><span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">info</span><p class="font-body-sm text-[12px] text-secondary leading-snug">No primeiro acesso, o docente digitará seu NIF autorizado e cadastrará sua senha individual com validação de segurança via e-mail corporativo.</p></div><div class="flex flex-wrap items-center justify-between gap-2 pt-2"><button type="button" onclick="openDocentesCadastradosModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-outline-variant/50 bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors shadow-sm" title="Visualizar e gerenciar NIFs autorizados"><span class="material-symbols-outlined text-[18px]">badge</span><span id="btnDocentesCadastradosCount">Docentes Cadastrados (0)</span></button><div class="flex items-center gap-2"><button class="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary font-title-md text-title-md transition-colors" type="reset">Limpar</button><button class="px-5 py-2 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-semibold hover:bg-primary transition-colors shadow-sm" type="submit">+ Autorizar NIF</button></div></div></form></div>
 </div>
 </div>
 </div>
@@ -965,6 +965,40 @@
 </form>
 </div>
 </div>
+
+<!-- MODAL 3: Docentes Cadastrados (Overlay Modal) -->
+<div class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-primary/40 backdrop-blur-sm transition-opacity" id="modalDocentesCadastrados">
+<div class="bg-surface-container-lowest max-w-xl w-full rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+<div class="px-6 py-4 bg-surface-container-low flex items-center justify-between border-b border-surface-container-highest/60">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-primary font-bold">Docentes Autorizados no Sistema</h2>
+</div>
+<button class="p-1 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" onclick="closeDocentesCadastradosModal()">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="p-6 space-y-4">
+<p class="font-body-sm text-body-sm text-secondary">
+  Lista de NIFs e docentes pré-cadastrados pela Coordenação Pedagógica aptos a realizar o Primeiro Acesso ou já ativos no sistema.
+</p>
+<div id="authorizedNifsList" class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
+  <!-- Preenchido dinamicamente via JS -->
+</div>
+</div>
+<div class="flex items-center justify-between px-6 py-4 border-t border-surface-container-highest/60 bg-surface-container-low">
+<button class="px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-title-md text-title-md transition-colors" onclick="closeDocentesCadastradosModal()" type="button">
+  Fechar
+</button>
+<button class="px-4 py-2 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-semibold hover:bg-primary transition-colors shadow-sm" onclick="closeDocentesCadastradosModal(); openNewTeacherModal();" type="button">
+  + Autorizar Novo Docente
+</button>
+</div>
+</div>
+</div>
+
 <!-- MODAL 2: Reset de Senhas (Overlay Modal) -->
 <div class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-primary/40 backdrop-blur-sm transition-opacity" id="modalResetPassword">
 <div class="bg-surface-container-lowest max-w-xl w-full rounded-2xl shadow-2xl overflow-hidden">
@@ -2094,27 +2128,28 @@
       <!-- Formulário 2: Primeiro Acesso (Ativar NIF autorizado pela Coordenação) -->
       <form id="form-auth-register" class="auth-modal-body" style="display: none;" onsubmit="executarPrimeiroAcesso(event)">
         <div style="padding: 8px 12px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; color: #92400e; font-size: 11.5px; margin-bottom: 14px;">
-          ℹ️ O seu NIF deve ter sido pré-cadastrado pela Coordenação. No primeiro acesso você define sua senha institucional pessoal.
+          ℹ️ O seu NIF deve ter sido pré-cadastrado pela Coordenação. Digite seu NIF e crie sua senha de acesso.
         </div>
 
         <div class="auth-field-group">
           <label class="auth-field-label" for="auth-reg-nif">Seu NIF (Código SN)</label>
-          <input type="text" id="auth-reg-nif" class="auth-field-input" placeholder="Ex: SN10000" maxlength="14" required>
+          <input type="text" id="auth-reg-nif" class="auth-field-input" placeholder="Ex: SN10000" maxlength="14" required oninput="atualizarNomeDocentePrimeiroAcesso(this.value)">
+        </div>
+
+        <!-- Exibição automática do Nome do Docente identificado no cadastro prévio da Coordenação -->
+        <div id="auth-reg-nome-preview-group" style="display: none; padding: 8px 12px; background: #FAF6EC; border: 1px solid #E8DEC7; border-radius: 6px; margin-bottom: 12px;">
+          <span style="font-size: 11px; color: #73634F; display: block; font-weight: 500;">Docente Pré-Cadastrado:</span>
+          <strong id="auth-reg-nome-preview" style="font-size: 12.5px; color: #4A2A1A;"></strong>
         </div>
 
         <div class="auth-field-group">
-          <label class="auth-field-label" for="auth-reg-nome">Nome Completo</label>
-          <input type="text" id="auth-reg-nome" class="auth-field-input" placeholder="Ex: Prof. Leonardo Matos" required>
-        </div>
-
-        <div class="auth-field-group">
-          <label class="auth-field-label" for="auth-reg-senha">Nova Senha (mín. 6 caracteres)</label>
-          <input type="password" id="auth-reg-senha" class="auth-field-input" placeholder="••••••••" minlength="6" required>
+          <label class="auth-field-label" for="auth-reg-senha">Nova Senha (mín. 3 caracteres)</label>
+          <input type="password" id="auth-reg-senha" class="auth-field-input" placeholder="••••••••" minlength="3" required>
         </div>
 
         <div class="auth-field-group">
           <label class="auth-field-label" for="auth-reg-conf-senha">Confirmar Senha</label>
-          <input type="password" id="auth-reg-conf-senha" class="auth-field-input" placeholder="••••••••" minlength="6" required>
+          <input type="password" id="auth-reg-conf-senha" class="auth-field-input" placeholder="••••••••" minlength="3" required>
         </div>
 
         <div id="auth-register-error" style="display: none; padding: 8px 12px; background: #ffdad6; color: #ba1a1a; border-radius: 6px; font-size: 12px; margin-bottom: 14px;"></div>

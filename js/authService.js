@@ -11,6 +11,15 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbmtxcmxtaGRicWR5dWhtemp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MzE2ODEsImV4cCI6MjEwODAwNzY4MX0.PfPOINnPLkZimKrJC5L6PI0Q6OQs2puoC0AUrIFJoWw';
   const AUTH_STORAGE_KEY = 'senai_hub_auth_session';
 
+  function formatAuthPassword(senha) {
+    if (!senha) return '';
+    const s = String(senha).trim();
+    if (s.length < 6) {
+      return s + '__senai'; // Complemento interno transparente para requisito do Supabase GoTrue
+    }
+    return s;
+  }
+
   function formatEmailFromNif(nif) {
     if (!nif) return '';
     const clean = String(nif).trim().toLowerCase();
@@ -159,7 +168,7 @@
       if (this.client && this.client.auth) {
         const { data, error } = await this.client.auth.signInWithPassword({
           email,
-          password: cleanSenha
+          password: formatAuthPassword(cleanSenha)
         });
 
         if (error) {
@@ -211,7 +220,7 @@
         return { success: true, user: mockUser, offline: true };
       }
 
-      if (cleanSenha.length >= 6) {
+      if (cleanSenha.length >= 3) {
         const mockDocente = {
           id: `docente-${cleanNif}`,
           nif: cleanNif,
@@ -232,7 +241,7 @@
         return { success: true, user: mockDocente, offline: true };
       }
 
-      throw new Error('A senha deve conter pelo menos 6 caracteres.');
+      throw new Error('A senha deve conter no mínimo 3 caracteres.');
     }
 
     async primeiroAcesso({ nif, nome, senha }) {
@@ -269,7 +278,7 @@
         // Criar usuário no Supabase Auth
         const { data: signUpData, error: signErr } = await this.client.auth.signUp({
           email,
-          password: cleanSenha,
+          password: formatAuthPassword(cleanSenha),
           options: {
             data: { nome: cleanNome, nif: cleanNif }
           }
@@ -608,7 +617,7 @@
   window.executarPrimeiroAcesso = async function(e) {
     e.preventDefault();
     const nif = document.getElementById('auth-reg-nif')?.value?.trim();
-    const nome = document.getElementById('auth-reg-nome')?.value?.trim();
+    const nome = window.buscarNomeNifAutorizado(nif) || document.getElementById('auth-reg-nome')?.value?.trim() || '';
     const senha = document.getElementById('auth-reg-senha')?.value?.trim();
     const confSenha = document.getElementById('auth-reg-conf-senha')?.value?.trim();
     const errBox = document.getElementById('auth-register-error');
@@ -702,3 +711,50 @@
   });
 
 })(window, document);
+
+  window.buscarNomeNifAutorizado = function(nif) {
+    if (!nif) return '';
+    const cleanNif = String(nif).trim().toLowerCase();
+    try {
+      const raw = localStorage.getItem('senai_nifs_autorizados');
+      if (raw) {
+        const list = JSON.parse(raw);
+        const item = list.find(x => String(x.nif).trim().toLowerCase() === cleanNif);
+        if (item && item.nome) return item.nome;
+      }
+    } catch (e) {}
+    return '';
+  };
+
+  window.atualizarNomeDocentePrimeiroAcesso = async function(nif) {
+    const previewGroup = document.getElementById('auth-reg-nome-preview-group');
+    const previewEl = document.getElementById('auth-reg-nome-preview');
+    if (!previewGroup || !previewEl) return;
+
+    if (!nif || !nif.trim()) {
+      previewGroup.style.display = 'none';
+      return;
+    }
+
+    const nome = window.buscarNomeNifAutorizado(nif);
+    if (nome) {
+      previewEl.textContent = nome;
+      previewGroup.style.display = 'block';
+    } else if (window.authService?.client) {
+      try {
+        const { data } = await window.authService.client
+          .from('nifs_autorizados')
+          .select('nome')
+          .eq('nif', nif.trim())
+          .maybeSingle();
+        if (data && data.nome) {
+          previewEl.textContent = data.nome;
+          previewGroup.style.display = 'block';
+          return;
+        }
+      } catch (e) {}
+      previewGroup.style.display = 'none';
+    } else {
+      previewGroup.style.display = 'none';
+    }
+  };

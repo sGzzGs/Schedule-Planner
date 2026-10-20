@@ -247,7 +247,7 @@ export class AuthService {
     }
 
     // Docente offline mock
-    if (cleanSenha.length >= 6) {
+    if (cleanSenha.length >= 3) {
       const mockDocente = {
         id: `mock-docente-${cleanNif}`,
         nif: cleanNif,
@@ -263,7 +263,7 @@ export class AuthService {
       return { success: true, user: mockDocente, offline: true };
     }
 
-    throw new Error('Senha deve conter no mínimo 6 caracteres.');
+    throw new Error('Senha deve conter no mínimo 3 caracteres.');
   }
 
   /**
@@ -274,12 +274,12 @@ export class AuthService {
     const cleanNome = String(nome || '').trim();
     const cleanSenha = String(senha || '').trim();
 
-    if (!cleanNif || !cleanNome || !cleanSenha) {
+    if (!cleanNif || !cleanSenha) {
       throw new Error('Preencha todos os campos obrigatórios (NIF, Nome Completo e Senha).');
     }
 
-    if (cleanSenha.length < 6) {
-      throw new Error('A senha deve conter no mínimo 6 caracteres.');
+    if (cleanSenha.length < 3) {
+      throw new Error('A senha deve conter no mínimo 3 caracteres.');
     }
 
     const email = formatEmailFromNif(cleanNif);
