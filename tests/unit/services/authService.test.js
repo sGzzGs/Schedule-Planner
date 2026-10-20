@@ -66,9 +66,9 @@ describe('AuthService & Gestão de NIFs (SENAI)', () => {
   });
 
   describe('3. Primeiro Acesso e Validações', () => {
-    it('deve rejeitar primeiro acesso com campos vazios', async () => {
+    it('deve rejeitar primeiro acesso com campos vazios sem mencionar Nome Completo', async () => {
       await expect(auth.primeiroAcesso({ nif: '', senha: '' }))
-        .rejects.toThrow(/Preencha/);
+        .rejects.toThrow('Preencha todos os campos obrigatórios (NIF e Senha).');
     });
 
     it('deve rejeitar senha com menos de 3 caracteres', async () => {
@@ -76,10 +76,20 @@ describe('AuthService & Gestão de NIFs (SENAI)', () => {
         .rejects.toThrow(/mínimo 3 caracteres/);
     });
 
-    it('deve aceitar senha a partir de 3 caracteres', async () => {
+    it('deve aceitar senha a partir de 3 caracteres e resolver nome automaticamente', async () => {
       const res = await auth.primeiroAcesso({ nif: '123456', senha: '123' });
       expect(res.success).toBe(true);
       expect(res.user.nif).toBe('123456');
+      expect(res.user.nome).toBe('Docente 123456');
+    });
+
+    it('deve aceitar troca de senha a partir de 3 caracteres', async () => {
+      await expect(auth.trocarSenha('12')).rejects.toThrow(/mínimo 3 caracteres/);
+      // Offline mock trocarSenha
+      auth.currentUser = { id: 'doc-1', role: 'docente', senha_provisoria: true };
+      const res = await auth.trocarSenha('123');
+      expect(res.success).toBe(true);
+      expect(auth.currentUser.senha_provisoria).toBe(false);
     });
   });
 });

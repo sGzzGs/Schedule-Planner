@@ -1,5 +1,93 @@
 // Created at: 2026-10-19 16:51
+/**
+ * SENAI Hub de Registros • Módulo do Painel da Coordenação Pedagógica (Aba 4)
+ * Governança de Frequência, Duplo Alerta de Impressão, Evasão e Gestão de NIFs
+ */
 
+(function (window, document) {
+  'use strict';
+
+  let activeQuickFilter = 'todos';
+  let currentPrintStudent = null;
+  let currentEvasaoStudent = null;
+  let alunosGovernancaCache = [];
+
+  /**
+   * Extrai discentes das turmas salvas no LocalStorage para retrocompatibilidade
+   */
+  function extrairAlunosLocais() {
+    try {
+      const raw = localStorage.getItem('senai_compensacao_turmas');
+      if (!raw) return [];
+      const turmasObj = JSON.parse(raw);
+      const listaAlunos = [];
+
+      Object.entries(turmasObj).forEach(([codTurma, turma]) => {
+        const discentes = turma.discentes || [];
+        discentes.forEach(d => {
+          const totalAulas = Number(turma.cargaHoraria || 320);
+          const faltas = Number(d.faltas || d.totalFaltas || 0);
+          const perc = totalAulas > 0 ? Number(((faltas / totalAulas) * 100).toFixed(1)) : 0;
+
+          listaAlunos.push({
+            id: `local-${codTurma}-${d.matricula || d.id}`,
+            nome_discente: d.nome || d.nomeDiscente || 'Discente sem Nome',
+            matricula: d.matricula || String(d.id || '000000'),
+            nif_discente: d.nif || '',
+            codigo_turma: codTurma,
+            nome_curso: turma.nomeCurso || 'Curso Técnico',
+            docente_id: 'docente-responsavel',
+            nome_docente: turma.docente || 'Docente Responsável',
+            total_aulas: totalAulas,
+            horas_faltadas: faltas * 4,
+            total_faltas: faltas,
+            perc_faltas: perc,
+            faltas_ultima_impressao_docente: Number(d.faltasUltimaImpressao || 0),
+            data_impressao_docente: d.dataUltimaImpressao || null,
+            atestado_coordenacao: Boolean(d.atestadoCoord),
+            status_evasao: d.statusEvasao || 'ativo'
+          });
+        });
+      });
+      return listaAlunos;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /**
+   * Inicializa o painel de governança da coordenação
+   */
+  async function coordCarregarDados() {
+    const client = window.authService?.client;
+    let dadosCarregados = [];
+
+    if (client) {
+      try {
+        const { data, error } = await client
+          .from('alunos_governanca')
+          .select('*')
+          .order('perc_faltas', { ascending: false });
+
+        if (data && !error && data.length > 0) {
+          dadosCarregados = data;
+        }
+      } catch (err) {
+        console.warn('[Coordenação] Falha ao consultar Supabase:', err);
+      }
+    }
+
+    if (!dadosCarregados || dadosCarregados.length === 0) {
+      dadosCarregados = extrairAlunosLocais() || [];
+    }
+
+    alunosGovernancaCache = dadosCarregados;
+    coordAtualizarMetricas(alunosGovernancaCache);
+    coordPreencherFiltros(alunosGovernancaCache);
+    coordRenderizarTabela(alunosGovernancaCache);
+    await coordCarregarResetsPendentes();
+    await coordCarregarNifsAutorizados();
+  }
 
   /**
    * Atualiza os Cards de KPIs de Governança
@@ -569,7 +657,10 @@
   }
 
   async function coordAutorizarNif(e) {
-    if (e) e.preventDefault();
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
 
     let nome = '';
     let nif = '';
@@ -581,10 +672,14 @@
     const quickNifEl = document.getElementById('teacherNif');
     const quickCatEl = document.getElementById('teacherCategory');
 
-    // Detectar qual formulário foi preenchido
-    if (modalNifEl && modalNifEl.value.trim()) {
+    // Detectar qual formulário disparou o evento com segurança
+    const formEl = e?.target?.closest ? (e.target.closest('form') || e.target) : null;
+    const isModal = (formEl && (formEl.id === 'modalNewTeacher' || formEl.querySelector('#modalTeacherNif'))) ||
+                    Boolean(modalNifEl && modalNifEl.value.trim() && (!quickNifEl || !quickNifEl.value.trim()));
+
+    if (isModal) {
       nome = modalNameEl?.value?.trim() || '';
-      nif = modalNifEl.value.trim();
+      nif = modalNifEl?.value?.trim() || '';
       const modal = document.getElementById('modalNewTeacher');
       const catSelect = modal?.querySelector('select');
       categoria = catSelect?.value || 'Docente Horista';
@@ -596,7 +691,7 @@
 
     if (!nome || !nif) {
       alert('Informe o Nome Completo e o NIF / SN do docente.');
-      return;
+      return false;
     }
 
     const novoRegistro = {
@@ -616,6 +711,12 @@
       lista = lista.filter(x => String(x.nif).trim().toLowerCase() !== nif.toLowerCase());
       lista.unshift(novoRegistro);
       localStorage.setItem('senai_nifs_autorizados', JSON.stringify(lista));
+
+      // Atualizar contador imediatamente
+      const btnCount = document.getElementById('btnDocentesCadastradosCount');
+      if (btnCount) {
+        btnCount.textContent = `Docentes Cadastrados (${lista.length})`;
+      }
     } catch (err) {
       console.warn('[Coordenação] Erro ao gravar NIF em localStorage:', err);
     }
@@ -649,6 +750,7 @@
 
     coordMostrarToast(`NIF ${nif} autorizado com sucesso para ${nome}. O docente pode realizar o Primeiro Acesso.`);
     coordCarregarNifsAutorizados();
+    return false;
   }
 
   async function coordRemoverNif(nif) {
@@ -850,6 +952,8 @@
 
   // Exportar para o escopo global
   window.coordCarregarDados = coordCarregarDados;
+  window.coordCarregarNifsAutorizados = coordCarregarNifsAutorizados;
+  window.coordCarregarResetsPendentes = coordCarregarResetsPendentes;
   window.coordAplicarFiltros = coordAplicarFiltros;
   window.coordSetQuickFilter = coordSetQuickFilter;
   window.coordAbrirModalEvasao = coordAbrirModalEvasao;
@@ -861,9 +965,12 @@
   window.coordAtestarAluno = coordAtestarAluno;
   window.coordExportarDossie = coordExportarDossie;
   window.coordAutorizarNif = coordAutorizarNif;
+  window.coordRemoverNif = coordRemoverNif;
   window.coordAprovarReset = coordAprovarReset;
   window.coordAprovarTodosResets = coordAprovarTodosResets;
   window.coordMostrarToast = coordMostrarToast;
+  window.openDocentesCadastradosModal = openDocentesCadastradosModal;
+  window.closeDocentesCadastradosModal = closeDocentesCadastradosModal;
 
   // Aliases para funções chamadas no HTML fornecido
   window.showToast = coordMostrarToast;
@@ -889,5 +996,9 @@
   window.handleModalTeacherSubmit = coordAutorizarNif;
   window.approvePasswordReset = coordAprovarReset;
   window.approveAllResets = coordAprovarTodosResets;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    coordCarregarDados();
+  });
 
 })(window, document);

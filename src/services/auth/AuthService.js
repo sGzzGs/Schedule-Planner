@@ -275,7 +275,7 @@ export class AuthService {
     const cleanSenha = String(senha || '').trim();
 
     if (!cleanNif || !cleanSenha) {
-      throw new Error('Preencha todos os campos obrigatórios (NIF, Nome Completo e Senha).');
+      throw new Error('Preencha todos os campos obrigatórios (NIF e Senha).');
     }
 
     if (cleanSenha.length < 3) {
@@ -300,13 +300,15 @@ export class AuthService {
         throw new Error(`O NIF ${cleanNif} já foi ativado anteriormente. Caso tenha esquecido a senha, solicite redefinição.`);
       }
 
+      const resolvedNome = authNif.nome || cleanNome || `Docente ${cleanNif}`;
+
       // 2. Realizar cadastro no Supabase Auth
       const { data: signUpData, error: signErr } = await this.client.auth.signUp({
         email,
         password: cleanSenha,
         options: {
           data: {
-            nome: cleanNome,
+            nome: resolvedNome,
             nif: cleanNif
           }
         }
@@ -325,7 +327,7 @@ export class AuthService {
           .insert({
             id: userId,
             nif: cleanNif,
-            nome: cleanNome,
+            nome: resolvedNome,
             role: 'docente',
             unidade: authNif.unidade || 'SENAI Humberto Reis Costa',
             senha_provisoria: false
@@ -346,10 +348,11 @@ export class AuthService {
     }
 
     // Modo Mock Offline
+    const finalNome = cleanNome || `Docente ${cleanNif}`;
     const mockUser = {
       id: `docente-${cleanNif}`,
       nif: cleanNif,
-      nome: cleanNome,
+      nome: finalNome,
       role: 'docente',
       email,
       unidade: 'SENAI Humberto Reis Costa',
@@ -394,8 +397,8 @@ export class AuthService {
    * Altera a senha do usuário atual (usado para trocar senha provisória senai102)
    */
   async trocarSenha(novaSenha) {
-    if (!novaSenha || novaSenha.length < 6) {
-      throw new Error('A nova senha deve ter no mínimo 6 caracteres.');
+    if (!novaSenha || novaSenha.length < 3) {
+      throw new Error('A nova senha deve ter no mínimo 3 caracteres.');
     }
 
     if (this.client && this.client.auth) {

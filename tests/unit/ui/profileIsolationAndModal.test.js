@@ -66,6 +66,23 @@ describe("SCO01-d • Verificação de NIF, Isolamento de Perfil e Modal Stitch"
       expect(previewGroup).not.toBeNull();
     });
 
+    it("formulários de autorização de docente devem conter return false para prevenir reload", () => {
+      const quickForm = document.getElementById("quickTeacherForm");
+      expect(quickForm).not.toBeNull();
+      expect(quickForm.getAttribute("onsubmit")).toContain("return false;");
+
+      const modalForm = document.getElementById("modalNewTeacher")?.querySelector("form");
+      expect(modalForm).not.toBeNull();
+      expect(modalForm.getAttribute("onsubmit")).toContain("return false;");
+    });
+
+    it("modal de troca de senha provisória deve exigir mínimo de 3 caracteres", () => {
+      const forceNova = document.getElementById("auth-force-nova-senha");
+      const forceConf = document.getElementById("auth-force-conf-senha");
+      expect(forceNova?.getAttribute("minlength")).toBe("3");
+      expect(forceConf?.getAttribute("minlength")).toBe("3");
+    });
+
     it("modal de docentes cadastrados e lista authorizedNifsList devem existir no DOM", () => {
       const modal = document.getElementById("modalDocentesCadastrados");
       expect(modal).not.toBeNull();

@@ -246,15 +246,19 @@
 
     async primeiroAcesso({ nif, nome, senha }) {
       const cleanNif = String(nif || '').trim();
-      const cleanNome = String(nome || '').trim();
+      let cleanNome = String(nome || '').trim();
       const cleanSenha = String(senha || '').trim();
 
-      if (!cleanNif || !cleanNome || !cleanSenha) {
-        throw new Error('Preencha todos os campos obrigatórios (NIF, Nome Completo e Senha).');
+      if (!cleanNif || !cleanSenha) {
+        throw new Error('Preencha todos os campos obrigatórios (NIF e Senha).');
       }
 
-      if (cleanSenha.length < 6) {
-        throw new Error('A senha deve conter no mínimo 6 caracteres.');
+      if (cleanSenha.length < 3) {
+        throw new Error('A senha deve conter no mínimo 3 caracteres.');
+      }
+
+      if (!cleanNome && typeof window.buscarNomeNifAutorizado === 'function') {
+        cleanNome = window.buscarNomeNifAutorizado(cleanNif);
       }
 
       const email = formatEmailFromNif(cleanNif);
@@ -273,6 +277,12 @@
 
         if (authNif.utilizado) {
           throw new Error(`O NIF ${cleanNif} já foi ativado anteriormente. Caso tenha esquecido a senha, solicite a redefinição.`);
+        }
+
+        if (authNif.nome) {
+          cleanNome = authNif.nome;
+        } else if (!cleanNome) {
+          cleanNome = `Docente ${cleanNif}`;
         }
 
         // Criar usuário no Supabase Auth
@@ -311,6 +321,9 @@
       }
 
       // Mock offline
+      if (!cleanNome) {
+        cleanNome = `Docente ${cleanNif}`;
+      }
       const mockDocente = {
         id: `docente-${cleanNif}`,
         nif: cleanNif,
@@ -354,8 +367,8 @@
     }
 
     async trocarSenha(novaSenha) {
-      if (!novaSenha || novaSenha.length < 6) {
-        throw new Error('A nova senha deve ter no mínimo 6 caracteres.');
+      if (!novaSenha || novaSenha.length < 3) {
+        throw new Error('A nova senha deve ter no mínimo 3 caracteres.');
       }
 
       if (this.client && this.client.auth) {
@@ -615,15 +628,31 @@
   };
 
   window.executarPrimeiroAcesso = async function(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const nif = document.getElementById('auth-reg-nif')?.value?.trim();
-    const nome = window.buscarNomeNifAutorizado(nif) || document.getElementById('auth-reg-nome')?.value?.trim() || '';
+    const nome = (typeof window.buscarNomeNifAutorizado === 'function' ? window.buscarNomeNifAutorizado(nif) : '') || '';
     const senha = document.getElementById('auth-reg-senha')?.value?.trim();
     const confSenha = document.getElementById('auth-reg-conf-senha')?.value?.trim();
     const errBox = document.getElementById('auth-register-error');
     const btn = document.getElementById('btn-auth-submit-register');
 
     if (errBox) errBox.style.display = 'none';
+
+    if (!nif || !senha) {
+      if (errBox) {
+        errBox.textContent = 'Preencha todos os campos obrigatórios (NIF e Senha).';
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    if (senha.length < 3) {
+      if (errBox) {
+        errBox.textContent = 'A senha deve conter no mínimo 3 caracteres.';
+        errBox.style.display = 'block';
+      }
+      return;
+    }
 
     if (senha !== confSenha) {
       if (errBox) {
@@ -639,7 +668,8 @@
       await window.authService.primeiroAcesso({ nif, nome, senha });
       window.authService.fecharModalAuth();
       if (typeof window.showToast === 'function') {
-        window.showToast(`Acesso ativado com sucesso! Seja bem-vindo, ${nome}.`);
+        const u = window.authService.getUsuarioAtual();
+        window.showToast(`Acesso ativado com sucesso! Seja bem-vindo, ${u?.nome || nome || 'Docente'}.`);
       }
     } catch (err) {
       if (errBox) {
