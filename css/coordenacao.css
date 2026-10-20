@@ -345,3 +345,132 @@
 .btn-aceitar-evasao:hover {
   background-color: #9f1239;
 }
+
+
+/* ==========================================================================
+   MENU DROPDOWN DE PERFIL DO DOCENTE / COORDENAÇÃO
+   ========================================================================== */
+.stitch-profile-clickable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 12px;
+  transition: background-color 0.15s ease;
+}
+
+.stitch-profile-clickable:hover {
+  background-color: #faf7f2;
+}
+
+.profile-chevron {
+  font-size: 10px;
+  color: #83746e;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.stitch-profile-clickable.is-open .profile-chevron {
+  transform: rotate(180deg);
+}
+
+.profile-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background-color: #ffffff;
+  border: 1px solid #e8e2d5;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(49, 22, 7, 0.12), 0 8px 10px -6px rgba(49, 22, 7, 0.08);
+  padding: 6px;
+  z-index: 1050;
+  animation: profileDropdownFadeIn 0.18s ease-out;
+}
+
+@keyframes profileDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-dropdown-header {
+  padding: 8px 10px 6px;
+}
+
+.profile-dropdown-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #311607;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-dropdown-nif {
+  font-size: 11px;
+  color: #83746e;
+  margin-top: 2px;
+  display: block;
+}
+
+.profile-dropdown-divider {
+  height: 1px;
+  background-color: #f0eae1;
+  margin: 4px 0;
+}
+
+.profile-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: #4a2a1a;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.profile-dropdown-item i {
+  font-size: 13px;
+  color: #83746e;
+  width: 16px;
+  text-align: center;
+}
+
+.profile-dropdown-item:hover {
+  background-color: #FAF6EC;
+  color: #311607;
+}
+
+.profile-dropdown-item:hover i {
+  color: #4a2a1a;
+}
+
+.profile-dropdown-item.profile-dropdown-logout {
+  color: #ba1a1a;
+}
+
+.profile-dropdown-item.profile-dropdown-logout i {
+  color: #ba1a1a;
+}
+
+.profile-dropdown-item.profile-dropdown-logout:hover {
+  background-color: #fee2e2;
+  color: #991b1b;
+}

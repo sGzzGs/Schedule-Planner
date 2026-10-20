@@ -1,3 +1,8 @@
+function setCompStorageItem(dadosJsonStr) {
+  const key = (typeof getCompStorageKey === 'function') ? getCompStorageKey() : 'SENAI_COMP_TURMAS_DATA';
+  localStorage.setItem(key, dadosJsonStr);
+}
+
 /**
  * app.js
  * Aplicação Web: Gerador de Cronograma SENAI FR-1.02-66A (V.00) - A4 Paisagem (Landscape)
@@ -527,7 +532,7 @@ function exportProfile() {
     let parecer = "";
     let conteudo = {};
     try {
-      const rawComp = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+      const rawComp = (typeof getCompStorageKey === "function" ? localStorage.getItem(getCompStorageKey()) : localStorage.getItem("SENAI_COMP_TURMAS_DATA"));
       if (rawComp) compData = JSON.parse(rawComp);
       parecer = localStorage.getItem("SENAI_COMP_COORD_PARECER") || "";
       const rawCont = localStorage.getItem("SENAI_COMP_CONTEUDO_DATA");
@@ -757,10 +762,10 @@ function importProfile(event) {
           const dadosComp = parsed.compensacao?.turmasCompensacao || parsed.compensacoes;
           if (dadosComp && typeof dadosComp === "object") {
             try {
-              const rawAtual = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+              const rawAtual = (typeof getCompStorageKey === "function" ? localStorage.getItem(getCompStorageKey()) : localStorage.getItem("SENAI_COMP_TURMAS_DATA"));
               const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
               const bancoMesclado = { ...bancoAtual, ...dadosComp };
-              localStorage.setItem("SENAI_COMP_TURMAS_DATA", JSON.stringify(bancoMesclado));
+              setCompStorageItem( JSON.stringify(bancoMesclado));
             } catch (errC) {
               console.warn("Erro ao mesclar turmas de compensação:", errC);
             }
@@ -785,7 +790,7 @@ function importProfile(event) {
         let primeiroModeloKey = null;
 
         try {
-          const rawAtual = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+          const rawAtual = (typeof getCompStorageKey === "function" ? localStorage.getItem(getCompStorageKey()) : localStorage.getItem("SENAI_COMP_TURMAS_DATA"));
           const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
           for (const [key, modelData] of Object.entries(turmasFonte)) {
             if (modelData && typeof modelData === "object" && (modelData.codigoTurma || modelData.nomeCurso)) {
@@ -809,7 +814,7 @@ function importProfile(event) {
               }
             }
           }
-          localStorage.setItem("SENAI_COMP_TURMAS_DATA", JSON.stringify(bancoAtual));
+          setCompStorageItem( JSON.stringify(bancoAtual));
         } catch (_) {}
         saveModels(currentSaved);
         populatePresetDropdown();
@@ -884,10 +889,10 @@ function importProfile(event) {
             compImportarDadosCompletos(dadosCompLegado);
           } else {
             try {
-              const rawAtual = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+              const rawAtual = (typeof getCompStorageKey === "function" ? localStorage.getItem(getCompStorageKey()) : localStorage.getItem("SENAI_COMP_TURMAS_DATA"));
               const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
               const bancoMesclado = { ...bancoAtual, ...(dadosCompLegado.turmasCompensacao || dadosCompLegado) };
-              localStorage.setItem("SENAI_COMP_TURMAS_DATA", JSON.stringify(bancoMesclado));
+              setCompStorageItem( JSON.stringify(bancoMesclado));
             } catch (_) {}
           }
         }
@@ -2105,7 +2110,7 @@ function getFormData() {
       conteudoTurma = JSON.parse(JSON.stringify(CompState.conteudoProgramaticoPorDia || {}));
     } else if (codTurma) {
       try {
-        const raw = localStorage.getItem("SENAI_COMP_TURMAS_DATA");
+        const raw = (typeof getCompStorageKey === "function" ? localStorage.getItem(getCompStorageKey()) : localStorage.getItem("SENAI_COMP_TURMAS_DATA"));
         const banco = raw ? JSON.parse(raw) : {};
         if (banco[codTurma]) {
           const salvo = banco[codTurma];
@@ -2180,17 +2185,60 @@ function updatePreview(preserveCustom = false) {
 }
 
 let _draftSaveTimeout = null;
+let _cloudSyncDraftTimeout = null;
+
 function salvarRascunhoFormularioDebounced() {
   if (_draftSaveTimeout) clearTimeout(_draftSaveTimeout);
   _draftSaveTimeout = setTimeout(() => {
-    try {
-      const draft = getFormData();
-      if (draft && (draft.codigoTurma || draft.nomeCurso || draft.docente)) {
-        localStorage.setItem("SENAI_CRONOGRAMA_DRAFT", JSON.stringify(draft));
-      }
-    } catch (e) {}
+    autoSaveActiveTurma();
   }, 300);
 }
+
+function autoSaveActiveTurma() {
+  try {
+    const draft = getFormData();
+    if (!draft || (!draft.codigoTurma && !draft.nomeCurso && !draft.docente)) return;
+
+    // 1. Rascunho transitório
+    const user = (typeof window !== 'undefined' && window.authService?.currentUser) ? window.authService.currentUser : null;
+    const draftKey = user ? ('SENAI_CRONOGRAMA_DRAFT_' + user.id) : 'SENAI_CRONOGRAMA_DRAFT';
+    localStorage.setItem(draftKey, JSON.stringify(draft));
+    localStorage.setItem('SENAI_CRONOGRAMA_DRAFT', JSON.stringify(draft));
+
+    // 2. Se temos código de turma, salvar imediatamente no banco de modelos do perfil
+    if (draft.codigoTurma && draft.codigoTurma.trim()) {
+      const codTurma = draft.codigoTurma.trim();
+      const saved = getSavedModels();
+      draft._savedAt = Date.now();
+      saved[codTurma] = {
+        ...(saved[codTurma] || {}),
+        ...draft
+      };
+      saveModels(saved);
+
+      // 3. Sync imediato silencioso com o Supabase Cloud se o usuário estiver logado
+      if (window.authService?.client && user) {
+        if (_cloudSyncDraftTimeout) clearTimeout(_cloudSyncDraftTimeout);
+        _cloudSyncDraftTimeout = setTimeout(async () => {
+          try {
+            await window.authService.client.from('turmas_docente').upsert({
+              docente_id: user.id,
+              codigo_turma: codTurma,
+              nome_curso: draft.nomeCurso || '',
+              dados: saved[codTurma],
+              atualizado_em: new Date().toISOString()
+            }, { onConflict: 'docente_id,codigo_turma' });
+          } catch (e) {
+            console.warn('[SyncCloud] Falha no auto-save do cronograma:', e);
+          }
+        }, 500);
+      }
+    }
+  } catch (e) {
+    console.warn('Erro no autoSaveActiveTurma:', e);
+  }
+}
+window.autoSaveActiveTurma = autoSaveActiveTurma;
 
 // 9. PREENCHIMENTO AUTOMÁTICO COM PRESET
 function applyPreset(presetKey) {
@@ -2958,6 +3006,14 @@ async function appHandleAuthChange(user) {
     const client = window.authService?.client;
     let modelosOnline = {};
 
+    // Mescla turmas locais já existentes no navegador com os dados da nuvem
+    const key = 'SENAI_SAVED_MODELS_' + user.id;
+    let modelosLocais = {};
+    try {
+      const rawLocais = localStorage.getItem(key);
+      if (rawLocais) modelosLocais = JSON.parse(rawLocais);
+    } catch (_) {}
+
     if (client) {
       try {
         const { data, error } = await client
@@ -2968,16 +3024,29 @@ async function appHandleAuthChange(user) {
         if (!error && Array.isArray(data)) {
           data.forEach(item => {
             if (item.codigo_turma && item.dados) {
-              modelosOnline[item.codigo_turma] = item.dados;
+              const localTurma = modelosLocais[item.codigo_turma];
+              const localSavedAt = localTurma?._savedAt || 0;
+              const remoteUpdated = item.dados?._savedAt || (item.atualizado_em ? new Date(item.atualizado_em).getTime() : 0);
+              if (!localTurma || remoteUpdated >= localSavedAt) {
+                modelosOnline[item.codigo_turma] = item.dados;
+              } else {
+                modelosOnline[item.codigo_turma] = localTurma;
+              }
             }
           });
-          const key = 'SENAI_SAVED_MODELS_' + user.id;
-          localStorage.setItem(key, JSON.stringify(modelosOnline));
         }
       } catch (err) {
         console.warn('[CloudSync] Falha ao consultar turmas online do Supabase:', err);
       }
     }
+
+    // Incorpora modelos locais que ainda não foram para a nuvem
+    for (const [kTurma, vDados] of Object.entries(modelosLocais)) {
+      if (!modelosOnline[kTurma]) {
+        modelosOnline[kTurma] = vDados;
+      }
+    }
+    localStorage.setItem(key, JSON.stringify(modelosOnline));
 
     // 3. Atualizar seletor de modelos com os dados isolados do usuário
     populatePresetDropdown();

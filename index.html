@@ -178,15 +178,40 @@
           <span>Entrar / NIF</span>
         </button>
 
-        <div id="topbar-user-profile" class="stitch-user-profile-pill" style="display: none;">
-          <span class="stitch-user-avatar"><i class="fa-solid fa-user"></i></span>
-          <div class="stitch-user-info">
-            <span id="topbar-user-name" class="stitch-user-name">Prof. Carlos</span>
-            <span id="topbar-user-role" class="stitch-user-role">Coordenação</span>
+        <div id="topbar-user-profile" class="stitch-user-profile-pill" style="display: none; position: relative;">
+          <div id="topbar-profile-trigger" class="stitch-profile-clickable" onclick="window.authService.toggleMenuPerfil(event)" title="Abrir opções de perfil e segurança">
+            <span class="stitch-user-avatar"><i class="fa-solid fa-user"></i></span>
+            <div class="stitch-user-info">
+              <span id="topbar-user-name" class="stitch-user-name">Prof. Carlos</span>
+              <span id="topbar-user-role" class="stitch-user-role">Coordenação</span>
+            </div>
+            <i class="fa-solid fa-chevron-down profile-chevron"></i>
           </div>
           <button id="btn-topbar-logout" class="stitch-btn-logout" title="Sair da Conta" type="button">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>
           </button>
+
+          <!-- Menu Dropdown de Perfil -->
+          <div id="topbar-profile-dropdown" class="profile-dropdown-menu" style="display: none;">
+            <div class="profile-dropdown-header">
+              <span id="dropdown-user-name" class="profile-dropdown-name">Docente</span>
+              <span id="dropdown-user-nif" class="profile-dropdown-nif">NIF: ---</span>
+            </div>
+            <div class="profile-dropdown-divider"></div>
+            <button type="button" class="profile-dropdown-item" onclick="window.authService.abrirModalEditarNome()">
+              <i class="fa-solid fa-user-pen"></i>
+              <span>Alterar Meu Nome</span>
+            </button>
+            <button type="button" class="profile-dropdown-item" onclick="window.authService.abrirModalAlterarSenhaManual()">
+              <i class="fa-solid fa-key"></i>
+              <span>Alterar Minha Senha</span>
+            </button>
+            <div class="profile-dropdown-divider"></div>
+            <button type="button" class="profile-dropdown-item profile-dropdown-logout" onclick="window.authService.logout()">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              <span>Sair da Conta</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -2121,12 +2146,13 @@
       <!-- Formulário 2: Primeiro Acesso (Ativar NIF autorizado pela Coordenação) -->
       <form id="form-auth-register" class="auth-modal-body" style="display: none;" onsubmit="executarPrimeiroAcesso(event)">
         <div style="padding: 8px 12px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; color: #92400e; font-size: 11.5px; margin-bottom: 14px;">
-          ℹ️ O seu NIF deve ter sido pré-cadastrado pela Coordenação. Digite seu NIF e crie sua senha de acesso.
+          ℹ️ O seu NIF deve ter sido pré-cadastrado pela Coordenação. Digite seu NIF e confirme sua senha.
         </div>
 
+        <!-- Campo 1: Seu NIF (Código SN) com hint Ex: 1082233 -->
         <div class="auth-field-group">
           <label class="auth-field-label" for="auth-reg-nif">Seu NIF (Código SN)</label>
-          <input type="text" id="auth-reg-nif" class="auth-field-input" placeholder="Ex: SN10000" maxlength="14" required oninput="atualizarNomeDocentePrimeiroAcesso(this.value)">
+          <input type="text" id="auth-reg-nif" class="auth-field-input" placeholder="Ex: 1082233" maxlength="14" required oninput="atualizarNomeDocentePrimeiroAcesso(this.value)">
         </div>
 
         <!-- Exibição automática do Nome do Docente identificado no cadastro prévio da Coordenação -->
@@ -2135,14 +2161,21 @@
           <strong id="auth-reg-nome-preview" style="font-size: 12.5px; color: #4A2A1A;"></strong>
         </div>
 
+        <!-- Campo 2: Senha padrão (senai102) -->
         <div class="auth-field-group">
-          <label class="auth-field-label" for="auth-reg-senha">Nova Senha (mín. 3 caracteres)</label>
-          <input type="password" id="auth-reg-senha" class="auth-field-input" placeholder="••••••••" minlength="3" required>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label class="auth-field-label" for="auth-reg-senha-padrao" style="margin: 0;">Senha padrão:</label>
+            <span style="font-size: 10.5px; color: #92400e; background: #fef3c7; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Padrão institucional</span>
+          </div>
+          <input type="text" id="auth-reg-senha-padrao" class="auth-field-input font-mono" value="senai102" required readonly style="background: #faf7f2; cursor: default; color: #51443f; font-weight: 600;">
+          <span style="font-size: 11px; color: #83746e; margin-top: 3px; display: block;">Senha inicial fornecida pela instituição: <code>senai102</code></span>
         </div>
 
+        <!-- Campo 3: Nova senha (opcional) -->
         <div class="auth-field-group">
-          <label class="auth-field-label" for="auth-reg-conf-senha">Confirmar Senha</label>
-          <input type="password" id="auth-reg-conf-senha" class="auth-field-input" placeholder="••••••••" minlength="3" required>
+          <label class="auth-field-label" for="auth-reg-senha">Nova senha (opcional):</label>
+          <input type="password" id="auth-reg-senha" class="auth-field-input" placeholder="Defina sua senha pessoal (mín. 3 caracteres)" minlength="3">
+          <span style="font-size: 11px; color: #83746e; margin-top: 3px; display: block;">Se preenchida, esta será sua nova senha de perfil definitiva de imediato.</span>
         </div>
 
         <div id="auth-register-error" style="display: none; padding: 8px 12px; background: #ffdad6; color: #ba1a1a; border-radius: 6px; font-size: 12px; margin-bottom: 14px;"></div>
@@ -2216,6 +2249,35 @@
     </div>
   </div>
 
+
+
+  <!-- 4. Modal de Edição de Nome do Docente -->
+  <div id="modal-auth-edit-profile" class="auth-modal-backdrop" style="display: none;">
+    <div class="auth-modal-card" role="dialog" aria-modal="true" style="max-width: 400px;">
+      <div class="auth-modal-header">
+        <h3 style="margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; color: #311607;">Editar Nome de Exibição</h3>
+        <button type="button" onclick="window.authService.fecharModalEditarNome()" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: #83746e;">&times;</button>
+      </div>
+
+      <form class="auth-modal-body" onsubmit="window.executarSalvarNomePerfil(event)">
+        <div style="font-size: 12px; color: #51443f; margin-bottom: 14px; line-height: 1.4;">
+          Altere seu nome de apresentação institucional. Este nome constará nos seus relatórios e cronogramas.
+        </div>
+
+        <div class="auth-field-group">
+          <label class="auth-field-label" for="auth-edit-nome-input">Nome Completo</label>
+          <input type="text" id="auth-edit-nome-input" class="auth-field-input" placeholder="Ex: Prof. Leonardo Matos" required minlength="3">
+        </div>
+
+        <div id="auth-edit-nome-error" style="display: none; padding: 8px 12px; background: #ffdad6; color: #ba1a1a; border-radius: 6px; font-size: 12px; margin-bottom: 14px;"></div>
+
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.authService.fecharModalEditarNome()">Cancelar</button>
+          <button type="submit" class="auth-submit-btn" style="width: auto; padding: 8px 16px;">Salvar Nome</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Scripts de Autenticação e Coordenação -->
   <script src="js/authService.js"></script>

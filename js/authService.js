@@ -244,7 +244,7 @@
       throw new Error('A senha deve conter no mínimo 3 caracteres.');
     }
 
-    async primeiroAcesso({ nif, nome, senha }) {
+    async primeiroAcesso({ nif, nome, senha, definirPessoalDiretamente = false }) {
       const cleanNif = String(nif || '').trim();
       let cleanNome = String(nome || '').trim();
       const cleanSenha = String(senha || '').trim();
@@ -308,7 +308,7 @@
               nome: cleanNome,
               role: 'docente',
               unidade: authNif.unidade || 'SENAI Humberto Reis Costa',
-              senha_provisoria: false
+              senha_provisoria: !definirPessoalDiretamente && cleanSenha === 'senai102'
             });
 
           await this.client
@@ -317,7 +317,13 @@
             .eq('nif', cleanNif);
         }
 
-        return await this.login(cleanNif, cleanSenha);
+        const res = await this.login(cleanNif, cleanSenha);
+        if (definirPessoalDiretamente && res?.user) {
+          res.user.senha_provisoria = false;
+          this.salvarSessaoLocal(res.user);
+          this.fecharModalTrocaSenhaProvisoria();
+        }
+        return res;
       }
 
       // Mock offline
@@ -465,10 +471,15 @@
         if (btnLogin) btnLogin.style.display = 'none';
         if (userProfile) {
           userProfile.style.display = 'inline-flex';
-          if (userNameEl) userNameEl.textContent = this.currentUser.nome || this.currentUser.nif;
+          const nomeExibicao = this.currentUser.nome || this.currentUser.nif;
+          if (userNameEl) userNameEl.textContent = nomeExibicao;
           if (userRoleEl) {
             userRoleEl.textContent = this.currentUser.role === 'coordenacao' ? 'Coordenação' : 'Docente';
           }
+          const dropName = document.getElementById('dropdown-user-name');
+          const dropNif = document.getElementById('dropdown-user-nif');
+          if (dropName) dropName.textContent = nomeExibicao;
+          if (dropNif) dropNif.textContent = 'NIF: ' + (this.currentUser.nif || '---');
         }
 
         // Aba de coordenação na barra superior permanece clicável (requer autenticação)
@@ -531,12 +542,21 @@
       }
 
       if (btnLogout) {
-        btnLogout.addEventListener('click', () => {
+        btnLogout.addEventListener('click', (e) => {
+          e.stopPropagation();
           if (confirm('Deseja realmente sair da sua conta institucional?')) {
             this.logout();
           }
         });
       }
+
+      // Fechar dropdown de perfil ao clicar fora
+      document.addEventListener('click', (e) => {
+        const userProfile = document.getElementById('topbar-user-profile');
+        if (userProfile && !userProfile.contains(e.target)) {
+          this.fecharMenuPerfil();
+        }
+      });
     }
 
     abrirModalAuth() {
@@ -553,8 +573,110 @@
       if (modal) modal.style.display = 'none';
     }
 
+    toggleMenuPerfil(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const dropdown = document.getElementById('topbar-profile-dropdown');
+      const trigger = document.getElementById('topbar-profile-trigger');
+      if (!dropdown) return;
+      const isOpen = dropdown.style.display === 'block';
+      if (isOpen) {
+        dropdown.style.display = 'none';
+        trigger?.classList.remove('is-open');
+      } else {
+        dropdown.style.display = 'block';
+        trigger?.classList.add('is-open');
+      }
+    }
+
+    fecharMenuPerfil() {
+      const dropdown = document.getElementById('topbar-profile-dropdown');
+      const trigger = document.getElementById('topbar-profile-trigger');
+      if (dropdown) dropdown.style.display = 'none';
+      if (trigger) trigger.classList.remove('is-open');
+    }
+
+    abrirModalEditarNome() {
+      this.fecharMenuPerfil();
+      const modal = document.getElementById('modal-auth-edit-profile');
+      const input = document.getElementById('auth-edit-nome-input');
+      const errBox = document.getElementById('auth-edit-nome-error');
+      if (errBox) errBox.style.display = 'none';
+      if (input && this.currentUser) {
+        input.value = this.currentUser.nome || '';
+      }
+      if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => input?.focus(), 100);
+      }
+    }
+
+    fecharModalEditarNome() {
+      const modal = document.getElementById('modal-auth-edit-profile');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async atualizarNomePerfil(novoNome) {
+      const cleanNome = String(novoNome || '').trim();
+      if (!cleanNome || cleanNome.length < 3) {
+        throw new Error('O nome deve ter pelo menos 3 caracteres.');
+      }
+      if (!this.currentUser) {
+        throw new Error('Nenhum usuário autenticado no momento.');
+      }
+
+      this.currentUser.nome = cleanNome;
+      this.salvarSessaoLocal(this.currentUser);
+
+      if (this.client) {
+        try {
+          await this.client
+            .from('perfis_usuarios')
+            .update({ nome: cleanNome })
+            .eq('id', this.currentUser.id);
+        } catch (e) {
+          console.warn('[AuthService] Falha ao sincronizar novo nome no banco:', e);
+        }
+      }
+
+      // Sincronizar nome no formulário de cronograma se for o docente ativo
+      const docInput = document.getElementById('docente');
+      if (docInput && (!docInput.value || docInput.value.trim() === '')) {
+        docInput.value = cleanNome;
+      }
+
+      this.atualizarInterface();
+      this.notificarMudanca();
+      return cleanNome;
+    }
+
+    abrirModalAlterarSenhaManual() {
+      this.fecharMenuPerfil();
+      const modal = document.getElementById('modal-auth-force-change');
+      const title = modal?.querySelector('h3');
+      const desc = modal?.querySelector('.auth-modal-body > div');
+      if (title) title.innerHTML = '<i class="fa-solid fa-key" style="margin-right: 6px;"></i> Alterar Senha de Perfil';
+      if (desc) desc.textContent = 'Cadastre sua nova senha de acesso institucional (mínimo de 3 caracteres).';
+      const nInput = document.getElementById('auth-force-nova-senha');
+      const cInput = document.getElementById('auth-force-conf-senha');
+      const errBox = document.getElementById('auth-force-error');
+      if (nInput) nInput.value = '';
+      if (cInput) cInput.value = '';
+      if (errBox) errBox.style.display = 'none';
+      if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => nInput?.focus(), 100);
+      }
+    }
+
     abrirModalTrocaSenhaProvisoria() {
       const modal = document.getElementById('modal-auth-force-change');
+      const title = modal?.querySelector('h3');
+      const desc = modal?.querySelector('.auth-modal-body > div');
+      if (title) title.innerHTML = '⚠️ Troca de Senha Provisória';
+      if (desc) desc.innerHTML = 'Você acessou com a senha institucional temporária (<strong>senai102</strong>). Por segurança, cadastre sua nova senha pessoal antes de prosseguir.';
       if (modal) modal.style.display = 'flex';
     }
 
@@ -631,41 +753,43 @@
     if (e && e.preventDefault) e.preventDefault();
     const nif = document.getElementById('auth-reg-nif')?.value?.trim();
     const nome = (typeof window.buscarNomeNifAutorizado === 'function' ? window.buscarNomeNifAutorizado(nif) : '') || '';
-    const senha = document.getElementById('auth-reg-senha')?.value?.trim();
-    const confSenha = document.getElementById('auth-reg-conf-senha')?.value?.trim();
+    const senhaPadrao = document.getElementById('auth-reg-senha-padrao')?.value?.trim() || 'senai102';
+    const novaSenhaOpcional = document.getElementById('auth-reg-senha')?.value?.trim();
     const errBox = document.getElementById('auth-register-error');
     const btn = document.getElementById('btn-auth-submit-register');
 
     if (errBox) errBox.style.display = 'none';
 
-    if (!nif || !senha) {
+    if (!nif) {
       if (errBox) {
-        errBox.textContent = 'Preencha todos os campos obrigatórios (NIF e Senha).';
+        errBox.textContent = 'Informe o seu NIF (Código SN) autorizado.';
         errBox.style.display = 'block';
       }
       return;
     }
 
-    if (senha.length < 3) {
+    // Se informou nova senha opcional, ela deve ter no mínimo 3 caracteres
+    if (novaSenhaOpcional && novaSenhaOpcional.length < 3) {
       if (errBox) {
-        errBox.textContent = 'A senha deve conter no mínimo 3 caracteres.';
+        errBox.textContent = 'A nova senha deve conter no mínimo 3 caracteres.';
         errBox.style.display = 'block';
       }
       return;
     }
 
-    if (senha !== confSenha) {
-      if (errBox) {
-        errBox.textContent = 'As senhas não coincidem. Digite a mesma senha em ambos os campos.';
-        errBox.style.display = 'block';
-      }
-      return;
-    }
+    // Se preencheu nova senha, já cadastra diretamente com a nova senha definitiva!
+    const senhaDefinitiva = novaSenhaOpcional && novaSenhaOpcional.length >= 3 ? novaSenhaOpcional : senhaPadrao;
+    const ehSenhaPessoal = Boolean(novaSenhaOpcional && novaSenhaOpcional.length >= 3);
 
     if (btn) btn.disabled = true;
 
     try {
-      await window.authService.primeiroAcesso({ nif, nome, senha });
+      await window.authService.primeiroAcesso({
+        nif,
+        nome,
+        senha: senhaDefinitiva,
+        definirPessoalDiretamente: ehSenhaPessoal
+      });
       window.authService.fecharModalAuth();
       if (typeof window.showToast === 'function') {
         const u = window.authService.getUsuarioAtual();
@@ -678,6 +802,36 @@
       }
     } finally {
       if (btn) btn.disabled = false;
+    }
+  };
+
+  window.executarSalvarNomePerfil = async function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const input = document.getElementById('auth-edit-nome-input');
+    const errBox = document.getElementById('auth-edit-nome-error');
+    const novoNome = input?.value?.trim();
+
+    if (errBox) errBox.style.display = 'none';
+
+    if (!novoNome || novoNome.length < 3) {
+      if (errBox) {
+        errBox.textContent = 'O nome deve ter no mínimo 3 caracteres.';
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    try {
+      await window.authService.atualizarNomePerfil(novoNome);
+      window.authService.fecharModalEditarNome();
+      if (typeof window.showToast === 'function') {
+        window.showToast(`Nome de exibição atualizado para "${novoNome}".`);
+      }
+    } catch (err) {
+      if (errBox) {
+        errBox.textContent = err.message || 'Erro ao atualizar nome.';
+        errBox.style.display = 'block';
+      }
     }
   };
 

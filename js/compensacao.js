@@ -405,6 +405,20 @@ COMP_VARIAVEIS_META.forEach(v => {
  * Lê os dados da turma da Aba 1 (inputs do formulário e activeLessons).
  * LIMPA AUTOMATICAMENTE FALTAS ÓRFÃS quando datas de início/aulas mudam.
  */
+// ==========================================================================
+// PERSISTÊNCIA ISOLADA POR USUÁRIO E TURMA (STORAGE KEY GLOBAL & SYNC)
+// ==========================================================================
+function getCompStorageKey() {
+  const user = (typeof window !== 'undefined' && window.authService?.currentUser) ? window.authService.currentUser : null;
+  if (user && user.id) {
+    return 'SENAI_COMP_TURMAS_DATA_' + user.id;
+  }
+  return 'SENAI_COMP_TURMAS_DATA';
+}
+if (typeof window !== 'undefined') {
+  window.getCompStorageKey = getCompStorageKey;
+}
+
 function compSincronizarAbaMae() {
   // 1. Dados cadastrais da turma
   const elCurso   = document.getElementById('nomeCurso');
@@ -438,7 +452,15 @@ function compSincronizarAbaMae() {
 
   function carregarBancoTurmas() {
     try {
-      const bruto = localStorage.getItem(getCompStorageKey());
+      const storageKey = getCompStorageKey();
+      let bruto = localStorage.getItem(storageKey);
+      if (!bruto && storageKey !== 'SENAI_COMP_TURMAS_DATA') {
+        const fallback = localStorage.getItem(getCompStorageKey());
+        if (fallback) {
+          bruto = fallback;
+          localStorage.setItem(storageKey, fallback);
+        }
+      }
       const banco = bruto ? JSON.parse(bruto) : {};
       // Sanitização de produção: remove dados de teste simulados que possam ter ficado em cache local
       const mockSet = new Set([
@@ -4799,12 +4821,15 @@ function compAlternarSubViewDiario(subView) {
   compRenderizarDiario();
 }
 
+let _syncTurmaCloudTimeout = null;
+
 function compSalvarTurmaAtualStorage() {
   const turmaAtual = CompState.turmaInfo.turma || document.getElementById('codigoTurma')?.value?.trim() || '_TURMA_GERAL_';
   try {
-    const bruto = localStorage.getItem('SENAI_COMP_TURMAS_DATA');
+    const storageKey = getCompStorageKey();
+    const bruto = localStorage.getItem(storageKey);
     const banco = bruto ? JSON.parse(bruto) : {};
-    banco[turmaAtual] = {
+    const dadosTurma = {
       alunos: [...CompState.alunos],
       ordemFisicaAlunos: [...(CompState.ordemFisicaAlunos || CompState.alunos)],
       subViewDiario: CompState.subViewDiario || 'compensacao',
@@ -4819,16 +4844,55 @@ function compSalvarTurmaAtualStorage() {
       ultimasFaltasImpressas: { ...(CompState.ultimasFaltasImpressas || {}) },
       _atualizadoEm: new Date().toISOString()
     };
-    localStorage.setItem('SENAI_COMP_TURMAS_DATA', JSON.stringify(banco));
+    banco[turmaAtual] = dadosTurma;
+    localStorage.setItem(storageKey, JSON.stringify(banco));
+
+    // Se houver turma ativa no cronograma salvo, sincronizar em tempo real no modelo local
+    if (typeof getSavedModels === 'function' && typeof saveModels === 'function' && turmaAtual !== '_TURMA_GERAL_') {
+      const savedModels = getSavedModels();
+      if (savedModels[turmaAtual]) {
+        savedModels[turmaAtual].alunos = [...dadosTurma.alunos];
+        savedModels[turmaAtual].ordemFisicaAlunos = [...dadosTurma.ordemFisicaAlunos];
+        savedModels[turmaAtual].faltasPorAluno = { ...dadosTurma.faltasPorAluno };
+        savedModels[turmaAtual].overrides = { ...dadosTurma.overrides };
+        savedModels[turmaAtual].observacoesPorDia = { ...dadosTurma.observacoesPorDia };
+        savedModels[turmaAtual].manualFlagAlunos = { ...dadosTurma.manualFlagAlunos };
+        savedModels[turmaAtual].evadidosPorAluno = { ...dadosTurma.evadidosPorAluno };
+        savedModels[turmaAtual].conteudoProgramaticoPorDia = { ...dadosTurma.conteudoProgramaticoPorDia };
+        savedModels[turmaAtual]._savedAt = Date.now();
+        saveModels(savedModels);
+      }
+    }
+
+    // Sincronização assíncrona imediata com o Supabase Cloud se logado
+    if (window.authService?.client && window.authService?.currentUser && turmaAtual !== '_TURMA_GERAL_') {
+      if (_syncTurmaCloudTimeout) clearTimeout(_syncTurmaCloudTimeout);
+      _syncTurmaCloudTimeout = setTimeout(async () => {
+        try {
+          const user = window.authService.currentUser;
+          const currentForm = typeof getFormData === 'function' ? getFormData() : {};
+          const payload = {
+            ...currentForm,
+            codigoTurma: turmaAtual,
+            ...dadosTurma
+          };
+          await window.authService.client.from('turmas_docente').upsert({
+            docente_id: user.id,
+            codigo_turma: turmaAtual,
+            nome_curso: currentForm.nomeCurso || '',
+            dados: payload,
+            atualizado_em: new Date().toISOString()
+          }, { onConflict: 'docente_id,codigo_turma' });
+        } catch (errSync) {
+          console.warn('[SyncCloud] Falha silenciosa no sync automático:', errSync);
+        }
+      }, 500);
+    }
   } catch (e) {
     console.warn("Erro no auto-save de presenças:", e);
   }
 }
 
-/**
- * Exporta todos os dados, alunos, ordens físicas, faltas e configurações da Aba 2 (Compensação).
- * Garante que nenhuma alteração realizada pelo docente seja perdida.
- */
 function compExportarDadosCompletos() {
   // 1. Sincroniza turma atual com o DOM se disponível
   const elTurma = document.getElementById('codigoTurma');
@@ -4842,7 +4906,7 @@ function compExportarDadosCompletos() {
   // 3. Lê o banco consolidado do localStorage
   let turmasCompensacao = {};
   try {
-    const raw = localStorage.getItem('SENAI_COMP_TURMAS_DATA');
+    const raw = localStorage.getItem(getCompStorageKey());
     if (raw) turmasCompensacao = JSON.parse(raw);
   } catch (e) {
     console.warn("Erro ao ler turmas de compensação:", e);
@@ -4905,10 +4969,10 @@ function compImportarDadosCompletos(dados) {
   const turmas = dados.turmasCompensacao || dados.compensacoes || (dados.turmas ? dados.turmas : null);
   if (turmas && typeof turmas === 'object') {
     try {
-      const rawAtual = localStorage.getItem('SENAI_COMP_TURMAS_DATA');
+      const rawAtual = localStorage.getItem(getCompStorageKey());
       const bancoAtual = rawAtual ? JSON.parse(rawAtual) : {};
       const bancoMesclado = { ...bancoAtual, ...turmas };
-      localStorage.setItem('SENAI_COMP_TURMAS_DATA', JSON.stringify(bancoMesclado));
+      localStorage.setItem(getCompStorageKey(), JSON.stringify(bancoMesclado));
     } catch (e) {
       console.warn("Erro ao mesclar turmas importadas no localStorage:", e);
     }
@@ -5379,6 +5443,19 @@ function compInicializarAbas() {
 }
 
 function compTrocarAba(from, to) {
+  // Salvar imediatamente as alterações da página anterior antes de alternar
+  if (from === 'tab-compensacao') {
+    if (typeof compSalvarTurmaAtualStorage === 'function') {
+      compSalvarTurmaAtualStorage();
+    }
+  } else if (from === 'tab-cronograma') {
+    if (typeof salvarRascunhoFormularioDebounced === 'function') {
+      salvarRascunhoFormularioDebounced();
+    }
+    if (typeof autoSaveActiveTurma === 'function') {
+      autoSaveActiveTurma();
+    }
+  }
   // Barreira de segurança para impedir troca forçada sem autenticação de coordenação
   if (to === 'tab-coordenacao') {
     const isCoordLogado = Boolean(
