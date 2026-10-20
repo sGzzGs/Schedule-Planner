@@ -165,6 +165,12 @@
         </div>
 
         <!-- Action: Baixar PDF -->
+        <!-- Botão Explícito de Salvar Dados (Local + Nuvem) -->
+        <button id="btn-salvar-geral" class="stitch-btn-save-all" title="Salvar todas as alterações da turma (Cronograma e Diário) localmente e na nuvem" type="button" onclick="window.executarSalvarGeralTurma()">
+          <svg class="w-3.5 h-3.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span id="btn-salvar-geral-label">Salvar</span>
+        </button>
+
         <button id="btn-export-pdf" class="stitch-btn-download-pdf" title="Baixar Cronograma em PDF" type="button">
           <i class="fa-solid fa-file-pdf text-xs"></i>
           <span>Baixar PDF</span>
@@ -185,7 +191,7 @@
               <span id="topbar-user-name" class="stitch-user-name">Prof. Carlos</span>
               <span id="topbar-user-role" class="stitch-user-role">Coordenação</span>
             </div>
-            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+            <svg class="profile-chevron-svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#83746e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </div>
           <button id="btn-topbar-logout" class="stitch-btn-logout" title="Sair da Conta" type="button">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -2082,6 +2088,8 @@
 
   <!-- Motor Universal de Feriados SENAI -->
   <script src="js/holidayService.js"></script>
+  <!-- Autenticação e Gestão de Sessão Institucional -->
+  <script src="js/authService.js"></script>
   <!-- Scripts da Aplicação -->
   <script src="js/app.js"></script>
   <!-- Script da Aba de Compensação -->
@@ -2279,8 +2287,7 @@
     </div>
   </div>
 
-  <!-- Scripts de Autenticação e Coordenação -->
-  <script src="js/authService.js"></script>
+  <!-- Scripts de Coordenação -->
   <script src="js/coordenacao.js"></script>
 </body>
 </html>

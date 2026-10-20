@@ -1,3 +1,125 @@
+
+/**
+ * Ação disparada pelo botão "Salvar" no topo da página
+ */
+async function executarSalvarGeralTurma() {
+  const btn = document.getElementById('btn-salvar-geral');
+  const label = document.getElementById('btn-salvar-geral-label');
+  const originalText = label ? label.textContent : 'Salvar';
+
+  if (btn) btn.classList.add('is-saving');
+  if (label) label.textContent = 'Salvando...';
+
+  try {
+    // 1. Salva rascunho e modelo do Cronograma
+    if (typeof autoSaveActiveTurma === 'function') {
+      autoSaveActiveTurma();
+    }
+
+    // 2. Salva diário e faltas da Compensação
+    if (typeof compSalvarTurmaAtualStorage === 'function') {
+      compSalvarTurmaAtualStorage();
+    }
+
+    // 3. Salva no Supabase se logado
+    const user = window.authService?.currentUser;
+    const formData = typeof getFormData === 'function' ? getFormData() : {};
+    const codTurma = formData.codigoTurma || (typeof CompState !== 'undefined' ? CompState.turmaInfo?.turma : '') || '';
+
+    if (!codTurma) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('Preencha o Código da Turma antes de salvar.', 'warning');
+      } else {
+        alert('Preencha o Código da Turma antes de salvar.');
+      }
+      return;
+    }
+
+    let cloudMsg = '';
+    if (user && window.authService?.client) {
+      const savedModels = typeof getSavedModels === 'function' ? getSavedModels() : {};
+      const payloadCompleto = savedModels[codTurma] || formData;
+      const res = await salvarTurmaSupabaseSeguro(user.id, codTurma, formData.nomeCurso, payloadCompleto);
+      if (res.success) {
+        cloudMsg = ' e sincronizado na Nuvem (Supabase)';
+      } else {
+        cloudMsg = ' (Salvo no Navegador. Sincronização pendente)';
+      }
+    } else {
+      cloudMsg = ' (Salvo no Navegador)';
+    }
+
+    if (typeof window.showToast === 'function') {
+      window.showToast(`Turma ${codTurma} salva com sucesso${cloudMsg}!`, 'success');
+    } else {
+      alert(`Turma ${codTurma} salva com sucesso${cloudMsg}!`);
+    }
+
+  } catch (e) {
+    console.error('Erro ao salvar turma:', e);
+    if (typeof window.showToast === 'function') {
+      window.showToast('Erro ao salvar turma: ' + e.message, 'error');
+    } else {
+      alert('Erro ao salvar: ' + e.message);
+    }
+  } finally {
+    if (btn) btn.classList.remove('is-saving');
+    if (label) label.textContent = originalText;
+  }
+}
+window.executarSalvarGeralTurma = executarSalvarGeralTurma;
+
+
+/**
+ * Salva com garantia absoluta no Supabase Cloud (executa verificação de existência para contornar ausência de constraint UNIQUE)
+ */
+async function salvarTurmaSupabaseSeguro(userId, codTurma, nomeCurso, dadosCompletos) {
+  if (!window.authService?.client || !userId || !codTurma) return { success: false, reason: 'offline_or_invalid' };
+  try {
+    const client = window.authService.client;
+    // 1. Checa se a turma já existe para este docente
+    const { data: existing, error: checkErr } = await client
+      .from('turmas_docente')
+      .select('id')
+      .eq('docente_id', userId)
+      .eq('codigo_turma', codTurma)
+      .maybeSingle();
+
+    if (existing && existing.id) {
+      // 2. Atualiza registro existente
+      const { error: updErr } = await client
+        .from('turmas_docente')
+        .update({
+          nome_curso: nomeCurso || '',
+          dados: dadosCompletos,
+          atualizado_em: new Date().toISOString()
+        })
+        .eq('id', existing.id);
+
+      if (updErr) throw updErr;
+      return { success: true, action: 'updated' };
+    } else {
+      // 3. Insere novo registro
+      const { error: insErr } = await client
+        .from('turmas_docente')
+        .insert({
+          docente_id: userId,
+          codigo_turma: codTurma,
+          nome_curso: nomeCurso || '',
+          dados: dadosCompletos,
+          atualizado_em: new Date().toISOString()
+        });
+
+      if (insErr) throw insErr;
+      return { success: true, action: 'inserted' };
+    }
+  } catch (err) {
+    console.warn('[CloudSync] Erro na gravação do Supabase:', err);
+    return { success: false, error: err };
+  }
+}
+window.salvarTurmaSupabaseSeguro = salvarTurmaSupabaseSeguro;
+
 function setCompStorageItem(dadosJsonStr) {
   const key = (typeof getCompStorageKey === 'function') ? getCompStorageKey() : 'SENAI_COMP_TURMAS_DATA';
   localStorage.setItem(key, dadosJsonStr);
@@ -2221,13 +2343,7 @@ function autoSaveActiveTurma() {
         if (_cloudSyncDraftTimeout) clearTimeout(_cloudSyncDraftTimeout);
         _cloudSyncDraftTimeout = setTimeout(async () => {
           try {
-            await window.authService.client.from('turmas_docente').upsert({
-              docente_id: user.id,
-              codigo_turma: codTurma,
-              nome_curso: draft.nomeCurso || '',
-              dados: saved[codTurma],
-              atualizado_em: new Date().toISOString()
-            }, { onConflict: 'docente_id,codigo_turma' });
+            await salvarTurmaSupabaseSeguro(user.id, codTurma, draft.nomeCurso || '', saved[codTurma]);
           } catch (e) {
             console.warn('[SyncCloud] Falha no auto-save do cronograma:', e);
           }

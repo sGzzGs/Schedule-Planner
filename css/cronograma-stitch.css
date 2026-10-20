@@ -967,3 +967,71 @@
     border: none !important;
   }
 }
+
+
+/* ==========================================================================
+   CORREÇÃO DE RESPONSIVIDADE E ZOOM NA TOPBAR (PREVENÇÃO DE QUEBRA EM LINHAS)
+   ========================================================================== */
+.app-topbar {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  white-space: nowrap !important;
+}
+
+.app-topbar > div {
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+}
+
+.topbar-actions {
+  flex-shrink: 0 !important;
+  flex-wrap: nowrap !important;
+}
+
+.stitch-models-select {
+  min-width: 170px !important;
+  max-width: 220px !important;
+}
+
+/* Botão Explícito de Salvar Dados (Local + Nuvem) */
+.stitch-btn-save-all {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 14px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  border-radius: 20px !important;
+  background-color: #009A4D !important;
+  color: #FFFFFF !important;
+  border: 1px solid #008241 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(0, 154, 77, 0.2) !important;
+}
+
+.stitch-btn-save-all:hover {
+  background-color: #008241 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 3px 8px rgba(0, 154, 77, 0.3) !important;
+}
+
+.stitch-btn-save-all:active {
+  transform: translateY(0) !important;
+}
+
+.stitch-btn-save-all.is-saving {
+  background-color: #A7E1C0 !important;
+  cursor: wait !important;
+  color: #006633 !important;
+}
+
+.profile-chevron-svg {
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.stitch-profile-clickable.is-open .profile-chevron-svg {
+  transform: rotate(180deg);
+}

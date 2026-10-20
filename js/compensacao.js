@@ -4876,13 +4876,17 @@ function compSalvarTurmaAtualStorage() {
             codigoTurma: turmaAtual,
             ...dadosTurma
           };
-          await window.authService.client.from('turmas_docente').upsert({
-            docente_id: user.id,
-            codigo_turma: turmaAtual,
-            nome_curso: currentForm.nomeCurso || '',
-            dados: payload,
-            atualizado_em: new Date().toISOString()
-          }, { onConflict: 'docente_id,codigo_turma' });
+          if (typeof salvarTurmaSupabaseSeguro === 'function') {
+            await salvarTurmaSupabaseSeguro(user.id, turmaAtual, currentForm.nomeCurso || '', payload);
+          } else if (window.authService?.client) {
+            const client = window.authService.client;
+            const { data: ex } = await client.from('turmas_docente').select('id').eq('docente_id', user.id).eq('codigo_turma', turmaAtual).maybeSingle();
+            if (ex && ex.id) {
+              await client.from('turmas_docente').update({ dados: payload, atualizado_em: new Date().toISOString() }).eq('id', ex.id);
+            } else {
+              await client.from('turmas_docente').insert({ docente_id: user.id, codigo_turma: turmaAtual, nome_curso: currentForm.nomeCurso || '', dados: payload });
+            }
+          }
         } catch (errSync) {
           console.warn('[SyncCloud] Falha silenciosa no sync automático:', errSync);
         }
