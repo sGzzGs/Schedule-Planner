@@ -11,35 +11,79 @@ async function executarSalvarGeralTurma() {
   if (label) label.textContent = 'Salvando...';
 
   try {
-    // 1. Salva rascunho e modelo do Cronograma
-    if (typeof autoSaveActiveTurma === 'function') {
-      autoSaveActiveTurma();
-    }
-
-    // 2. Salva diário e faltas da Compensação
-    if (typeof compSalvarTurmaAtualStorage === 'function') {
-      compSalvarTurmaAtualStorage();
-    }
-
-    // 3. Salva no Supabase se logado
-    const user = window.authService?.currentUser;
-    const formData = typeof getFormData === 'function' ? getFormData() : {};
-    const codTurma = formData.codigoTurma || (typeof CompState !== 'undefined' ? CompState.turmaInfo?.turma : '') || '';
+    const codTurma = document.getElementById('codigoTurma')?.value?.trim() || 
+                     (typeof CompState !== 'undefined' ? CompState.turmaInfo?.turma : '') || '';
 
     if (!codTurma) {
       if (typeof window.showToast === 'function') {
         window.showToast('Preencha o Código da Turma antes de salvar.', 'warning');
       } else {
-        alert('Preencha o Código da Turma antes de salvar.');
+      if (typeof alert === 'function') alert('Preencha o Código da Turma antes de salvar.');
       }
       return;
     }
 
+    // 1. Salva diário e faltas da Compensação primeiro (garante que CompState e storage local estejam sincronizados)
+    if (typeof compSalvarTurmaAtualStorage === 'function') {
+      compSalvarTurmaAtualStorage();
+    }
+
+    // 2. Salva rascunho e modelo do Cronograma
+    if (typeof autoSaveActiveTurma === 'function') {
+      autoSaveActiveTurma();
+    }
+
+    // 3. Monta o payload definitivo garantindo discentes e chamadas
+    const user = window.authService?.currentUser;
+    const formData = typeof getFormData === 'function' ? getFormData() : {};
+    const savedModels = typeof getSavedModels === 'function' ? getSavedModels() : {};
+    const payloadCompleto = {
+      ...(savedModels[codTurma] || {}),
+      ...formData
+    };
+
+    // Garantia explícita de preservação dos discentes cadastrados
+    if (typeof CompState !== 'undefined' && Array.isArray(CompState.alunos) && CompState.alunos.length > 0) {
+      payloadCompleto.alunos = [...CompState.alunos];
+      payloadCompleto.ordemFisicaAlunos = [...(CompState.ordemFisicaAlunos || CompState.alunos)];
+      payloadCompleto.faltasPorAluno = { ...CompState.faltasPorAluno };
+      payloadCompleto.overrides = { ...CompState.overrides };
+      payloadCompleto.observacoesPorDia = { ...CompState.observacoesPorDia };
+      payloadCompleto.manualFlagAlunos = { ...(CompState.manualFlagAlunos || {}) };
+      payloadCompleto.evadidosPorAluno = { ...(CompState.evadidosPorAluno || {}) };
+      payloadCompleto.coordenacaoPorAluno = { ...(CompState.coordenacaoPorAluno || {}) };
+      payloadCompleto.conteudoProgramaticoPorDia = { ...(CompState.conteudoProgramaticoPorDia || {}) };
+    } else {
+      // Se CompState estava em branco na memória, busca no banco local de compensação
+      try {
+        const storageKey = typeof getCompStorageKey === 'function' ? getCompStorageKey() : 'SENAI_COMP_TURMAS_DATA';
+        const raw = localStorage.getItem(storageKey);
+        const banco = raw ? JSON.parse(raw) : {};
+        if (banco[codTurma] && Array.isArray(banco[codTurma].alunos) && banco[codTurma].alunos.length > 0) {
+          const salvo = banco[codTurma];
+          payloadCompleto.alunos = [...salvo.alunos];
+          payloadCompleto.ordemFisicaAlunos = Array.isArray(salvo.ordemFisicaAlunos) ? [...salvo.ordemFisicaAlunos] : [...salvo.alunos];
+          payloadCompleto.faltasPorAluno = salvo.faltasPorAluno || {};
+          payloadCompleto.overrides = salvo.overrides || {};
+          payloadCompleto.observacoesPorDia = salvo.observacoesPorDia || {};
+          payloadCompleto.manualFlagAlunos = salvo.manualFlagAlunos || {};
+          payloadCompleto.evadidosPorAluno = salvo.evadidosPorAluno || {};
+          payloadCompleto.coordenacaoPorAluno = salvo.coordenacaoPorAluno || {};
+          payloadCompleto.conteudoProgramaticoPorDia = salvo.conteudoProgramaticoPorDia || {};
+        }
+      } catch (_) {}
+    }
+
+    payloadCompleto._savedAt = Date.now();
+    savedModels[codTurma] = payloadCompleto;
+    if (typeof saveModels === 'function') {
+      saveModels(savedModels);
+    }
+
+    // 4. Salva no Supabase se logado
     let cloudMsg = '';
     if (user && window.authService?.client) {
-      const savedModels = typeof getSavedModels === 'function' ? getSavedModels() : {};
-      const payloadCompleto = savedModels[codTurma] || formData;
-      const res = await salvarTurmaSupabaseSeguro(user.id, codTurma, formData.nomeCurso, payloadCompleto);
+      const res = await salvarTurmaSupabaseSeguro(user.id, codTurma, formData.nomeCurso || '', payloadCompleto);
       if (res.success) {
         cloudMsg = ' e sincronizado na Nuvem (Supabase)';
       } else {
@@ -49,10 +93,13 @@ async function executarSalvarGeralTurma() {
       cloudMsg = ' (Salvo no Navegador)';
     }
 
+    const qtdAlunos = Array.isArray(payloadCompleto.alunos) ? payloadCompleto.alunos.length : 0;
+    const msgFinal = `Turma "${codTurma}" salva com sucesso${cloudMsg}! (${qtdAlunos} discente${qtdAlunos === 1 ? '' : 's'} cadastrado${qtdAlunos === 1 ? '' : 's'})`;
+
     if (typeof window.showToast === 'function') {
-      window.showToast(`Turma ${codTurma} salva com sucesso${cloudMsg}!`, 'success');
+      window.showToast(msgFinal, 'success');
     } else {
-      alert(`Turma ${codTurma} salva com sucesso${cloudMsg}!`);
+      if (typeof alert === 'function') alert(msgFinal);
     }
 
   } catch (e) {
@@ -60,7 +107,7 @@ async function executarSalvarGeralTurma() {
     if (typeof window.showToast === 'function') {
       window.showToast('Erro ao salvar turma: ' + e.message, 'error');
     } else {
-      alert('Erro ao salvar: ' + e.message);
+      if (typeof alert === 'function') alert('Erro ao salvar: ' + e.message);
     }
   } finally {
     if (btn) btn.classList.remove('is-saving');
@@ -270,6 +317,8 @@ function getActiveUserModelKey() {
   return 'SENAI_SAVED_MODELS';
 }
 
+window.getSavedModels = getSavedModels;
+window.saveModels = saveModels;
 function getSavedModels() {
   const key = getActiveUserModelKey();
   const models = localStorage.getItem(key);
@@ -606,17 +655,38 @@ function fillFormData(data) {
   }
 
   // Restaura alunos e chamadas associados à turma se presentes
-  if (Array.isArray(data.alunos) && data.alunos.length > 0) {
+  let alunosParaRestaurar = Array.isArray(data.alunos) && data.alunos.length > 0 ? data.alunos : null;
+  let dadosOrigem = data;
+
+  if (!alunosParaRestaurar && data.codigoTurma) {
+    try {
+      const storageKey = typeof getCompStorageKey === "function" ? getCompStorageKey() : "SENAI_COMP_TURMAS_DATA";
+      const raw = localStorage.getItem(storageKey);
+      const banco = raw ? JSON.parse(raw) : {};
+      if (banco[data.codigoTurma] && Array.isArray(banco[data.codigoTurma].alunos) && banco[data.codigoTurma].alunos.length > 0) {
+        alunosParaRestaurar = banco[data.codigoTurma].alunos;
+        dadosOrigem = banco[data.codigoTurma];
+      } else if (typeof getSavedModels === "function") {
+        const saved = getSavedModels();
+        if (saved[data.codigoTurma] && Array.isArray(saved[data.codigoTurma].alunos) && saved[data.codigoTurma].alunos.length > 0) {
+          alunosParaRestaurar = saved[data.codigoTurma].alunos;
+          dadosOrigem = saved[data.codigoTurma];
+        }
+      }
+    } catch (_) {}
+  }
+
+  if (alunosParaRestaurar && alunosParaRestaurar.length > 0) {
     if (typeof CompState !== "undefined" && CompState) {
-      CompState.alunos = [...data.alunos];
-      CompState.ordemFisicaAlunos = Array.isArray(data.ordemFisicaAlunos) ? [...data.ordemFisicaAlunos] : [...data.alunos];
-      if (data.faltasPorAluno) CompState.faltasPorAluno = JSON.parse(JSON.stringify(data.faltasPorAluno));
-      if (data.overrides) CompState.overrides = JSON.parse(JSON.stringify(data.overrides));
-      if (data.observacoesPorDia) CompState.observacoesPorDia = JSON.parse(JSON.stringify(data.observacoesPorDia));
-      if (data.manualFlagAlunos) CompState.manualFlagAlunos = JSON.parse(JSON.stringify(data.manualFlagAlunos));
-      if (data.evadidosPorAluno) CompState.evadidosPorAluno = JSON.parse(JSON.stringify(data.evadidosPorAluno));
-      if (data.coordenacaoPorAluno) CompState.coordenacaoPorAluno = JSON.parse(JSON.stringify(data.coordenacaoPorAluno));
-      if (data.conteudoProgramaticoPorDia) CompState.conteudoProgramaticoPorDia = JSON.parse(JSON.stringify(data.conteudoProgramaticoPorDia));
+      CompState.alunos = [...alunosParaRestaurar];
+      CompState.ordemFisicaAlunos = Array.isArray(dadosOrigem.ordemFisicaAlunos) ? [...dadosOrigem.ordemFisicaAlunos] : [...alunosParaRestaurar];
+      if (dadosOrigem.faltasPorAluno) CompState.faltasPorAluno = JSON.parse(JSON.stringify(dadosOrigem.faltasPorAluno));
+      if (dadosOrigem.overrides) CompState.overrides = JSON.parse(JSON.stringify(dadosOrigem.overrides));
+      if (dadosOrigem.observacoesPorDia) CompState.observacoesPorDia = JSON.parse(JSON.stringify(dadosOrigem.observacoesPorDia));
+      if (dadosOrigem.manualFlagAlunos) CompState.manualFlagAlunos = JSON.parse(JSON.stringify(dadosOrigem.manualFlagAlunos));
+      if (dadosOrigem.evadidosPorAluno) CompState.evadidosPorAluno = JSON.parse(JSON.stringify(dadosOrigem.evadidosPorAluno));
+      if (dadosOrigem.coordenacaoPorAluno) CompState.coordenacaoPorAluno = JSON.parse(JSON.stringify(dadosOrigem.coordenacaoPorAluno));
+      if (dadosOrigem.conteudoProgramaticoPorDia) CompState.conteudoProgramaticoPorDia = JSON.parse(JSON.stringify(dadosOrigem.conteudoProgramaticoPorDia));
 
       if (data.codigoTurma) {
         CompState.turmaInfo.turma = data.codigoTurma;
@@ -2234,9 +2304,9 @@ function getFormData() {
       try {
         const raw = (typeof getCompStorageKey === "function" ? localStorage.getItem(getCompStorageKey()) : localStorage.getItem("SENAI_COMP_TURMAS_DATA"));
         const banco = raw ? JSON.parse(raw) : {};
-        if (banco[codTurma]) {
+        if (banco[codTurma] && Array.isArray(banco[codTurma].alunos) && banco[codTurma].alunos.length > 0) {
           const salvo = banco[codTurma];
-          alunosTurma = Array.isArray(salvo.alunos) ? [...salvo.alunos] : [];
+          alunosTurma = [...salvo.alunos];
           ordemFisica = Array.isArray(salvo.ordemFisicaAlunos) ? [...salvo.ordemFisicaAlunos] : [...alunosTurma];
           faltas = salvo.faltasPorAluno || {};
           overridesTurma = salvo.overrides || {};
@@ -2247,6 +2317,24 @@ function getFormData() {
           conteudoTurma = salvo.conteudoProgramaticoPorDia || {};
         }
       } catch (_) {}
+
+      if (alunosTurma.length === 0 && typeof getSavedModels === "function") {
+        try {
+          const saved = getSavedModels();
+          if (saved[codTurma] && Array.isArray(saved[codTurma].alunos) && saved[codTurma].alunos.length > 0) {
+            const salvo = saved[codTurma];
+            alunosTurma = [...salvo.alunos];
+            ordemFisica = Array.isArray(salvo.ordemFisicaAlunos) ? [...salvo.ordemFisicaAlunos] : [...alunosTurma];
+            faltas = salvo.faltasPorAluno || {};
+            overridesTurma = salvo.overrides || {};
+            obsTurma = salvo.observacoesPorDia || {};
+            flagsTurma = salvo.manualFlagAlunos || {};
+            evadidosTurma = salvo.evadidosPorAluno || {};
+            coordTurma = salvo.coordenacaoPorAluno || {};
+            conteudoTurma = salvo.conteudoProgramaticoPorDia || {};
+          }
+        } catch (_) {}
+      }
     }
   }
 
@@ -2332,6 +2420,20 @@ function autoSaveActiveTurma() {
       const codTurma = draft.codigoTurma.trim();
       const saved = getSavedModels();
       draft._savedAt = Date.now();
+
+      // Preservação de discentes: nunca sobrescreve alunos existentes com array vazio durante auto-save de rascunho
+      if ((!draft.alunos || draft.alunos.length === 0) && saved[codTurma]?.alunos?.length > 0) {
+        draft.alunos = [...saved[codTurma].alunos];
+        draft.ordemFisicaAlunos = [...(saved[codTurma].ordemFisicaAlunos || saved[codTurma].alunos)];
+        draft.faltasPorAluno = { ...(saved[codTurma].faltasPorAluno || {}) };
+        draft.overrides = { ...(saved[codTurma].overrides || {}) };
+        draft.observacoesPorDia = { ...(saved[codTurma].observacoesPorDia || {}) };
+        draft.manualFlagAlunos = { ...(saved[codTurma].manualFlagAlunos || {}) };
+        draft.evadidosPorAluno = { ...(saved[codTurma].evadidosPorAluno || {}) };
+        draft.coordenacaoPorAluno = { ...(saved[codTurma].coordenacaoPorAluno || {}) };
+        draft.conteudoProgramaticoPorDia = { ...(saved[codTurma].conteudoProgramaticoPorDia || {}) };
+      }
+
       saved[codTurma] = {
         ...(saved[codTurma] || {}),
         ...draft
@@ -2357,6 +2459,7 @@ function autoSaveActiveTurma() {
 window.autoSaveActiveTurma = autoSaveActiveTurma;
 
 // 9. PREENCHIMENTO AUTOMÁTICO COM PRESET
+window.applyPreset = applyPreset;
 function applyPreset(presetKey) {
   let p = null;
   if (presetKey.startsWith("OFFICIAL_")) {
@@ -2435,6 +2538,8 @@ function applyPreset(presetKey) {
     lessonCustomizations = {};
   }
 
+  // Restaura alunos e compensações associadas ao modelo aplicado
+  fillFormData(p);
   renderManualDatesList();
 
   // Recalcula do zero para o novo preset
@@ -3143,11 +3248,23 @@ async function appHandleAuthChange(user) {
               const localTurma = modelosLocais[item.codigo_turma];
               const localSavedAt = localTurma?._savedAt || 0;
               const remoteUpdated = item.dados?._savedAt || (item.atualizado_em ? new Date(item.atualizado_em).getTime() : 0);
-              if (!localTurma || remoteUpdated >= localSavedAt) {
-                modelosOnline[item.codigo_turma] = item.dados;
-              } else {
-                modelosOnline[item.codigo_turma] = localTurma;
+              let chosen = (!localTurma || remoteUpdated >= localSavedAt) ? { ...item.dados } : { ...localTurma };
+
+              // Preserva discentes se uma das fontes possuir discentes cadastrados
+              if ((!chosen.alunos || chosen.alunos.length === 0) && (localTurma?.alunos?.length > 0 || item.dados?.alunos?.length > 0)) {
+                const fonteComAlunos = (localTurma?.alunos?.length > 0) ? localTurma : item.dados;
+                chosen.alunos = [...fonteComAlunos.alunos];
+                chosen.ordemFisicaAlunos = [...(fonteComAlunos.ordemFisicaAlunos || fonteComAlunos.alunos)];
+                chosen.faltasPorAluno = { ...(fonteComAlunos.faltasPorAluno || {}) };
+                chosen.overrides = { ...(fonteComAlunos.overrides || {}) };
+                chosen.observacoesPorDia = { ...(fonteComAlunos.observacoesPorDia || {}) };
+                chosen.manualFlagAlunos = { ...(fonteComAlunos.manualFlagAlunos || {}) };
+                chosen.evadidosPorAluno = { ...(fonteComAlunos.evadidosPorAluno || {}) };
+                chosen.coordenacaoPorAluno = { ...(fonteComAlunos.coordenacaoPorAluno || {}) };
+                chosen.conteudoProgramaticoPorDia = { ...(fonteComAlunos.conteudoProgramaticoPorDia || {}) };
               }
+
+              modelosOnline[item.codigo_turma] = chosen;
             }
           });
         }
@@ -3163,6 +3280,34 @@ async function appHandleAuthChange(user) {
       }
     }
     localStorage.setItem(key, JSON.stringify(modelosOnline));
+
+    // Sincroniza imediatamente com o banco de compensação local daquele docente
+    const compKey = "SENAI_COMP_TURMAS_DATA_" + user.id;
+    let compBanco = {};
+    try {
+      const rawComp = localStorage.getItem(compKey);
+      if (rawComp) compBanco = JSON.parse(rawComp);
+    } catch (_) {}
+
+    for (const [kTurma, vDados] of Object.entries(modelosOnline)) {
+      if (vDados && Array.isArray(vDados.alunos) && vDados.alunos.length > 0) {
+        compBanco[kTurma] = {
+          alunos: [...vDados.alunos],
+          ordemFisicaAlunos: [...(vDados.ordemFisicaAlunos || vDados.alunos)],
+          subViewDiario: vDados.subViewDiario || "compensacao",
+          faltasPorAluno: { ...(vDados.faltasPorAluno || {}) },
+          overrides: { ...(vDados.overrides || {}) },
+          observacoesPorDia: { ...(vDados.observacoesPorDia || {}) },
+          manualFlagAlunos: { ...(vDados.manualFlagAlunos || {}) },
+          evadidosPorAluno: { ...(vDados.evadidosPorAluno || {}) },
+          coordenacao: { ...(vDados.coordenacao || {}) },
+          coordenacaoPorAluno: { ...(vDados.coordenacaoPorAluno || {}) },
+          conteudoProgramaticoPorDia: { ...(vDados.conteudoProgramaticoPorDia || {}) },
+          _atualizadoEm: new Date().toISOString()
+        };
+      }
+    }
+    localStorage.setItem(compKey, JSON.stringify(compBanco));
 
     // 3. Atualizar seletor de modelos com os dados isolados do usuário
     populatePresetDropdown();

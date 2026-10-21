@@ -530,9 +530,12 @@ function compSincronizarAbaMae() {
       const savedModels = (typeof getSavedModels === 'function') ? getSavedModels() : {};
       const modelTurma = savedModels[novaTurma];
 
-      if (bancoTurmas[novaTurma] && Array.isArray(bancoTurmas[novaTurma].alunos)) {
-        // Carrega do armazenamento persistente (alunos e configurações já cadastrados pelo professor)
-        const salvo = bancoTurmas[novaTurma];
+      const salvo = bancoTurmas[novaTurma];
+      const hasAlunosBanco = salvo && Array.isArray(salvo.alunos) && salvo.alunos.length > 0;
+      const hasAlunosModel = modelTurma && Array.isArray(modelTurma.alunos) && modelTurma.alunos.length > 0;
+
+      if (hasAlunosBanco) {
+        // Carrega do armazenamento persistente de compensação
         CompState.alunos = [...salvo.alunos];
         CompState.ordemFisicaAlunos = Array.isArray(salvo.ordemFisicaAlunos) ? [...salvo.ordemFisicaAlunos] : [...salvo.alunos];
         if (salvo.subViewDiario) CompState.subViewDiario = salvo.subViewDiario;
@@ -545,24 +548,8 @@ function compSincronizarAbaMae() {
         CompState.coordenacaoPorAluno = salvo.coordenacaoPorAluno ? { ...salvo.coordenacaoPorAluno } : {};
         CompState.conteudoProgramaticoPorDia = salvo.conteudoProgramaticoPorDia ? { ...salvo.conteudoProgramaticoPorDia } : {};
         CompState.ultimasFaltasImpressas = salvo.ultimasFaltasImpressas ? { ...salvo.ultimasFaltasImpressas } : {};
-      } else if (bancoTurmas['_TURMA_GERAL_'] && Array.isArray(bancoTurmas['_TURMA_GERAL_'].alunos) && bancoTurmas['_TURMA_GERAL_'].alunos.length > 0) {
-        // Migra alunos cadastrados antes de preencher o código da turma
-        const salvo = bancoTurmas['_TURMA_GERAL_'];
-        CompState.alunos = [...salvo.alunos];
-        CompState.ordemFisicaAlunos = Array.isArray(salvo.ordemFisicaAlunos) ? [...salvo.ordemFisicaAlunos] : [...salvo.alunos];
-        if (salvo.subViewDiario) CompState.subViewDiario = salvo.subViewDiario;
-        CompState.faltasPorAluno = salvo.faltasPorAluno || {};
-        CompState.overrides = salvo.overrides || {};
-        CompState.observacoesPorDia = salvo.observacoesPorDia || {};
-        CompState.manualFlagAlunos = salvo.manualFlagAlunos ? { ...salvo.manualFlagAlunos } : {};
-        CompState.evadidosPorAluno = salvo.evadidosPorAluno ? { ...salvo.evadidosPorAluno } : {};
-        if (salvo.coordenacao) CompState.coordenacao = { ...salvo.coordenacao };
-        CompState.coordenacaoPorAluno = salvo.coordenacaoPorAluno ? { ...salvo.coordenacaoPorAluno } : {};
-        CompState.conteudoProgramaticoPorDia = salvo.conteudoProgramaticoPorDia ? { ...salvo.conteudoProgramaticoPorDia } : {};
-        CompState.ultimasFaltasImpressas = salvo.ultimasFaltasImpressas ? { ...salvo.ultimasFaltasImpressas } : {};
-        delete bancoTurmas['_TURMA_GERAL_'];
-      } else if (modelTurma && Array.isArray(modelTurma.alunos) && modelTurma.alunos.length > 0) {
-        // Carrega discentes anexados ao modelo do Cronograma
+      } else if (hasAlunosModel) {
+        // Carrega discentes anexados ao modelo do Cronograma (ex: vindos da nuvem Supabase)
         CompState.alunos = [...modelTurma.alunos];
         CompState.ordemFisicaAlunos = Array.isArray(modelTurma.ordemFisicaAlunos) ? [...modelTurma.ordemFisicaAlunos] : [...modelTurma.alunos];
         CompState.faltasPorAluno = modelTurma.faltasPorAluno ? { ...modelTurma.faltasPorAluno } : {};
@@ -572,21 +559,37 @@ function compSincronizarAbaMae() {
         CompState.evadidosPorAluno = modelTurma.evadidosPorAluno ? { ...modelTurma.evadidosPorAluno } : {};
         CompState.coordenacaoPorAluno = modelTurma.coordenacaoPorAluno ? { ...modelTurma.coordenacaoPorAluno } : {};
         CompState.conteudoProgramaticoPorDia = modelTurma.conteudoProgramaticoPorDia ? { ...modelTurma.conteudoProgramaticoPorDia } : {};
+      } else if (bancoTurmas['_TURMA_GERAL_'] && Array.isArray(bancoTurmas['_TURMA_GERAL_'].alunos) && bancoTurmas['_TURMA_GERAL_'].alunos.length > 0) {
+        // Migra alunos cadastrados antes de preencher o código da turma
+        const salvoGeral = bancoTurmas['_TURMA_GERAL_'];
+        CompState.alunos = [...salvoGeral.alunos];
+        CompState.ordemFisicaAlunos = Array.isArray(salvoGeral.ordemFisicaAlunos) ? [...salvoGeral.ordemFisicaAlunos] : [...salvoGeral.alunos];
+        if (salvoGeral.subViewDiario) CompState.subViewDiario = salvoGeral.subViewDiario;
+        CompState.faltasPorAluno = salvoGeral.faltasPorAluno || {};
+        CompState.overrides = salvoGeral.overrides || {};
+        CompState.observacoesPorDia = salvoGeral.observacoesPorDia || {};
+        CompState.manualFlagAlunos = salvoGeral.manualFlagAlunos ? { ...salvoGeral.manualFlagAlunos } : {};
+        CompState.evadidosPorAluno = salvoGeral.evadidosPorAluno ? { ...salvoGeral.evadidosPorAluno } : {};
+        if (salvoGeral.coordenacao) CompState.coordenacao = { ...salvo.coordenacao };
+        CompState.coordenacaoPorAluno = salvoGeral.coordenacaoPorAluno ? { ...salvoGeral.coordenacaoPorAluno } : {};
+        CompState.conteudoProgramaticoPorDia = salvoGeral.conteudoProgramaticoPorDia ? { ...salvoGeral.conteudoProgramaticoPorDia } : {};
+        CompState.ultimasFaltasImpressas = salvoGeral.ultimasFaltasImpressas ? { ...salvoGeral.ultimasFaltasImpressas } : {};
+        delete bancoTurmas['_TURMA_GERAL_'];
       } else if (!CompState.ultimaTurmaCarregada && CompState.alunos && CompState.alunos.length > 0) {
         // Mantém alunos já digitados na tela na primeira atribuição de código de turma
         CompState.alunosPorTurma[novaTurma] = [...CompState.alunos];
       } else {
-        // Nova turma: Inicia estritamente vazia sem discentes até o cadastro pelo professor
+        // Inicia vazio preservando registros de outros campos se existirem
         CompState.alunos = [];
         CompState.ordemFisicaAlunos = [];
-        CompState.faltasPorAluno = {};
-        CompState.overrides = {};
-        CompState.observacoesPorDia = {};
-        CompState.manualFlagAlunos = {};
-        CompState.evadidosPorAluno = {};
-        CompState.coordenacaoPorAluno = {};
-        CompState.conteudoProgramaticoPorDia = {};
-        CompState.ultimasFaltasImpressas = {};
+        CompState.faltasPorAluno = salvo?.faltasPorAluno || {};
+        CompState.overrides = salvo?.overrides || {};
+        CompState.observacoesPorDia = salvo?.observacoesPorDia || {};
+        CompState.manualFlagAlunos = salvo?.manualFlagAlunos || {};
+        CompState.evadidosPorAluno = salvo?.evadidosPorAluno || {};
+        CompState.coordenacaoPorAluno = salvo?.coordenacaoPorAluno || {};
+        CompState.conteudoProgramaticoPorDia = salvo?.conteudoProgramaticoPorDia || {};
+        CompState.ultimasFaltasImpressas = salvo?.ultimasFaltasImpressas || {};
       }
 
       CompState.alunosPorTurma[novaTurma] = [...CompState.alunos];
@@ -4850,18 +4853,19 @@ function compSalvarTurmaAtualStorage() {
     // Se houver turma ativa no cronograma salvo, sincronizar em tempo real no modelo local
     if (typeof getSavedModels === 'function' && typeof saveModels === 'function' && turmaAtual !== '_TURMA_GERAL_') {
       const savedModels = getSavedModels();
-      if (savedModels[turmaAtual]) {
-        savedModels[turmaAtual].alunos = [...dadosTurma.alunos];
-        savedModels[turmaAtual].ordemFisicaAlunos = [...dadosTurma.ordemFisicaAlunos];
-        savedModels[turmaAtual].faltasPorAluno = { ...dadosTurma.faltasPorAluno };
-        savedModels[turmaAtual].overrides = { ...dadosTurma.overrides };
-        savedModels[turmaAtual].observacoesPorDia = { ...dadosTurma.observacoesPorDia };
-        savedModels[turmaAtual].manualFlagAlunos = { ...dadosTurma.manualFlagAlunos };
-        savedModels[turmaAtual].evadidosPorAluno = { ...dadosTurma.evadidosPorAluno };
-        savedModels[turmaAtual].conteudoProgramaticoPorDia = { ...dadosTurma.conteudoProgramaticoPorDia };
-        savedModels[turmaAtual]._savedAt = Date.now();
-        saveModels(savedModels);
+      if (!savedModels[turmaAtual]) {
+        savedModels[turmaAtual] = (typeof getFormData === 'function') ? getFormData() : {};
       }
+      savedModels[turmaAtual].alunos = [...dadosTurma.alunos];
+      savedModels[turmaAtual].ordemFisicaAlunos = [...dadosTurma.ordemFisicaAlunos];
+      savedModels[turmaAtual].faltasPorAluno = { ...dadosTurma.faltasPorAluno };
+      savedModels[turmaAtual].overrides = { ...dadosTurma.overrides };
+      savedModels[turmaAtual].observacoesPorDia = { ...dadosTurma.observacoesPorDia };
+      savedModels[turmaAtual].manualFlagAlunos = { ...dadosTurma.manualFlagAlunos };
+      savedModels[turmaAtual].evadidosPorAluno = { ...dadosTurma.evadidosPorAluno };
+      savedModels[turmaAtual].conteudoProgramaticoPorDia = { ...dadosTurma.conteudoProgramaticoPorDia };
+      savedModels[turmaAtual]._savedAt = Date.now();
+      saveModels(savedModels);
     }
 
     // Sincronização assíncrona imediata com o Supabase Cloud se logado
@@ -6436,6 +6440,8 @@ window.compCalcularValoresVariaveis = compCalcularValoresVariaveis;
 window.compObterFaltasAteHoje = compObterFaltasAteHoje;
 window.compFormatarHorasParaHHMM = compFormatarHorasParaHHMM;
 window.CompState = CompState;
+window.compAdicionarAluno = compAdicionarAluno;
+window.compAdicionarAlunos = compAdicionarAlunos;
 
 
 

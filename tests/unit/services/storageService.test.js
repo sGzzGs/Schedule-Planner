@@ -31,7 +31,13 @@ function initStorageEnvironment() {
     compExportarDadosCompletos: window.compExportarDadosCompletos,
     compImportarDadosCompletos: window.compImportarDadosCompletos,
     compSalvarTurmaAtualStorage: window.compSalvarTurmaAtualStorage,
-    compSincronizarAbaMae: window.compSincronizarAbaMae
+    compSincronizarAbaMae: window.compSincronizarAbaMae,
+    compAdicionarAluno: window.compAdicionarAluno,
+    executarSalvarGeralTurma: window.executarSalvarGeralTurma,
+    applyPreset: window.applyPreset,
+    autoSaveActiveTurma: window.autoSaveActiveTurma,
+    getFormData: window.getFormData,
+    getSavedModels: window.getSavedModels
   };
 }
 
@@ -52,7 +58,10 @@ describe("StorageService & Persistência de Dados (SENAI)", () => {
     compSincronizarAbaMae = env.compSincronizarAbaMae;
 
     // Configurar dados de turma para teste
+    const elTurma = document.getElementById("codigoTurma");
+    if (elTurma) elTurma.value = "JAVA_2602TG";
     CompState.turmaInfo.turma = "JAVA_2602TG";
+    CompState.ultimaTurmaCarregada = "JAVA_2602TG";
     CompState.turmaInfo.curso = "Desenvolvimento Java";
     CompState.turmaInfo.docente = "Professor Teste";
     CompState.turmaInfo.chTotal = 80;
@@ -145,6 +154,44 @@ describe("StorageService & Persistência de Dados (SENAI)", () => {
       // A falta de 02/03 deve ser mantida, e a de 10/03 (órfã) deve ter sido purgada
       expect(CompState.faltasPorAluno["Ana Silva"]["2026-03-02"]).toBe(4);
       expect(CompState.faltasPorAluno["Ana Silva"]["2026-03-10"]).toBeUndefined();
+    });
+  });
+
+  describe("5. Persistência de Alunos Cadastrados no Cronograma e Compensação", () => {
+    it("deve salvar e manter discentes cadastrados ao executarSalvarGeralTurma e ao trocar de preset", async () => {
+      const elTurma = document.getElementById("codigoTurma");
+      if (elTurma) elTurma.value = "TURMA-TEST-PERSIST";
+      
+      // Sincroniza a troca de turma para iniciar a nova turma
+      compSincronizarAbaMae();
+
+      // Adiciona discentes à nova turma
+      window.compAdicionarAluno("Carlos Eduardo");
+      window.compAdicionarAluno("Mariana Lima");
+
+      expect(CompState.alunos).toEqual(["Carlos Eduardo", "Mariana Lima"]);
+
+      // Executa salvamento geral
+      await window.executarSalvarGeralTurma();
+
+      // Verifica se savedModels foi atualizado com os alunos
+      const saved = window.getSavedModels();
+      expect(saved["TURMA-TEST-PERSIST"]).toBeDefined();
+      expect(saved["TURMA-TEST-PERSIST"].alunos).toEqual(["Carlos Eduardo", "Mariana Lima"]);
+
+      // Simula reset de memória (como ocorre ao recarregar a página antes da hidratação)
+      CompState.alunos = [];
+
+      // Aplica o preset salvo
+      window.applyPreset("SAVED_TURMA-TEST-PERSIST");
+
+      // Deve restaurar os alunos cadastrados sem zerá-los
+      expect(CompState.alunos).toEqual(["Carlos Eduardo", "Mariana Lima"]);
+
+      // Dispara autoSaveActiveTurma em segundo plano para garantir que não sobrescreve com array vazio
+      window.autoSaveActiveTurma();
+      const savedDepois = window.getSavedModels();
+      expect(savedDepois["TURMA-TEST-PERSIST"].alunos).toEqual(["Carlos Eduardo", "Mariana Lima"]);
     });
   });
 });
