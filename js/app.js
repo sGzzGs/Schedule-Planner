@@ -1360,7 +1360,7 @@ function calculateSchedule(formData, preserveCustomLessons = false) {
   const novasAulas = [];
   let minutosRestantes = totalCargaMinutos;
   const minutosDia = timeToMinutes(horasPorDia) || 240;
-  let maxLoop = 600;
+  let maxLoop = 1500;
   let loopCount = 0;
 
   while (minutosRestantes > 0 && loopCount < maxLoop) {
@@ -1580,11 +1580,9 @@ function calculateSchedule(formData, preserveCustomLessons = false) {
     }
   }
 
-  // Cálculo de slots/colunas disponíveis no gabarito (8 blocos mensais com até 25 colunas cada)
-  let capacidadeColunas = 0;
-  for (let slot = 0; slot < Math.min(8, mesesSequenciais.length); slot++) {
-    capacidadeColunas += 25;
-  }
+  // Cálculo de slots/colunas disponíveis no gabarito (8 blocos mensais por folha A4 com até 25 colunas cada)
+  const totalPaginas = Math.max(1, Math.ceil(mesesSequenciais.length / 8));
+  let capacidadeColunas = totalPaginas * 8 * 25;
 
   // Soma de minutos das aulas ativas que couberam no limite de colunas da folha A4
   let colunasConsumidas = 0;
@@ -1616,13 +1614,47 @@ function calculateSchedule(formData, preserveCustomLessons = false) {
     cargaHorariaFormatada,
     vigencia,
     semAno,
-    mesesSequenciais
+    mesesSequenciais,
+    totalPages: totalPaginas
   };
 
   return currentScheduleResult;
 }
 
-// 6. RENDERIZADOR EXATO DO GABARITO NO FORMATO A4 PAISAGEM (8 BLOCOS MENSAIS)
+// Estado da folha ativa no visualizador interativo
+let currentCronogramaPage = 1;
+
+function changeCronogramaPage(delta) {
+  const calcResult = currentScheduleResult;
+  if (!calcResult) return;
+  const totalPages = calcResult.totalPages || 1;
+  const newPage = currentCronogramaPage + delta;
+  if (newPage < 1 || newPage > totalPages) return;
+  currentCronogramaPage = newPage;
+
+  const pages = document.querySelectorAll(".page-a4");
+  pages.forEach(p => {
+    const pageNum = Number(p.dataset.page);
+    if (pageNum === currentCronogramaPage) {
+      p.classList.remove("hidden-preview-page");
+      p.classList.add("active-page");
+    } else {
+      p.classList.add("hidden-preview-page");
+      p.classList.remove("active-page");
+    }
+  });
+
+  const badgeNum = document.getElementById("cron-current-page-num");
+  if (badgeNum) badgeNum.textContent = currentCronogramaPage;
+
+  const btnPrev = document.getElementById("btn-cron-prev");
+  const btnNext = document.getElementById("btn-cron-next");
+  if (btnPrev) btnPrev.disabled = (currentCronogramaPage <= 1);
+  if (btnNext) btnNext.disabled = (currentCronogramaPage >= totalPages);
+}
+window.changeCronogramaPage = changeCronogramaPage;
+
+// 6. RENDERIZADOR EXATO DO GABARITO NO FORMATO A4 PAISAGEM (8 BLOCOS MENSAIS POR FOLHA COM PAGINAÇÃO)
 function renderScheduleHTML(formData, calcResult) {
   if (!calcResult || calcResult.emptyReason === "no_days_selected") {
     return `
@@ -1645,156 +1677,199 @@ function renderScheduleHTML(formData, calcResult) {
   } = formData;
 
   const { vigencia, semAno, mesesSequenciais = [] } = calcResult;
-
-  let monthTablesHTML = "";
   const numCols = 25;
-  const totalBlocos = 8;
+  const blocosPorPagina = 8;
+  const totalPages = calcResult.totalPages || Math.max(1, Math.ceil(mesesSequenciais.length / blocosPorPagina));
 
-  for (let slot = 0; slot < totalBlocos; slot++) {
-    const mData = mesesSequenciais[slot] || null;
-    const nomeMes = mData ? mData.nomeMes : "";
-    const dTeoria = mData ? mData.diasTeoria : [];
-    const dPratica = mData ? mData.diasPratica : [];
-    const dAmb = mData ? mData.ambientes : [];
-
-    let rowTeoria = "";
-    let rowPratica = "";
-    let rowAmbiente = "";
-
-    for (let c = 0; c < numCols; c++) {
-      const t = dTeoria[c] || "";
-      const p = dPratica[c] || "";
-      const a = dAmb[c] || "";
-      const isSplitAmb = a && a.includes("/");
-
-      rowTeoria += `<td class="a4-cell a4-cell-teoria ${t ? "has-val" : ""}">${t}</td>`;
-      rowPratica += `<td class="a4-cell a4-cell-pratica ${p ? "has-val" : ""}">${p}</td>`;
-      rowAmbiente += `<td class="a4-cell ${a ? "has-val" : ""} ${isSplitAmb ? "a4-cell-split" : ""}">${a}</td>`;
-    }
-
-    monthTablesHTML += `
-      <table class="a4-month-table">
-        <thead>
-          <tr>
-            <th class="a4-th-label">Aulas/Mês</th>
-            <th class="a4-th-monthname" colspan="${numCols}">
-              ${nomeMes}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="a4-row-teoria">Dias de Teoria</td>
-            ${rowTeoria}
-          </tr>
-          <tr>
-            <td class="a4-row-pratica">Dias de Prática</td>
-            ${rowPratica}
-          </tr>
-          <tr>
-            <td class="a4-row-ambiente">Ambiente</td>
-            ${rowAmbiente}
-          </tr>
-        </tbody>
-      </table>
-    `;
-  }
+  if (currentCronogramaPage > totalPages) currentCronogramaPage = totalPages;
+  if (currentCronogramaPage < 1) currentCronogramaPage = 1;
 
   const schoolHeadingHTML = escola ? `<h2>ESCOLA SENAI “${escola}”</h2>` : `<h2>ESCOLA SENAI</h2>`;
 
-  return `
-    <div class="page-a4">
-      <header class="a4-header">
-        <img src="logo_senai_oficial.png" alt="SENAI" class="senai-logo-img">
-        <div class="a4-school-title">
-          ${schoolHeadingHTML}
-          <h1>Cronograma de Aulas</h1>
+  let paginationBarHTML = "";
+  if (totalPages > 1) {
+    paginationBarHTML = `
+      <div class="cron-pagination-bar no-print" id="cron-pagination-bar">
+        <button type="button" class="cron-nav-btn" id="btn-cron-prev" ${currentCronogramaPage <= 1 ? "disabled" : ""} title="Ver folha anterior" onclick="changeCronogramaPage(-1)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+          <span>Folha Anterior</span>
+        </button>
+        <div class="cron-page-badge">
+          <span class="cron-page-badge-dot"></span>
+          <strong>Folha <span id="cron-current-page-num">${currentCronogramaPage}</span> de <span id="cron-total-pages-num">${totalPages}</span></strong>
         </div>
-      </header>
+        <button type="button" class="cron-nav-btn" id="btn-cron-next" ${currentCronogramaPage >= totalPages ? "disabled" : ""} title="Ver próxima folha" onclick="changeCronogramaPage(1)">
+          <span>Próxima Folha</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    `;
+  }
 
-      <table class="a4-meta-table">
-        <tbody>
-          <tr>
-            <td class="col-left">
-              <div class="meta-field">
-                <span class="meta-lbl">Curso:</span>
-                <span class="meta-val">${nomeCurso}</span>
-              </div>
-            </td>
-            <td class="col-right">
-              <div class="meta-field">
-                <span class="meta-lbl">Turma:</span>
-                <span class="meta-val">${codigoTurma}</span>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td class="col-left">
-              <div class="meta-field">
-                <span class="meta-lbl">Unidade Curricular:</span>
-                <span class="meta-val">${unidadeCurricular || nomeCurso}</span>
-              </div>
-            </td>
-            <td class="col-right">
-              <div class="meta-field">
-                <span class="meta-lbl">Carga Horária:</span>
-                <span class="meta-val">${calcResult.cargaHorariaFormatada || (cargaHorariaTotal + " horas")}</span>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td class="col-left">
-              <div class="meta-field">
-                <span class="meta-lbl">COORDENADOR:</span>
-                <span class="meta-val">${coordenador}</span>
-              </div>
-            </td>
-            <td class="col-right">
-              <div class="meta-field">
-                <span class="meta-lbl">Sem / Ano:</span>
-                <span class="meta-val">${semAno}</span>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td class="col-left">
-              <div class="meta-field">
-                <span class="meta-lbl">PROFESSOR / RESPONSÁVEL:</span>
-                <span class="meta-val">${docente}</span>
-              </div>
-            </td>
-            <td class="col-right">
-              <div class="meta-field">
-                <span class="meta-lbl">Vigência:</span>
-                <span class="meta-val">${vigencia}</span>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  let allPagesHTML = "";
 
-      <main class="a4-months-container">
-        ${monthTablesHTML}
-      </main>
+  for (let p = 1; p <= totalPages; p++) {
+    const slotStart = (p - 1) * blocosPorPagina;
+    const slotEnd = slotStart + blocosPorPagina;
+    let monthTablesHTML = "";
 
-      <footer class="a4-footer">
-        <table class="a4-signatures-table">
+    for (let slot = slotStart; slot < slotEnd; slot++) {
+      const mData = mesesSequenciais[slot] || null;
+      const nomeMes = mData ? mData.nomeMes : "";
+      const dTeoria = mData ? mData.diasTeoria : [];
+      const dPratica = mData ? mData.diasPratica : [];
+      const dAmb = mData ? mData.ambientes : [];
+
+      let rowTeoria = "";
+      let rowPratica = "";
+      let rowAmbiente = "";
+
+      for (let c = 0; c < numCols; c++) {
+        const t = dTeoria[c] || "";
+        const pVal = dPratica[c] || "";
+        const a = dAmb[c] || "";
+        const isSplitAmb = a && a.includes("/");
+
+        rowTeoria += `<td class="a4-cell a4-cell-teoria ${t ? "has-val" : ""}">${t}</td>`;
+        rowPratica += `<td class="a4-cell a4-cell-pratica ${pVal ? "has-val" : ""}">${pVal}</td>`;
+        rowAmbiente += `<td class="a4-cell ${a ? "has-val" : ""} ${isSplitAmb ? "a4-cell-split" : ""}">${a}</td>`;
+      }
+
+      monthTablesHTML += `
+        <table class="a4-month-table">
+          <thead>
+            <tr>
+              <th class="a4-th-label">Aulas/Mês</th>
+              <th class="a4-th-monthname" colspan="${numCols}">
+                ${nomeMes}
+              </th>
+            </tr>
+          </thead>
           <tbody>
             <tr>
-              <td class="col-elab">Elaborador:<br><strong>${docente}</strong></td>
-              <td class="col-data1">Data:<br>&nbsp;</td>
-              <td class="col-aprov">Aprovador:<br><strong>${coordenador}</strong></td>
-              <td class="col-data2">Data:<br>&nbsp;</td>
+              <td class="a4-row-teoria">Dias de Teoria</td>
+              ${rowTeoria}
+            </tr>
+            <tr>
+              <td class="a4-row-pratica">Dias de Prática</td>
+              ${rowPratica}
+            </tr>
+            <tr>
+              <td class="a4-row-ambiente">Ambiente</td>
+              ${rowAmbiente}
+            </tr>
+          </tbody>
+        </table>
+      `;
+    }
+
+    const isVisible = (p === currentCronogramaPage);
+    const pageClasses = `page-a4 ${isVisible ? "active-page" : "hidden-preview-page"}`;
+
+    allPagesHTML += `
+      <div class="${pageClasses}" data-page="${p}">
+        <header class="a4-header">
+          <img src="logo_senai_oficial.png" alt="SENAI" class="senai-logo-img">
+          <div class="a4-school-title">
+            ${schoolHeadingHTML}
+            <h1>Cronograma de Aulas</h1>
+          </div>
+        </header>
+
+        <table class="a4-meta-table">
+          <tbody>
+            <tr>
+              <td class="col-left">
+                <div class="meta-field">
+                  <span class="meta-lbl">Curso:</span>
+                  <span class="meta-val">${nomeCurso}</span>
+                </div>
+              </td>
+              <td class="col-right">
+                <div class="meta-field">
+                  <span class="meta-lbl">Turma:</span>
+                  <span class="meta-val">${codigoTurma}</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="col-left">
+                <div class="meta-field">
+                  <span class="meta-lbl">Unidade Curricular:</span>
+                  <span class="meta-val">${unidadeCurricular || nomeCurso}</span>
+                </div>
+              </td>
+              <td class="col-right">
+                <div class="meta-field">
+                  <span class="meta-lbl">Carga Horária:</span>
+                  <span class="meta-val">${calcResult.cargaHorariaFormatada || (cargaHorariaTotal + " horas")}</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="col-left">
+                <div class="meta-field">
+                  <span class="meta-lbl">COORDENADOR:</span>
+                  <span class="meta-val">${coordenador}</span>
+                </div>
+              </td>
+              <td class="col-right">
+                <div class="meta-field">
+                  <span class="meta-lbl">Sem / Ano:</span>
+                  <span class="meta-val">${semAno}</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="col-left">
+                <div class="meta-field">
+                  <span class="meta-lbl">PROFESSOR / RESPONSÁVEL:</span>
+                  <span class="meta-val">${docente}</span>
+                </div>
+              </td>
+              <td class="col-right">
+                <div class="meta-field">
+                  <span class="meta-lbl">Vigência:</span>
+                  <span class="meta-val">${vigencia}</span>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
 
-        <div class="a4-footer-info">
-          <span class="code">FR-1.02 – 66A (V.00)</span>
-          <span class="legend-coral">Legenda: &nbsp;&nbsp; S – Sala &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; O – Oficina &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; L – Laboratório</span>
-          <span class="page-num">1 de 1</span>
-        </div>
-      </footer>
+        <main class="a4-months-container">
+          ${monthTablesHTML}
+        </main>
+
+        <footer class="a4-footer">
+          <table class="a4-signatures-table">
+            <tbody>
+              <tr>
+                <td class="col-elab">Elaborador:<br><strong>${docente}</strong></td>
+                <td class="col-data1">Data:<br>&nbsp;</td>
+                <td class="col-aprov">Aprovador:<br><strong>${coordenador}</strong></td>
+                <td class="col-data2">Data:<br>&nbsp;</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="a4-footer-info">
+            <span class="code">FR-1.02 – 66A (V.00)</span>
+            <span class="legend-coral">Legenda: &nbsp;&nbsp; S – Sala &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; O – Oficina &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; L – Laboratório</span>
+            <span class="page-num">${p} de ${totalPages}</span>
+          </div>
+        </footer>
+      </div>
+      ${p < totalPages ? '<div class="html2pdf__page-break"></div>' : ''}
+    `;
+  }
+
+  return `
+    <div class="cron-pages-wrapper" id="cron-pages-wrapper">
+      ${paginationBarHTML}
+      <div class="cron-pages-container" id="cron-pages-container">
+        ${allPagesHTML}
+      </div>
     </div>
   `;
 }
@@ -1927,7 +2002,7 @@ function renderInteractiveDaysGrid() {
           </div>
           <div style="display: flex; align-items: center; gap: 4px;">
             <span class="stitch-badge-pill ${badgeClass}">${badgeText}</span>
-            <button type="button" class="chip-menu-btn" title="Configurar este dia (ambiente, horas, divisão)" data-index="${idx}" data-datekey="${aula.dataKey}" style="border: none; background: transparent; color: #8C7769; cursor: pointer; padding: 2px 4px; font-size: 13px; font-weight: bold;">⋮</button>
+            <button type="button" class="chip-menu-btn" title="Configurar este dia (ambiente, horas, divisão)" data-index="${idx}" data-datekey="${aula.dataKey}">⋮</button>
           </div>
         </div>
         <div style="font-size: 12px; color: #8C7769; display: flex; flex-direction: column; gap: 4px;">
@@ -2015,6 +2090,14 @@ function attachChipEvents(container) {
         cancelPress();
         openDayOptionsModal(idx, dateKey);
       });
+      menuBtn.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+        cancelPress();
+      });
+      menuBtn.addEventListener("touchstart", (e) => {
+        e.stopPropagation();
+        cancelPress();
+      }, { passive: true });
     }
 
     // Clique normal (botão esquerdo)
@@ -2573,10 +2656,11 @@ function initThemeSystem() {
 // Aplicação imediata do tema para evitar FOUC
 applyTheme(localStorage.getItem("theme") || "solarized");
 
-// 11. EXPORTAÇÃO EM PDF (A4 PAISAGEM / LANDSCAPE - 1 PÁGINA ESTRITA)
+// 11. EXPORTAÇÃO EM PDF (A4 PAISAGEM / LANDSCAPE - SUPORTE COMPLETO A MULTI-FOLHAS)
 async function exportToPDF() {
-  const element = document.querySelector(".page-a4");
-  if (!element) {
+  const pagesContainer = document.getElementById("cron-pages-container") || document.getElementById("cronograma-render-target");
+  const pages = document.querySelectorAll(".page-a4");
+  if (!pages || pages.length === 0) {
     alert("Nenhum cronograma gerado para exportação.");
     return;
   }
@@ -2594,9 +2678,14 @@ async function exportToPDF() {
     btn.disabled = true;
   }
 
-  // Desativa temporariamente o filtro de brilho do tema "conforto visual" durante a captura do PDF
-  const originalFilter = element.style.filter;
-  element.style.filter = "none";
+  // Torna todas as páginas visíveis temporariamente para captura total do PDF
+  pages.forEach(p => {
+    p.classList.remove("hidden-preview-page");
+    p.style.display = "flex";
+    p.style.filter = "none";
+  });
+
+  const exportTarget = pagesContainer;
 
   if (typeof window.html2pdf === "function") {
     const opt = {
@@ -2609,16 +2698,29 @@ async function exportToPDF() {
         logging: false,
         scrollY: 0
       },
-      jsPDF: { unit: "mm", format: "a4", orientation: "landscape" }
+      jsPDF: { unit: "mm", format: "a4", orientation: "landscape" },
+      pagebreak: { mode: ["css", "legacy"], after: ".html2pdf__page-break" }
     };
 
     try {
-      await window.html2pdf().set(opt).from(element).save();
+      await window.html2pdf().set(opt).from(exportTarget).save();
     } catch (err) {
       console.error("Erro no html2pdf:", err);
       window.print();
     } finally {
-      element.style.filter = originalFilter;
+      // Restaura a visualização da página ativa atual
+      pages.forEach(p => {
+        const pageNum = Number(p.dataset.page);
+        p.style.display = "";
+        p.style.filter = "";
+        if (pageNum === currentCronogramaPage) {
+          p.classList.remove("hidden-preview-page");
+          p.classList.add("active-page");
+        } else {
+          p.classList.add("hidden-preview-page");
+          p.classList.remove("active-page");
+        }
+      });
       document.title = oldTitle;
       if (btn) {
         btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Baixar PDF`;
@@ -2627,7 +2729,18 @@ async function exportToPDF() {
     }
   } else {
     window.print();
-    element.style.filter = originalFilter;
+    pages.forEach(p => {
+      const pageNum = Number(p.dataset.page);
+      p.style.display = "";
+      p.style.filter = "";
+      if (pageNum === currentCronogramaPage) {
+        p.classList.remove("hidden-preview-page");
+        p.classList.add("active-page");
+      } else {
+        p.classList.add("hidden-preview-page");
+        p.classList.remove("active-page");
+      }
+    });
     document.title = oldTitle;
     if (btn) {
       btn.innerHTML = `Baixar PDF`;
@@ -3200,6 +3313,8 @@ if (typeof window !== "undefined") {
   window.minutesToHHMM = minutesToHHMM;
   window.parseDateInputToISO = parseDateInputToISO;
   window.isoToDDMMAAAA = isoToDDMMAAAA;
+  window.renderScheduleHTML = renderScheduleHTML;
+  window.changeCronogramaPage = changeCronogramaPage;
 }
 
 

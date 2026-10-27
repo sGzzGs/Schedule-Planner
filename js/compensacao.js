@@ -2517,7 +2517,7 @@ function compGerarHtmlFichaCompensacao(aluno, options = {}) {
         </table>
 
         <!-- Rodapé Final Oficial (Imagem 2/Documento Base) descido geometricamente em 20 pixels -->
-        <table style="width: 100%; border-collapse: collapse; margin-top: auto; margin-bottom: 0; transform: translateY(20px); font-size: 8pt; text-align: center;">
+        <table style="width: 100%; border-collapse: collapse; margin-top: auto; margin-bottom: 0; transform: translateY(10px); font-size: 8pt; text-align: center;">
           <tr>
             <td style="width: 32%; vertical-align: bottom; padding: 0 8px;">
               <div style="border-top: 1px solid #000; padding-top: 4px;">Data de Conclusão da Reposição</div>

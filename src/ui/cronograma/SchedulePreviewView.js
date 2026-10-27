@@ -161,7 +161,7 @@ export class SchedulePreviewView {
             </div>
             <div style="display: flex; align-items: center; gap: 4px;">
               <span class="stitch-badge-pill ${badgeClass}">${badgeText}</span>
-              <button type="button" class="chip-menu-btn" title="Configurar este dia" data-index="${idx}" data-datekey="${aula.dataKey}" style="border: none; background: transparent; color: #8C7769; cursor: pointer; padding: 2px 4px; font-size: 13px; font-weight: bold;">⋮</button>
+              <button type="button" class="chip-menu-btn" title="Configurar este dia" data-index="${idx}" data-datekey="${aula.dataKey}">⋮</button>
             </div>
           </div>
           <div style="font-size: 12px; color: #8C7769; display: flex; flex-direction: column; gap: 4px;">
@@ -201,6 +201,12 @@ export class SchedulePreviewView {
           e.stopPropagation();
           this.onChipMenuClick(aula, idx);
         });
+        menuBtn.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+        });
+        menuBtn.addEventListener("touchstart", (e) => {
+          e.stopPropagation();
+        }, { passive: true });
       }
 
       chip.addEventListener("click", () => {

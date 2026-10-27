@@ -99,7 +99,7 @@ export function calculateSchedule(config, isDateBlockedFn = () => false) {
   const novasAulas = [];
   let minutosRestantes = totalCargaMinutos;
   const minutosDia = timeToMinutes(horasPorDia) || 240;
-  const maxLoop = 730;
+  const maxLoop = 1500;
   let loopCount = 0;
 
   while (minutosRestantes > 0 && loopCount < maxLoop) {
@@ -210,7 +210,8 @@ export function calculateSchedule(config, isDateBlockedFn = () => false) {
     currMes.ambientes.push(a.ambiente);
   }
 
-  const capacidadeColunas = Math.min(8, mesesSequenciais.length) * 25;
+  const totalPages = Math.max(1, Math.ceil(mesesSequenciais.length / 8));
+  const capacidadeColunas = totalPages * 8 * 25;
   let colunasConsumidas = 0;
   let minutosPreenchidos = 0;
   let aulasQueCouberam = 0;
@@ -238,6 +239,7 @@ export function calculateSchedule(config, isDateBlockedFn = () => false) {
     vigencia: vigenciaCurta,
     vigenciaCompleta,
     semAno,
-    mesesSequenciais
+    mesesSequenciais,
+    totalPages
   };
 }
