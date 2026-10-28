@@ -596,9 +596,15 @@ function calRenderizarListaModificacoes() {
 }
 
 function calExcluirModificacao(dateKey) {
+  const isOficial = holidayService.isDiaOficial ? holidayService.isDiaOficial(dateKey) : false;
   holidayService.restaurarDiaOficial(dateKey);
   holidayService.customizations.itensAdicionais = holidayService.customizations.itensAdicionais.filter(i => i.data !== dateKey);
   holidayService.saveCustomizations();
+
+  if (window.calendarSyncService && window.calendarSyncService.isCoordenador()) {
+    window.calendarSyncService.removerEvento(dateKey, isOficial);
+  }
+
   calAtualizarBadgeModificacoes();
   calRenderizarListaModificacoes();
   calRenderizar();
@@ -642,6 +648,14 @@ function calConfirmarAdicaoModal() {
           descricao: desc,
           categoria_id: 'ferias_fic'
         });
+        if (window.calendarSyncService && window.calendarSyncService.isCoordenador()) {
+          window.calendarSyncService.salvarEvento({
+            data: k,
+            descricao: desc,
+            categoria_id: 'ferias_fic',
+            bloqueia_aula: true
+          });
+        }
         cur.setDate(cur.getDate() + 1);
       }
     } else {
@@ -650,6 +664,14 @@ function calConfirmarAdicaoModal() {
         descricao: desc,
         categoria_id: 'feriado'
       });
+      if (window.calendarSyncService && window.calendarSyncService.isCoordenador()) {
+        window.calendarSyncService.salvarEvento({
+          data: dtIniStr,
+          descricao: desc,
+          categoria_id: 'feriado',
+          bloqueia_aula: true
+        });
+      }
     }
 
     calFecharModalNovoDia();
@@ -666,6 +688,10 @@ function calConfirmarAdicaoModal() {
     }
 
     holidayService.desbloquearDiaOficial(dtRemover);
+    if (window.calendarSyncService && window.calendarSyncService.isCoordenador()) {
+      window.calendarSyncService.removerEvento(dtRemover, true);
+    }
+
     calFecharModalNovoDia();
     calRenderizar();
     if (typeof window.showToast === 'function') {
@@ -677,6 +703,9 @@ function calConfirmarAdicaoModal() {
 function calRestaurarBaseOficialConfirm() {
   if (confirm('Deseja realmente restaurar a base oficial de feriados e eventos do SENAI? Todas as inclusões e exclusões manuais serão resetadas.')) {
     holidayService.restaurarPadrao();
+    if (window.calendarSyncService && window.calendarSyncService.isCoordenador()) {
+      window.calendarSyncService.restaurarBaseOficial();
+    }
     calFecharModalNovoDia();
     calRenderizar();
     if (typeof window.showToast === 'function') {
@@ -905,6 +934,15 @@ function calSalvarDiaMenu() {
     categoria_id: _calMenuSelectedCatId
   });
 
+  if (window.calendarSyncService && window.calendarSyncService.isCoordenador()) {
+    window.calendarSyncService.salvarEvento({
+      data: targetDate,
+      descricao: desc,
+      categoria_id: _calMenuSelectedCatId,
+      bloqueia_aula: true
+    });
+  }
+
   calFecharMenuMinimalista();
   calRenderizar();
 
@@ -919,7 +957,12 @@ function calSalvarDiaMenu() {
 function calExcluirDiaMenu() {
   if (!_calMenuCurrentDate) return;
 
+  const isOficial = holidayService.isDiaOficial ? holidayService.isDiaOficial(_calMenuCurrentDate) : false;
   holidayService.excluirFeriado(_calMenuCurrentDate);
+
+  if (window.calendarSyncService && window.calendarSyncService.isCoordenador()) {
+    window.calendarSyncService.removerEvento(_calMenuCurrentDate, isOficial);
+  }
 
   calFecharMenuMinimalista();
   calRenderizar();

@@ -449,6 +449,35 @@ class HolidayService {
     return this.excluirFeriado(dataKey);
   }
 
+  isDiaOficial(dateKey) {
+    if (!dateKey) return false;
+    const key = HolidayService.formatDateKey(dateKey);
+    const [y] = key.split("-").map(Number);
+    let itensAno = [];
+    if (this.baseData && this.baseData.anos && Array.isArray(this.baseData.anos[String(y)])) {
+      itensAno = this.baseData.anos[String(y)];
+    } else if (BASE_UNIVERSAL_EMBUTIDA.anos && Array.isArray(BASE_UNIVERSAL_EMBUTIDA.anos[String(y)])) {
+      itensAno = BASE_UNIVERSAL_EMBUTIDA.anos[String(y)];
+    }
+    return itensAno.some(item => item.data === key);
+  }
+
+  aplicarModificacoesUsuario(mods) {
+    if (!mods) return;
+    const adicionais = Array.isArray(mods.adicionais)
+      ? mods.adicionais
+      : (Array.isArray(mods.itensAdicionais) ? mods.itensAdicionais : []);
+    const removidos = Array.isArray(mods.removidos)
+      ? mods.removidos
+      : (Array.isArray(mods.itensRemovidos) ? mods.itensRemovidos : []);
+
+    this.customizations = {
+      itensAdicionais: [...adicionais],
+      itensRemovidos: [...removidos]
+    };
+    this.saveCustomizations();
+  }
+
   getTodasModificacoesUsuario() {
     return {
       adicionais: this.customizations.itensAdicionais || [],

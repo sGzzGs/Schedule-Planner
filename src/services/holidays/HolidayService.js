@@ -253,4 +253,28 @@ export class HolidayService {
   removerCustomizacao(dataKey) {
     return this.excluirFeriado(dataKey);
   }
+
+  isDiaOficial(dataKey) {
+    if (!dataKey) return false;
+    const key = HolidayService.formatDateKey(dataKey);
+    const [y] = key.split("-").map(Number);
+    const itensAno = this.baseData?.anos?.[String(y)] || [];
+    return itensAno.some(item => item.data === key);
+  }
+
+  aplicarModificacoesUsuario(mods) {
+    if (!mods) return;
+    const adicionais = Array.isArray(mods.adicionais)
+      ? mods.adicionais
+      : (Array.isArray(mods.itensAdicionais) ? mods.itensAdicionais : []);
+    const removidos = Array.isArray(mods.removidos)
+      ? mods.removidos
+      : (Array.isArray(mods.itensRemovidos) ? mods.itensRemovidos : []);
+
+    this.customizations = {
+      itensAdicionais: [...adicionais],
+      itensRemovidos: [...removidos]
+    };
+    this.saveCustomizations();
+  }
 }
