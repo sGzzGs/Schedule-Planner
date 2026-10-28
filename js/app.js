@@ -28,7 +28,10 @@ async function executarSalvarGeralTurma() {
       compSalvarTurmaAtualStorage();
     }
 
-    // 2. Salva rascunho e modelo do Cronograma
+    // 2. Salva rascunho e modelo do Cronograma e descarrega fila de frequências (SCO57-d)
+    if (window.attendanceSyncQueue && typeof window.attendanceSyncQueue.flush === 'function') {
+      await window.attendanceSyncQueue.flush();
+    }
     if (typeof autoSaveActiveTurma === 'function') {
       autoSaveActiveTurma();
     }
@@ -2496,7 +2499,9 @@ function autoSaveActiveTurma() {
     const user = (typeof window !== 'undefined' && window.authService?.currentUser) ? window.authService.currentUser : null;
     const draftKey = user ? ('SENAI_CRONOGRAMA_DRAFT_' + user.id) : 'SENAI_CRONOGRAMA_DRAFT';
     localStorage.setItem(draftKey, JSON.stringify(draft));
-    localStorage.setItem('SENAI_CRONOGRAMA_DRAFT', JSON.stringify(draft));
+    if (!user) {
+      localStorage.setItem('SENAI_CRONOGRAMA_DRAFT', JSON.stringify(draft));
+    }
 
     // 2. Se temos código de turma, salvar imediatamente no banco de modelos do perfil
     if (draft.codigoTurma && draft.codigoTurma.trim()) {
@@ -3060,7 +3065,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Auto-Save: Restaura rascunho persistido caso exista e nenhum preset tenha sido forçado
   let draftCarregado = false;
   try {
-    const rawDraft = localStorage.getItem("SENAI_CRONOGRAMA_DRAFT");
+    const user = (typeof window !== 'undefined' && window.authService?.currentUser) ? window.authService.currentUser : null;
+    const draftKey = user ? ('SENAI_CRONOGRAMA_DRAFT_' + user.id) : 'SENAI_CRONOGRAMA_DRAFT';
+    const rawDraft = localStorage.getItem(draftKey);
     if (rawDraft) {
       const draftObj = JSON.parse(rawDraft);
       if (draftObj && (draftObj.codigoTurma || draftObj.nomeCurso || draftObj.docente)) {
@@ -3383,8 +3390,36 @@ async function appHandleAuthChange(user) {
             }
           });
         }
+
+        // Consulta frequências normalizadas do Supabase (SCO57-d)
+        const { data: freqsData, error: freqsErr } = await client
+          .from('frequencias_discente')
+          .select('codigo_turma, aluno_nome, data_aula, horas_falta, observacao')
+          .eq('docente_id', user.id);
+
+        if (!freqsErr && Array.isArray(freqsData)) {
+          freqsData.forEach(fr => {
+            const tCode = fr.codigo_turma;
+            if (modelosOnline[tCode]) {
+              if (!modelosOnline[tCode].faltasPorAluno) modelosOnline[tCode].faltasPorAluno = {};
+              if (!modelosOnline[tCode].faltasPorAluno[fr.aluno_nome]) {
+                modelosOnline[tCode].faltasPorAluno[fr.aluno_nome] = {};
+              }
+              const hFalta = Number(fr.horas_falta) || 0;
+              modelosOnline[tCode].faltasPorAluno[fr.aluno_nome][fr.data_aula] = hFalta;
+
+              if (fr.observacao) {
+                if (!modelosOnline[tCode].observacoesPorDia) modelosOnline[tCode].observacoesPorDia = {};
+                if (!modelosOnline[tCode].observacoesPorDia[fr.aluno_nome]) {
+                  modelosOnline[tCode].observacoesPorDia[fr.aluno_nome] = {};
+                }
+                modelosOnline[tCode].observacoesPorDia[fr.aluno_nome][fr.data_aula] = fr.observacao;
+              }
+            }
+          });
+        }
       } catch (err) {
-        console.warn('[CloudSync] Falha ao consultar turmas online do Supabase:', err);
+        console.warn('[CloudSync] Falha ao consultar turmas/frequências online do Supabase:', err);
       }
     }
 
@@ -3467,4 +3502,105 @@ if (typeof window !== 'undefined') {
   window.addEventListener('senai:auth-changed', (e) => {
     appHandleAuthChange(e.detail?.user);
   });
+}
+
+
+// ============================================================================
+// FOCUS REVALIDATION SERVICE: SINCRONIZAÇÃO ENTRE NAVEGADORES (SCO57-d)
+// ============================================================================
+let _lastRevalidationTs = 0;
+let _isRevalidating = false;
+
+async function revalidateActiveTurmaFromCloud(force = false) {
+  const now = Date.now();
+  if (!force && (now - _lastRevalidationTs < 2500)) return;
+  if (_isRevalidating) return;
+
+  const auth = (typeof window !== 'undefined' && window.authService) ? window.authService : null;
+  const client = auth?.client;
+  const user = auth?.currentUser;
+  if (!client || !user || !user.id) return;
+
+  const codTurma = (typeof CompState !== 'undefined' && CompState?.turmaInfo?.turma)
+    ? CompState.turmaInfo.turma
+    : (typeof document !== 'undefined' ? document.getElementById('codigoTurma')?.value?.trim() : '');
+
+  if (!codTurma) return;
+
+  // Se houver edições pendentes locais ainda na fila de debounce, não sobrescreve
+  if (window.attendanceSyncQueue && window.attendanceSyncQueue.pending && window.attendanceSyncQueue.pending.size > 0) {
+    return;
+  }
+
+  _isRevalidating = true;
+  _lastRevalidationTs = now;
+
+  try {
+    const { data: freqs, error: fErr } = await client
+      .from('frequencias_discente')
+      .select('aluno_nome, data_aula, horas_falta, observacao')
+      .eq('docente_id', user.id)
+      .eq('codigo_turma', codTurma);
+
+    if (!fErr && Array.isArray(freqs) && freqs.length > 0) {
+      let mudou = false;
+      if (typeof CompState !== 'undefined') {
+        if (!CompState.faltasPorAluno) CompState.faltasPorAluno = {};
+        if (!CompState.observacoesPorDia) CompState.observacoesPorDia = {};
+
+        for (const f of freqs) {
+          const al = f.aluno_nome;
+          const dt = f.data_aula;
+          const h = Number(f.horas_falta) || 0;
+          const obs = f.observacao || '';
+
+          if (!CompState.faltasPorAluno[al]) CompState.faltasPorAluno[al] = {};
+          if (CompState.faltasPorAluno[al][dt] !== h) {
+            CompState.faltasPorAluno[al][dt] = h;
+            mudou = true;
+          }
+          if (obs) {
+            if (!CompState.observacoesPorDia[al]) CompState.observacoesPorDia[al] = {};
+            if (CompState.observacoesPorDia[al][dt] !== obs) {
+              CompState.observacoesPorDia[al][dt] = obs;
+              mudou = true;
+            }
+          }
+        }
+
+        if (mudou) {
+          if (typeof compSalvarTurmaAtualStorage === 'function') {
+            compSalvarTurmaAtualStorage();
+          }
+          if (typeof compRenderizarDiario === 'function') {
+            compRenderizarDiario();
+          }
+          if (typeof compRenderizarVariaveis === 'function') {
+            compRenderizarVariaveis();
+          }
+          if (typeof compAtualizarBannerContextual === 'function') {
+            compAtualizarBannerContextual();
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[FocusRevalidation] Falha silenciosa na revalidação remota:', err);
+  } finally {
+    _isRevalidating = false;
+  }
+}
+window.revalidateActiveTurmaFromCloud = revalidateActiveTurmaFromCloud;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('focus', () => {
+    revalidateActiveTurmaFromCloud();
+  });
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        revalidateActiveTurmaFromCloud();
+      }
+    });
+  }
 }

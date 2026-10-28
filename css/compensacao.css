@@ -4307,3 +4307,82 @@ textarea.is-overflow {
 
 
 
+
+
+/* ==========================================================================
+   DIAS FANTASMAS (GHOST DAYS) - RETENÇÃO VISUAL ACINZENTADA (SCO57-d)
+   ========================================================================== */
+.stitch-table th.col-date.is-ghost-col {
+  background: #E2E8F0 !important;
+  color: #64748B !important;
+  border-left: 1px dashed #CBD5E1 !important;
+  border-right: 1px dashed #CBD5E1 !important;
+}
+
+.stitch-table th.col-date.is-ghost-col:hover {
+  background: #CBD5E1 !important;
+}
+
+.comp-ghost-th-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+.comp-ghost-date-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.btn-delete-ghost-day {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 1px 3px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-delete-ghost-day:hover {
+  color: #DC2626 !important;
+  background: rgba(220, 38, 38, 0.12) !important;
+  transform: scale(1.15);
+}
+
+.comp-ghost-subtag {
+  color: #94A3B8 !important;
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.stitch-table td.is-ghost-cell {
+  background: rgba(241, 245, 249, 0.7) !important;
+  border-left: 1px dashed rgba(203, 213, 225, 0.6) !important;
+  border-right: 1px dashed rgba(203, 213, 225, 0.6) !important;
+}
+
+.stitch-cell-btn.is-ghost-presence {
+  filter: grayscale(100%);
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.stitch-cell-btn.is-ghost-presence:hover {
+  filter: grayscale(100%);
+  opacity: 0.45;
+  transform: none !important;
+}

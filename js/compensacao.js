@@ -454,13 +454,7 @@ function compSincronizarAbaMae() {
     try {
       const storageKey = getCompStorageKey();
       let bruto = localStorage.getItem(storageKey);
-      if (!bruto && storageKey !== 'SENAI_COMP_TURMAS_DATA') {
-        const fallback = localStorage.getItem(getCompStorageKey());
-        if (fallback) {
-          bruto = fallback;
-          localStorage.setItem(storageKey, fallback);
-        }
-      }
+      // Isolamento estrito entre Guest e Nuvem (SCO57-d): não copia turmas de storage anonimo
       const banco = bruto ? JSON.parse(bruto) : {};
       // Sanitização de produção: remove dados de teste simulados que possam ter ficado em cache local
       const mockSet = new Set([
@@ -699,17 +693,10 @@ function compSincronizarAbaMae() {
   }
 
   // ========================================================================
-  // CORREÇÃO CRÍTICA DE SINCRONIZAÇÃO:
-  // Purga faltas de datas que não são mais dias letivos válidos (ex: mudança de início)
+  // RETENÇÃO DE FREQUÊNCIAS (GHOST DAYS - SCO57-d):
+  // Nenhuma falta ou presença é purgada ao alterar o cronograma ou data inicial.
+  // Datas fora de diasLetivos permanecem salvas e viram Dias Fantasmas (fora da matemática).
   // ========================================================================
-  const validDaysSet = new Set(CompState.diasLetivos);
-  for (const aluno of Object.keys(CompState.faltasPorAluno)) {
-    for (const dKey of Object.keys(CompState.faltasPorAluno[aluno])) {
-      if (!validDaysSet.has(dKey)) {
-        delete CompState.faltasPorAluno[aluno][dKey];
-      }
-    }
-  }
 
   compAtualizarInfoDiasLetivos();
   compAtualizarBannerContextual();
@@ -2895,11 +2882,88 @@ function compResetarDataSimuladaHoje() {
 // ==========================================================================
 
 /**
- * Retorna a lista ordenada de meses únicos (YYYY-MM) presentes nos dias letivos da turma
+ * Retorna todas as datas que devem ser consideradas no diário:
+ * União ordenada entre os dias letivos ativos e qualquer data com apontamentos prévios (Dias Fantasmas).
+ * @returns {string[]}
+ */
+function compObterTodasDatasDiario() {
+  const setDatas = new Set(CompState.diasLetivos || []);
+  if (CompState.faltasPorAluno) {
+    for (const aluno of Object.keys(CompState.faltasPorAluno)) {
+      const faltas = CompState.faltasPorAluno[aluno];
+      if (faltas && typeof faltas === 'object') {
+        for (const dKey of Object.keys(faltas)) {
+          if (faltas[dKey] !== undefined && faltas[dKey] !== null) {
+            setDatas.add(dKey);
+          }
+        }
+      }
+    }
+  }
+  return Array.from(setDatas).sort();
+}
+window.compObterTodasDatasDiario = compObterTodasDatasDiario;
+
+/**
+ * Retorna verdadeiro se a data ISO for um Dia Fantasma (possui apontamentos mas não é dia letivo ativo).
+ * @param {string} isoDate
+ * @returns {boolean}
+ */
+function compIsDiaFantasma(isoDate) {
+  if (!isoDate) return false;
+  const activeSet = new Set(CompState.diasLetivos || []);
+  return !activeSet.has(isoDate);
+}
+window.compIsDiaFantasma = compIsDiaFantasma;
+
+/**
+ * Exclui permanentemente o registro de chamada de uma data (localmente e na nuvem).
+ * @param {string} isoDate
+ */
+function compExcluirDiaFrequenciaPermanente(isoDate) {
+  if (!isoDate) return;
+  if (CompState.faltasPorAluno) {
+    for (const aluno of Object.keys(CompState.faltasPorAluno)) {
+      if (CompState.faltasPorAluno[aluno]) {
+        delete CompState.faltasPorAluno[aluno][isoDate];
+      }
+    }
+  }
+  if (CompState.observacoesPorDia) {
+    for (const aluno of Object.keys(CompState.observacoesPorDia)) {
+      if (CompState.observacoesPorDia[aluno]) {
+        delete CompState.observacoesPorDia[aluno][isoDate];
+      }
+    }
+  }
+  compSalvarTurmaAtualStorage();
+  if (typeof window !== 'undefined' && window.attendanceSyncQueue && typeof window.attendanceSyncQueue.deleteDate === 'function') {
+    window.attendanceSyncQueue.deleteDate(isoDate, CompState.turmaInfo?.turma);
+  }
+  compRenderizarDiario();
+  compRenderizarVariaveis();
+}
+window.compExcluirDiaFrequenciaPermanente = compExcluirDiaFrequenciaPermanente;
+
+/**
+ * Pede confirmação ao professor antes de deletar permanentemente o dia fantasma.
+ * @param {string} isoDate
+ */
+window.compConfirmarExclusaoDiaFantasma = function(isoDate) {
+  if (!isoDate) return;
+  const brDate = compIsoToDDMMAAAA(isoDate);
+  const confirmar = window.confirm(`Deseja excluir permanentemente o registro de chamada do dia ${brDate}?\n\nEsta ação removerá o histórico deste dia e não poderá ser desfeita.`);
+  if (confirmar) {
+    compExcluirDiaFrequenciaPermanente(isoDate);
+  }
+};
+
+/**
+ * Retorna a lista ordenada de meses únicos (YYYY-MM) presentes nos dias letivos ou registros da turma
  * @returns {string[]}
  */
 function compObterMesesDisponiveisTurma() {
-  const dias = CompState.diasLetivos || [];
+  const dias = compObterTodasDatasDiario();
   const setMeses = new Set();
   dias.forEach(d => {
     if (d && d.length >= 7) {
@@ -3494,6 +3558,14 @@ function compInicializarModalAula() {
         delete CompState.observacoesPorDia[aluno][isoDate];
       }
 
+      if (typeof window !== 'undefined' && window.attendanceSyncQueue && typeof window.attendanceSyncQueue.enqueue === 'function') {
+        window.attendanceSyncQueue.enqueue({
+          aluno,
+          dataIso: isoDate,
+          horasFalta: val,
+          observacao: obs
+        });
+      }
       fechar();
       compSalvarTurmaAtualStorage();
       compRenderizarDiario();
@@ -3739,15 +3811,25 @@ function compToggleFlipFalta(aluno, isoDate) {
 
   const faltaAtual = Number(CompState.faltasPorAluno[aluno][isoDate]) || 0;
 
+  let novaFalta = 0;
   if (faltaAtual === 0) {
     // Flip para FALTA INTEGRAL
-    CompState.faltasPorAluno[aluno][isoDate] = horasAula;
+    novaFalta = horasAula;
+    CompState.faltasPorAluno[aluno][isoDate] = novaFalta;
   } else {
     // Flip para PRESENÇA (0h)
+    novaFalta = 0;
     delete CompState.faltasPorAluno[aluno][isoDate];
   }
 
   compSalvarTurmaAtualStorage();
+  if (typeof window !== 'undefined' && window.attendanceSyncQueue && typeof window.attendanceSyncQueue.enqueue === 'function') {
+    window.attendanceSyncQueue.enqueue({
+      aluno,
+      dataIso: isoDate,
+      horasFalta: novaFalta
+    });
+  }
   compRenderizarDiario();
   compRenderizarVariaveis();
   compAtualizarBannerContextual();
@@ -3758,7 +3840,17 @@ function compToggleFlipFalta(aluno, isoDate) {
  */
 function compMarcarTodosPresentes(aluno) {
   if (CompState.faltasPorAluno[aluno]) {
+    const dates = Object.keys(CompState.faltasPorAluno[aluno]);
     delete CompState.faltasPorAluno[aluno];
+    if (typeof window !== 'undefined' && window.attendanceSyncQueue && typeof window.attendanceSyncQueue.enqueue === 'function') {
+      for (const d of dates) {
+        window.attendanceSyncQueue.enqueue({
+          aluno,
+          dataIso: d,
+          horasFalta: 0
+        });
+      }
+    }
   }
   compSalvarTurmaAtualStorage();
   compRenderizarDiario();
@@ -3773,7 +3865,15 @@ function compMarcarTodasFaltas(aluno) {
     CompState.faltasPorAluno[aluno] = {};
   }
   for (const dKey of CompState.diasLetivos) {
-    CompState.faltasPorAluno[aluno][dKey] = compObterHorasAula(dKey);
+    const h = compObterHorasAula(dKey);
+    CompState.faltasPorAluno[aluno][dKey] = h;
+    if (typeof window !== 'undefined' && window.attendanceSyncQueue && typeof window.attendanceSyncQueue.enqueue === 'function') {
+      window.attendanceSyncQueue.enqueue({
+        aluno,
+        dataIso: dKey,
+        horasFalta: h
+      });
+    }
   }
   compSalvarTurmaAtualStorage();
   compRenderizarDiario();
@@ -3801,7 +3901,7 @@ function compRenderizarDiario() {
   }
 
   const alunos = CompState.alunos;
-  const dias = CompState.diasLetivos;
+  const dias = compObterTodasDatasDiario();
 
   if (alunos.length === 0) {
     container.innerHTML = `
@@ -4326,9 +4426,31 @@ function compRenderizarModoTabela(alunos, dias, chTotal) {
                 <div class="comp-col-resizer" id="comp-col-resizer-aluno" title="Arraste para redimensionar a largura da coluna (duplo clique para restaurar 200px)"></div>
               </th>
               ${dias.map(d => {
-                const hNum = compObterHorasAula(d);
-                const hStr = compFormatarHorasDecimais(hNum);
+                const isGhost = compIsDiaFantasma(d);
+                const hNum = isGhost ? 0 : compObterHorasAula(d);
+                const hStr = isGhost ? '[Inativo]' : compFormatarHorasDecimais(hNum);
                 const isDestacada = colDestacada === d;
+                if (isGhost) {
+                  return `<th class="col-date is-ghost-col${isDestacada ? ' is-col-destacada' : ''}"
+                              data-dia="${d}"
+                              onclick="compToggleDestacarColunaData('${d}')"
+                              title="${d} • [Dia Inativo / Fantasma] • Clique no ✕ para excluir permanentemente"
+                              scope="col">
+                            <div class="comp-ghost-th-inner">
+                              <div class="comp-ghost-date-header">
+                                <span>${compIsoToDDMM(d)}</span>
+                                <button type="button"
+                                        class="btn-delete-ghost-day"
+                                        onclick="event.stopPropagation(); window.compConfirmarExclusaoDiaFantasma('${d}')"
+                                        title="Excluir permanentemente o dia ${compIsoToDDMMAAAA(d)}"
+                                        aria-label="Excluir dia ${compIsoToDDMMAAAA(d)}">
+                                  <i class="fa-solid fa-xmark"></i>
+                                </button>
+                              </div>
+                              <div class="stitch-date-sub comp-ghost-subtag">[Inativo]</div>
+                            </div>
+                          </th>`;
+                }
                 return `<th class="col-date${isDestacada ? ' is-col-destacada' : ''}"
                             data-dia="${d}"
                             onclick="compToggleDestacarColunaData('${d}')"
@@ -4369,9 +4491,10 @@ function compRenderizarModoTabela(alunos, dias, chTotal) {
     const faltas = CompState.faltasPorAluno[al] || {};
 
     const faltasCells = dias.map(isoDate => {
+      const isGhost = compIsDiaFantasma(isoDate);
       const val = Number(faltas[isoDate]) || 0;
       const isFalta = val > 0;
-      const horasAula = compObterHorasAula(isoDate);
+      const horasAula = isGhost ? (val || 4) : compObterHorasAula(isoDate);
       const isParcial = isFalta && (val < horasAula);
       const isDestacada = colDestacada === isoDate;
 
@@ -4385,15 +4508,20 @@ function compRenderizarModoTabela(alunos, dias, chTotal) {
         cellCls = 'is-absent';
       }
 
+      if (isGhost) {
+        cellCls += ' is-ghost-presence';
+      }
+
       const symbol = isFalta ? design.falta : design.presenca;
 
-      return `<td class="${isDestacada ? 'is-col-destacada' : ''}" style="text-align: center; padding: 4px;" data-dia="${isoDate}">
+      return `<td class="${isDestacada ? 'is-col-destacada ' : ''}${isGhost ? 'is-ghost-cell' : ''}" style="text-align: center; padding: 4px;" data-dia="${isoDate}">
         <button
           type="button"
           class="stitch-cell-btn comp-cell-presence ${cellCls}"
           data-aluno="${compEscapeAttr(al)}"
           data-dia="${isoDate}"
-          title="${compEscapeAttr(al)} em ${compIsoToDDMMAAAA(isoDate)}: ${isFalta ? compFormatarHorasDecimais(val) + ' de falta' : 'Presente'} • 1-Click: Flip • Segure/Direito: Ajustar (1 a 8 faltas)"
+          ${isGhost ? 'disabled' : ''}
+          title="${compEscapeAttr(al)} em ${compIsoToDDMMAAAA(isoDate)}: ${isFalta ? compFormatarHorasDecimais(val) + ' de falta' : 'Presente'} • ${isGhost ? '[Dia Inativo / Fantasma - Fora dos cálculos]' : '1-Click: Flip • Segure/Direito: Ajustar (1 a 8 faltas)'}"
         >
           ${isParcial ? `
             <span class="stitch-cell-partial-symbol">${symbol}</span>
@@ -4469,6 +4597,7 @@ function compRenderizarModoTabela(alunos, dias, chTotal) {
   html += `</tbody></table></div></section>`;
   return html;
 }
+window.compRenderizarModoTabela = compRenderizarModoTabela;
 
 let _compDraggedAluno = null;
 
@@ -4566,12 +4695,14 @@ function compVincularEventosTabelaGeral() {
     // 1. Clique com o botão direito -> Abre modal de 1 a 8 faltas
     cell.addEventListener('contextmenu', (e) => {
       e.preventDefault();
+      if (cell.disabled || cell.classList.contains('is-ghost-presence')) return;
       compAbrirModalPersonalizarFalta(aluno, isoDate);
     });
 
     // 2. Clique com botão esquerdo -> Flip rápido (Presença <-> Falta)
     cell.addEventListener('click', (e) => {
       if (touchMoved) return;
+      if (cell.disabled || cell.classList.contains('is-ghost-presence')) return;
       compToggleFlipFalta(aluno, isoDate);
     });
 

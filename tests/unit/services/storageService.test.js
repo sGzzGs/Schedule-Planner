@@ -135,12 +135,12 @@ describe("StorageService & Persistência de Dados (SENAI)", () => {
     });
   });
 
-  describe("4. Limpeza Automática de Faltas Órfãs na Alteração de Datas", () => {
-    it("deve purgar faltas de datas que deixaram de ser dias letivos válidos", () => {
+  describe("4. Retenção de Faltas e Dias Fantasmas (Ghost Days) na Alteração de Datas", () => {
+    it("deve preservar faltas de datas que deixaram de ser dias letivos ativos como Dias Fantasmas", () => {
       // Aluno possui falta em 02/03 e em 10/03
       CompState.faltasPorAluno["Ana Silva"] = {
         "2026-03-02": 4,
-        "2026-03-10": 4 // Data órfã que não existirá no novo cronograma
+        "2026-03-10": 4 // Data que não existirá no novo cronograma ativo
       };
 
       // Novo activeLessons contendo APENAS a aula de 02/03
@@ -151,8 +151,16 @@ describe("StorageService & Persistência de Dados (SENAI)", () => {
       // Sincronizar com a Aba Mãe
       compSincronizarAbaMae();
 
-      // A falta de 02/03 deve ser mantida, e a de 10/03 (órfã) deve ter sido purgada
+      // A falta de 02/03 e a de 10/03 são mantidas (nenhuma exclusão automática de faltas)
       expect(CompState.faltasPorAluno["Ana Silva"]["2026-03-02"]).toBe(4);
+      expect(CompState.faltasPorAluno["Ana Silva"]["2026-03-10"]).toBe(4);
+
+      // 10/03 é identificado como Dia Fantasma, e 02/03 como dia ativo normal
+      expect(compIsDiaFantasma("2026-03-10")).toBe(true);
+      expect(compIsDiaFantasma("2026-03-02")).toBe(false);
+
+      // Exclusão manual permanente remove a data fantasma sob demanda do professor
+      compExcluirDiaFrequenciaPermanente("2026-03-10");
       expect(CompState.faltasPorAluno["Ana Silva"]["2026-03-10"]).toBeUndefined();
     });
   });
