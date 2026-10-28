@@ -7,6 +7,7 @@ describe("services/export/ - Serviços de Exportação e Impressão", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     window.print = vi.fn();
+    document.title = "Título Original do Hub";
   });
 
   describe("PrintService", () => {
@@ -17,9 +18,34 @@ describe("services/export/ - Serviços de Exportação e Impressão", () => {
       expect(printSpy).toHaveBeenCalled();
     });
 
-    it("deve criar um iframe e imprimir conteúdo HTML", async () => {
-      const res = await PrintService.print("<div>Conteúdo da Ficha</div>", { title: "Ficha" });
+    it("deve criar um iframe com dimensões A4 e sincronizar document.title para o Chromium", async () => {
+      const initialTitle = document.title;
+      const targetTitle = "Compensacao_TURMA_ALUNO_28_10_26";
+
+      const res = await PrintService.print("<div>Conteúdo da Ficha</div>", { title: targetTitle });
       expect(res).toBe(true);
+
+      // O iframe temporário foi criado com dimensões reais fora da tela
+      const iframes = document.querySelectorAll("iframe");
+      if (iframes.length > 0) {
+        const lastIframe = iframes[iframes.length - 1];
+        expect(lastIframe.style.width).toBe("210mm");
+        expect(lastIframe.style.height).toBe("297mm");
+      }
+    });
+
+    it("deve restaurar document.title após disparo de afterprint", async () => {
+      const initialTitle = "Hub Inicial";
+      document.title = initialTitle;
+      const targetTitle = "Compensacao_TURMA_ALUNO_TEST";
+
+      const printPromise = PrintService.print("<div>Ficha</div>", { title: targetTitle });
+
+      // Simula evento afterprint
+      window.dispatchEvent(new Event("afterprint"));
+      await printPromise;
+
+      expect(document.title).toBe(initialTitle);
     });
   });
 

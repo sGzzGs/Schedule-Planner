@@ -2570,23 +2570,33 @@ function compFormatarNomeArquivoPdf(aluno) {
 async function compExecutarImpressaoDocumento(htmlConteudo, nomeArquivoSugerido) {
   const filename = (nomeArquivoSugerido || compFormatarNomeArquivoPdf(CompState.alunoAtivo || 'Aluno')).replace(/\.pdf$/i, '');
 
-  // 1. Obtém ou cria o iframe isolado de impressão
-  let iframe = document.getElementById('comp-print-iframe');
-  if (!iframe) {
-    iframe = document.createElement('iframe');
-    iframe.id = 'comp-print-iframe';
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    iframe.style.opacity = '0';
-    iframe.style.pointerEvents = 'none';
-    document.body.appendChild(iframe);
+  // 1. Sincroniza temporariamente o título do documento principal (topo).
+  // Navegadores baseados em Chromium utilizam o document.title da janela principal
+  // como nome sugerido oficial ao escolher 'Salvar como PDF' em iframes.
+  const originalTitle = document.title;
+  document.title = filename;
+
+  // 2. Destrói qualquer iframe de impressão residual para garantir contexto 100% limpo
+  const existingIframe = document.getElementById('comp-print-iframe');
+  if (existingIframe && existingIframe.parentNode) {
+    existingIframe.parentNode.removeChild(existingIframe);
   }
 
-  // 2. Extrai estilos CSS da ficha de impressão para inlining garantido
+  // 3. Cria um iframe isolado com dimensões A4 reais fora da tela (off-screen).
+  // Dimensões reais (210mm x 297mm) impedem que o motor de PDF do Chromium aborte a geração por viewport zero.
+  const iframe = document.createElement('iframe');
+  iframe.id = 'comp-print-iframe';
+  iframe.style.position = 'fixed';
+  iframe.style.left = '-9999px';
+  iframe.style.top = '0';
+  iframe.style.width = '210mm';
+  iframe.style.height = '297mm';
+  iframe.style.border = '0';
+  iframe.style.opacity = '0.01';
+  iframe.style.pointerEvents = 'none';
+  document.body.appendChild(iframe);
+
+  // 4. Extrai estilos CSS da ficha de impressão para inlining garantido
   let estilosFicha = '';
   try {
     const linkFicha = document.querySelector('link[href*="print-ficha.css"]');
@@ -2595,7 +2605,7 @@ async function compExecutarImpressaoDocumento(htmlConteudo, nomeArquivoSugerido)
     }
   } catch (_) {}
 
-  // 3. Escreve o documento HTML completo no iframe
+  // 5. Escreve o documento HTML completo no iframe
   const doc = iframe.contentWindow.document;
   doc.open();
   doc.write(`
@@ -2627,7 +2637,7 @@ async function compExecutarImpressaoDocumento(htmlConteudo, nomeArquivoSugerido)
   `);
   doc.close();
 
-  // 4. Aguarda carregamento de todas as imagens internas (logotipo SENAI, ícones)
+  // 6. Aguarda carregamento de todas as imagens internas (logotipo SENAI, ícones)
   const imgs = Array.from(doc.querySelectorAll('img'));
   await Promise.all(imgs.map(img => {
     if (img.complete) return Promise.resolve();
@@ -2640,7 +2650,31 @@ async function compExecutarImpressaoDocumento(htmlConteudo, nomeArquivoSugerido)
   // Pequeno timeout para renderização de fontes e layout
   await new Promise(r => setTimeout(r, 250));
 
-  // 5. Aciona o diálogo nativo de impressão
+  // 7. Handler resiliente para restaurar o título original do sistema
+  let titleRestored = false;
+  const restoreOriginalTitle = () => {
+    if (titleRestored) return;
+    titleRestored = true;
+    document.title = originalTitle;
+    window.removeEventListener('afterprint', restoreOriginalTitle);
+    try {
+      if (iframe.contentWindow) {
+        iframe.contentWindow.removeEventListener('afterprint', restoreOriginalTitle);
+      }
+    } catch (_) {}
+  };
+
+  window.addEventListener('afterprint', restoreOriginalTitle, { once: true });
+  try {
+    if (iframe.contentWindow) {
+      iframe.contentWindow.addEventListener('afterprint', restoreOriginalTitle, { once: true });
+    }
+  } catch (_) {}
+
+  // Fallback garantido de restauração caso o navegador não emita afterprint
+  setTimeout(restoreOriginalTitle, 3000);
+
+  // 8. Aciona o diálogo nativo de impressão
   try {
     iframe.contentWindow.focus();
     iframe.contentWindow.print();

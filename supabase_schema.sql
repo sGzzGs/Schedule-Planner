@@ -84,6 +84,20 @@ CREATE TABLE IF NOT EXISTS public.alunos_governanca (
     atualizado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 7. Tabela de Calendário Escolar Institucional (Feriados, Emendas e Férias da Coordenação)
+CREATE TABLE IF NOT EXISTS public.calendario_institucional (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    data DATE NOT NULL UNIQUE,                       -- Formato YYYY-MM-DD
+    descricao TEXT NOT NULL,                         -- Ex: "Férias Docentes", "Emenda Carnaval"
+    categoria_id TEXT NOT NULL DEFAULT 'feriado'     -- 'feriado', 'emenda', 'ponto_facultativo', 'formatura', 'ferias_fic', 'a_decidir'
+        CHECK (categoria_id IN ('feriado', 'emenda', 'ponto_facultativo', 'formatura', 'ferias_fic', 'a_decidir')),
+    bloqueia_aula BOOLEAN NOT NULL DEFAULT TRUE,     -- Bloqueia encontros no cronograma
+    removido BOOLEAN NOT NULL DEFAULT FALSE,         -- TRUE se o dia oficial do SENAI foi desativado/liberado pela coordenação
+    criado_por UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    criado_em TIMESTAMPTZ DEFAULT NOW(),
+    atualizado_em TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============================================================================
 -- PRIVILÉGIOS DE SCHEMA E TABELAS PARA ROLES DO SUPABASE (anon, authenticated)
 -- ============================================================================
@@ -106,6 +120,7 @@ ALTER TABLE public.perfis_usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.solicitacoes_reset ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.turmas_docente ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.alunos_governanca ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.calendario_institucional ENABLE ROW LEVEL SECURITY;
 
 -- Helper function: verifica se o usuário autenticado é da Coordenação
 CREATE OR REPLACE FUNCTION public.is_coordenador()
@@ -170,6 +185,17 @@ CREATE POLICY "Docente atualiza seus alunos" ON public.alunos_governanca
 DROP POLICY IF EXISTS "Coordenação pode registrar recomendação e atesto" ON public.alunos_governanca;
 CREATE POLICY "Coordenação pode registrar recomendação e atesto" ON public.alunos_governanca
     FOR UPDATE TO authenticated USING (public.is_coordenador())
+    WITH CHECK (public.is_coordenador());
+
+-- Policies: calendario_institucional
+DROP POLICY IF EXISTS "Todos podem ler o calendário institucional" ON public.calendario_institucional;
+CREATE POLICY "Todos podem ler o calendário institucional" ON public.calendario_institucional
+    FOR SELECT TO authenticated, anon USING (true);
+
+DROP POLICY IF EXISTS "Coordenação gerencia calendário institucional" ON public.calendario_institucional;
+CREATE POLICY "Coordenação gerencia calendário institucional" ON public.calendario_institucional
+    FOR ALL TO authenticated
+    USING (public.is_coordenador())
     WITH CHECK (public.is_coordenador());
 
 -- ============================================================================
