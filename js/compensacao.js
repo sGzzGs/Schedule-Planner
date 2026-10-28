@@ -878,8 +878,24 @@ function compMostrarToast(titulo, mensagem, tipo = 'success') {
   if (!container) return;
 
   const toast = document.createElement('div');
-  toast.className = `comp-toast ${tipo === 'warning' ? 'toast-warning' : ''}`;
-  const icon = tipo === 'warning' ? '⚠️' : '🖨️';
+  const isWarning = tipo === 'warning';
+  const isDanger = tipo === 'danger' || tipo === 'error';
+  const isInfo = tipo === 'info';
+
+  let extraClass = '';
+  if (isWarning) extraClass = 'toast-warning';
+  else if (isDanger) extraClass = 'toast-danger';
+  else if (isInfo) extraClass = 'toast-info';
+
+  toast.className = `comp-toast ${extraClass}`.trim();
+
+  let icon = '✅';
+  if (isWarning) icon = '⚠️';
+  else if (isDanger) icon = '❌';
+  else if (isInfo) icon = 'ℹ️';
+  else if (titulo && (titulo.toLowerCase().includes('impress') || titulo.toLowerCase().includes('ficha') || (mensagem && mensagem.toLowerCase().includes('pdf')))) {
+    icon = '🖨️';
+  }
 
   toast.innerHTML = `
     <div class="comp-toast-icon">${icon}</div>
@@ -899,6 +915,7 @@ function compMostrarToast(titulo, mensagem, tipo = 'success') {
     }, 300);
   }, 3500);
 }
+window.compMostrarToast = compMostrarToast;
 
 /**
  * Calcula as faltas acumuladas de um aluno até a data de referência "Hoje" simulada.

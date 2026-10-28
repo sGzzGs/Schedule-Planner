@@ -21,6 +21,9 @@ class AttendanceSyncQueue {
     this.listeners.forEach(fn => {
       try { fn(newStatus, detail); } catch (e) { console.error(e); }
     });
+    if (typeof window !== 'undefined' && typeof window.atualizarIndicadorSincroniaNuvem === 'function') {
+      window.atualizarIndicadorSincroniaNuvem(newStatus, detail);
+    }
   }
 
   onStatusChange(fn) {

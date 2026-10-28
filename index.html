@@ -171,6 +171,16 @@
           <span id="btn-salvar-geral-label">Salvar</span>
         </button>
 
+        <!-- Indicador de Status e Integridade da Nuvem (SCO58-d) -->
+        <button id="btn-cloud-sync-status" class="stitch-btn-sync-status is-synced" title="Nuvem Sincronizada: Clique para checar integridade" type="button" onclick="window.verificarSincroniaNuvemComToast()">
+          <span class="sync-status-icon-wrap">
+            <svg class="w-3.5 h-3.5 svg-synced" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+            <svg class="w-3.5 h-3.5 svg-syncing" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            <svg class="w-3.5 h-3.5 svg-pending" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          </span>
+          <span id="btn-cloud-sync-label">Nuvem</span>
+        </button>
+
         <button id="btn-export-pdf" class="stitch-btn-download-pdf" title="Baixar Cronograma em PDF" type="button">
           <i class="fa-solid fa-file-pdf text-xs"></i>
           <span>Baixar PDF</span>

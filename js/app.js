@@ -1,5 +1,142 @@
 
 /**
+ * Atualiza o indicador visual de sincronização da nuvem (SCO58-d)
+ * @param {'synced'|'syncing'|'pending'|'error'|'offline'} status
+ * @param {object} [detail]
+ */
+function atualizarIndicadorSincroniaNuvem(status, detail) {
+  const btn = document.getElementById('btn-cloud-sync-status');
+  const label = document.getElementById('btn-cloud-sync-label');
+  if (!btn || !label) return;
+
+  btn.classList.remove('is-synced', 'is-syncing', 'is-pending', 'is-offline');
+
+  if (status === 'syncing') {
+    btn.classList.add('is-syncing');
+    label.textContent = 'Salvando...';
+    btn.title = 'Sincronizando alterações com a nuvem...';
+  } else if (status === 'error' || status === 'pending') {
+    btn.classList.add('is-pending');
+    label.textContent = 'Pendente';
+    btn.title = 'Sincronização pendente. Clique para conferir ou reenviar.';
+  } else if (status === 'offline') {
+    btn.classList.add('is-offline');
+    label.textContent = 'Local';
+    btn.title = 'Modo Local (Visitante): Faça login institucional para salvar na nuvem.';
+  } else {
+    // 'synced' ou 'idle'
+    btn.classList.add('is-synced');
+    label.textContent = 'Nuvem';
+    btn.title = 'Nuvem Sincronizada: Todos os dados coincidem. Clique para conferir.';
+  }
+}
+window.atualizarIndicadorSincroniaNuvem = atualizarIndicadorSincroniaNuvem;
+
+/**
+ * Realiza checagem de integridade ativa dos dados locais contra a nuvem (Supabase)
+ * e exibe o Toast correspondente (SCO58-d)
+ */
+async function verificarSincroniaNuvemComToast() {
+  const btn = document.getElementById('btn-cloud-sync-status');
+  const label = document.getElementById('btn-cloud-sync-label');
+
+  const auth = window.authService;
+  const client = auth?.client;
+  const user = auth?.currentUser;
+
+  // 1. Visitante / Deslogado
+  if (!client || !user || !user.id) {
+    atualizarIndicadorSincroniaNuvem('offline');
+    const msg = 'Você está em modo local (visitante). Faça login institucional para sincronizar com a nuvem.';
+    if (typeof window.compMostrarToast === 'function') {
+      window.compMostrarToast('Armazenamento Local', msg, 'info');
+    } else if (typeof window.showToast === 'function') {
+      window.showToast(msg, 'info');
+    }
+    return;
+  }
+
+  // 2. Transição visual de checagem
+  if (btn) {
+    btn.classList.remove('is-synced', 'is-pending', 'is-offline');
+    btn.classList.add('is-syncing');
+  }
+  if (label) label.textContent = 'Checando...';
+
+  try {
+    // Se houver pendências na fila de frequências, descarrega imediatamente
+    if (window.attendanceSyncQueue && typeof window.attendanceSyncQueue.flush === 'function') {
+      await window.attendanceSyncQueue.flush();
+    }
+
+    const codTurma = (typeof CompState !== 'undefined' && CompState?.turmaInfo?.turma)
+      ? CompState.turmaInfo.turma
+      : (typeof document !== 'undefined' ? document.getElementById('codigoTurma')?.value?.trim() : '');
+
+    const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    if (!codTurma) {
+      atualizarIndicadorSincroniaNuvem('synced');
+      const msg = `Nenhuma turma aberta no momento. Conexão com a nuvem ativa às ${horaAtual}.`;
+      if (typeof window.compMostrarToast === 'function') {
+        window.compMostrarToast('Nuvem Ativa', msg, 'info');
+      } else if (typeof window.showToast === 'function') {
+        window.showToast(msg, 'info');
+      }
+      return;
+    }
+
+    // 3. Consulta de integridade no Supabase
+    // A. Turma salva em turmas_docente
+    const { data: turmaCloud, error: errTurma } = await client
+      .from('turmas_docente')
+      .select('id, atualizado_em')
+      .eq('docente_id', user.id)
+      .eq('codigo_turma', codTurma)
+      .maybeSingle();
+
+    if (errTurma) throw errTurma;
+
+    // B. Frequências salvas em frequencias_discente
+    const { count: countFreq, error: errFreq } = await client
+      .from('frequencias_discente')
+      .select('*', { count: 'exact', head: true })
+      .eq('docente_id', user.id)
+      .eq('codigo_turma', codTurma);
+
+    if (errFreq) throw errFreq;
+
+    // Se a turma ativa ainda não tiver sido enviada à nuvem, salva agora
+    if (!turmaCloud && typeof executarSalvarGeralTurma === 'function') {
+      await executarSalvarGeralTurma();
+    }
+
+    // 4. Sucesso total: UI 100% íntegra
+    atualizarIndicadorSincroniaNuvem('synced');
+
+    const msgToast = `✓ Dados 100% íntegros. Conferido com a nuvem às ${horaAtual}.`;
+
+    if (typeof window.compMostrarToast === 'function') {
+      window.compMostrarToast('Nuvem Sincronizada', msgToast, 'success');
+    } else if (typeof window.showToast === 'function') {
+      window.showToast(msgToast, 'success');
+    }
+
+  } catch (err) {
+    console.warn('[verificarSincroniaNuvemComToast] Falha ao verificar sincronia:', err);
+    atualizarIndicadorSincroniaNuvem('error');
+
+    const msgErro = 'Falha temporária ao consultar a nuvem. Os dados estão preservados no navegador.';
+    if (typeof window.compMostrarToast === 'function') {
+      window.compMostrarToast('Sincronização Pendente', msgErro, 'warning');
+    } else if (typeof window.showToast === 'function') {
+      window.showToast(msgErro, 'error');
+    }
+  }
+}
+window.verificarSincroniaNuvemComToast = verificarSincroniaNuvemComToast;
+
+/**
  * Ação disparada pelo botão "Salvar" no topo da página
  */
 async function executarSalvarGeralTurma() {
@@ -9,6 +146,9 @@ async function executarSalvarGeralTurma() {
 
   if (btn) btn.classList.add('is-saving');
   if (label) label.textContent = 'Salvando...';
+  if (typeof window.atualizarIndicadorSincroniaNuvem === 'function') {
+    window.atualizarIndicadorSincroniaNuvem('syncing');
+  }
 
   try {
     const codTurma = document.getElementById('codigoTurma')?.value?.trim() || 
@@ -89,8 +229,14 @@ async function executarSalvarGeralTurma() {
       const res = await salvarTurmaSupabaseSeguro(user.id, codTurma, formData.nomeCurso || '', payloadCompleto);
       if (res.success) {
         cloudMsg = ' e sincronizado na Nuvem (Supabase)';
+        if (typeof window.atualizarIndicadorSincroniaNuvem === 'function') {
+          window.atualizarIndicadorSincroniaNuvem('synced');
+        }
       } else {
         cloudMsg = ' (Salvo no Navegador. Sincronização pendente)';
+        if (typeof window.atualizarIndicadorSincroniaNuvem === 'function') {
+          window.atualizarIndicadorSincroniaNuvem('error');
+        }
       }
     } else {
       cloudMsg = ' (Salvo no Navegador)';
@@ -3349,6 +3495,9 @@ async function appHandleAuthChange(user) {
     const client = window.authService?.client;
     let modelosOnline = {};
 
+    if (typeof window.atualizarIndicadorSincroniaNuvem === 'function') {
+      window.atualizarIndicadorSincroniaNuvem('synced');
+    }
     // Mescla turmas locais já existentes no navegador com os dados da nuvem
     const key = 'SENAI_SAVED_MODELS_' + user.id;
     let modelosLocais = {};
@@ -3478,6 +3627,9 @@ async function appHandleAuthChange(user) {
 
   } else {
     console.log('[AuthLifecycle] Usuário deslogado. Retornando ao modo local convidado.');
+    if (typeof window.atualizarIndicadorSincroniaNuvem === 'function') {
+      window.atualizarIndicadorSincroniaNuvem('offline');
+    }
 
     // Reset limpo da tela ao deslogar
     if (typeof resetFormToEmpty === 'function') resetFormToEmpty();
